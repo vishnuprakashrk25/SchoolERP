@@ -296,12 +296,17 @@ class StudentController extends Controller
 
         $validator = Validator::make($request->all(), [
             'admission_no' => 'required|unique:students,admission_no',
+            'student_code' => 'nullable|string|unique:students,student_code',
             'first_name' => 'required',
             'email' => 'nullable|email|unique:users,email|unique:students,email',
             'class_id' => 'required|exists:classes,id',
             'section_id' => 'required|exists:sections,id',
             'academic_year_id' => 'required|exists:academic_years,id',
             'gender' => 'nullable|string',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
+            'father_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
+            'mother_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
+            'guardian_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
         ]);
 
         if ($validator->fails()) {
@@ -331,12 +336,16 @@ class StudentController extends Controller
 
         $photoPath = $request->photo;
         if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->store('student_photos', 'public');
+            $file = $request->file('photo');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/student_photos'), $filename);
+            $photoPath = '/uploads/student_photos/' . $filename;
         }
 
         $student = Student::create([
             'user_id' => $user->id,
             'admission_no' => $request->admission_no,
+            'student_code' => $request->student_code,
             'admission_date' => $request->admission_date,
             'roll_no' => $request->roll_no,
             'first_name' => $request->first_name,
@@ -809,12 +818,17 @@ class StudentController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'first_name' => 'required',
+            'first_name' => 'sometimes|required',
+            'student_code' => 'nullable|string|unique:students,student_code,' . $id,
             'email' => 'nullable|email|unique:users,email,' . $student->user_id . '|unique:students,email,' . $id,
-            'class_id' => 'required|exists:classes,id',
-            'section_id' => 'required|exists:sections,id',
-            'academic_year_id' => 'required|exists:academic_years,id',
+            'class_id' => 'sometimes|required|exists:classes,id',
+            'section_id' => 'sometimes|required|exists:sections,id',
+            'academic_year_id' => 'sometimes|required|exists:academic_years,id',
             'gender' => 'nullable|string',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
+            'father_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
+            'mother_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
+            'guardian_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
         ]);
 
         if ($validator->fails()) {
