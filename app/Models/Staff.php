@@ -13,7 +13,8 @@ class Staff extends Model
         'email',
         'phone',
         'designation',
-        'staff_no',
+        'category',
+        'staff_code',
         'role',
         'first_name',
         'last_name',
@@ -52,6 +53,16 @@ class Staff extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getStaffNoAttribute()
+    {
+        return $this->attributes['staff_code'] ?? null;
+    }
+
+    public function setStaffNoAttribute($value)
+    {
+        $this->attributes['staff_code'] = $value;
     }
 
     public function getPhotoAttribute($value)

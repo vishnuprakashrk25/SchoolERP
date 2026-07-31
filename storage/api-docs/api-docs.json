@@ -11113,8 +11113,17 @@
                                     "designation": {
                                         "type": "string"
                                     },
+                                    "category": {
+                                        "type": "string",
+                                        "example": "Teaching"
+                                    },
+                                    "staff_code": {
+                                        "type": "string",
+                                        "example": "STF001"
+                                    },
                                     "staff_no": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "STF001"
                                     },
                                     "role": {
                                         "type": "string"

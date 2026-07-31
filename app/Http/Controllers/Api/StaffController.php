@@ -131,7 +131,9 @@ class StaffController extends Controller
      *                  @OA\Property(property="email", type="string"),
      *                  @OA\Property(property="phone", type="string"),
      *                  @OA\Property(property="designation", type="string"),
-     *                  @OA\Property(property="staff_no", type="string"),
+     *                  @OA\Property(property="category", type="string", example="Teaching"),
+     *                  @OA\Property(property="staff_code", type="string", example="STF001"),
+     *                  @OA\Property(property="staff_no", type="string", example="STF001"),
      *                  @OA\Property(property="role", type="string"),
      *                  @OA\Property(property="first_name", type="string"),
      *                  @OA\Property(property="last_name", type="string"),
@@ -236,7 +238,9 @@ class StaffController extends Controller
     public function store(Request $request)
     {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'staff_no' => 'required',
+            'staff_code' => 'nullable|string',
+            'staff_no' => 'nullable|string',
+            'category' => 'nullable|string',
             'role' => 'required',
             'first_name' => 'required',
             'email' => 'required|email|unique:users,email',
@@ -282,6 +286,7 @@ class StaffController extends Controller
         }
 
         $data = $request->all();
+        $data['staff_code'] = $request->staff_code ?? $request->staff_no;
         
         // Handle direct public file uploads
         if ($request->hasFile('photo')) {
@@ -580,15 +585,17 @@ class StaffController extends Controller
      *      )
      * )
      */
-        public function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $item = Staff::findOrFail($id);
         
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'staff_no' => 'required',
-            'role' => 'required',
-            'first_name' => 'required',
-            'email' => 'required|email'
+            'staff_code' => 'nullable|string',
+            'staff_no' => 'nullable|string',
+            'category' => 'nullable|string',
+            'role' => 'sometimes|required',
+            'first_name' => 'sometimes|required',
+            'email' => 'sometimes|required|email'
         ]);
 
         if ($validator->fails()) {
@@ -599,19 +606,34 @@ class StaffController extends Controller
         }
 
         $data = $request->all();
+        if ($request->has('staff_code') || $request->has('staff_no')) {
+            $data['staff_code'] = $request->staff_code ?? $request->staff_no;
+        }
         
-        // Handle file uploads
+        // Handle direct public file uploads
         if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')->store('staff_documents', 'public');
+            $file = $request->file('photo');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/staff_photos'), $filename);
+            $data['photo'] = '/uploads/staff_photos/' . $filename;
         }
         if ($request->hasFile('resume')) {
-            $data['resume'] = $request->file('resume')->store('staff_documents', 'public');
+            $file = $request->file('resume');
+            $filename = time() . '_resume_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/staff_documents'), $filename);
+            $data['resume'] = '/uploads/staff_documents/' . $filename;
         }
         if ($request->hasFile('joining_letter')) {
-            $data['joining_letter'] = $request->file('joining_letter')->store('staff_documents', 'public');
+            $file = $request->file('joining_letter');
+            $filename = time() . '_joining_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/staff_documents'), $filename);
+            $data['joining_letter'] = '/uploads/staff_documents/' . $filename;
         }
         if ($request->hasFile('other_document')) {
-            $data['other_document'] = $request->file('other_document')->store('staff_documents', 'public');
+            $file = $request->file('other_document');
+            $filename = time() . '_other_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/staff_documents'), $filename);
+            $data['other_document'] = '/uploads/staff_documents/' . $filename;
         }
 
         $item->update($data);
