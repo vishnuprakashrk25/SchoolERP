@@ -10705,7 +10705,7 @@
                 ]
             }
         },
-        "/api/staff-attendance": {
+        "/api/staff-attendances": {
             "get": {
                 "tags": [
                     "2. Staff & HR - StaffAttendance"
@@ -10714,7 +10714,51 @@
                 "operationId": "getStaffAttendanceList",
                 "responses": {
                     "200": {
-                        "description": "Successful operation"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "staff_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "date": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "note": {
+                                                        "type": "string",
+                                                        "example": "On sick leave"
+                                                    },
+                                                    "photo": {
+                                                        "type": "string",
+                                                        "example": "http://localhost:8000/uploads/staff_photos/example.jpg"
+                                                    },
+                                                    "staff": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -10742,15 +10786,20 @@
                                 "properties": {
                                     "staff_id": {
                                         "type": "integer",
-                                        "example": "1"
+                                        "example": 1
                                     },
                                     "date": {
                                         "type": "string",
-                                        "example": "date"
+                                        "format": "date",
+                                        "example": "2026-08-09"
                                     },
                                     "status": {
                                         "type": "string",
-                                        "example": "status"
+                                        "example": "present"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "On sick leave"
                                     }
                                 },
                                 "type": "object"
@@ -10760,7 +10809,23 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Successful operation"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -10770,7 +10835,7 @@
                 ]
             }
         },
-        "/api/staff-attendance/{id}": {
+        "/api/staff-attendances/{id}": {
             "get": {
                 "tags": [
                     "2. Staff & HR - StaffAttendance"
@@ -10789,7 +10854,23 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful operation"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -10827,15 +10908,20 @@
                                 "properties": {
                                     "staff_id": {
                                         "type": "integer",
-                                        "example": "1"
+                                        "example": 1
                                     },
                                     "date": {
                                         "type": "string",
-                                        "example": "date"
+                                        "format": "date",
+                                        "example": "2026-08-09"
                                     },
                                     "status": {
                                         "type": "string",
-                                        "example": "status"
+                                        "example": "present"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Updated note"
                                     }
                                 },
                                 "type": "object"
@@ -10845,7 +10931,23 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Successful operation"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -10964,6 +11066,9 @@
                                                         "type": "string"
                                                     },
                                                     "last_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "full_name": {
                                                         "type": "string"
                                                     },
                                                     "father_name": {
@@ -11103,6 +11208,10 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
+                                "required": [
+                                    "role",
+                                    "email"
+                                ],
                                 "properties": {
                                     "email": {
                                         "type": "string"
@@ -11132,6 +11241,9 @@
                                         "type": "string"
                                     },
                                     "last_name": {
+                                        "type": "string"
+                                    },
+                                    "full_name": {
                                         "type": "string"
                                     },
                                     "father_name": {
@@ -11273,6 +11385,9 @@
                                                     "type": "string"
                                                 },
                                                 "last_name": {
+                                                    "type": "string"
+                                                },
+                                                "full_name": {
                                                     "type": "string"
                                                 },
                                                 "father_name": {
@@ -11463,6 +11578,9 @@
                                                 "last_name": {
                                                     "type": "string"
                                                 },
+                                                "full_name": {
+                                                    "type": "string"
+                                                },
                                                 "father_name": {
                                                     "type": "string"
                                                 },
@@ -11635,6 +11753,9 @@
                                     "last_name": {
                                         "type": "string"
                                     },
+                                    "full_name": {
+                                        "type": "string"
+                                    },
                                     "father_name": {
                                         "type": "string"
                                     },
@@ -11774,6 +11895,9 @@
                                                     "type": "string"
                                                 },
                                                 "last_name": {
+                                                    "type": "string"
+                                                },
+                                                "full_name": {
                                                     "type": "string"
                                                 },
                                                 "father_name": {
@@ -11966,8 +12090,6 @@
                                         "type": "array",
                                         "items": {
                                             "required": [
-                                                "staff_no",
-                                                "first_name",
                                                 "email",
                                                 "role"
                                             ],
@@ -11981,8 +12103,17 @@
                                                 "designation": {
                                                     "type": "string"
                                                 },
+                                                "category": {
+                                                    "type": "string",
+                                                    "example": "Teaching"
+                                                },
+                                                "staff_code": {
+                                                    "type": "string",
+                                                    "example": "STF001"
+                                                },
                                                 "staff_no": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "example": "STF001"
                                                 },
                                                 "role": {
                                                     "type": "string"
@@ -11991,6 +12122,9 @@
                                                     "type": "string"
                                                 },
                                                 "last_name": {
+                                                    "type": "string"
+                                                },
+                                                "full_name": {
                                                     "type": "string"
                                                 },
                                                 "father_name": {
@@ -12299,9 +12433,93 @@
                 "tags": [
                     "4. Student Enrollment - StudentAttendance"
                 ],
-                "summary": "Get list of StudentAttendances",
-                "description": "Returns list of StudentAttendances",
+                "summary": "Get list of StudentAttendances with optional class, section, date, student_id, student_code, search filters",
+                "description": "Display a listing of student attendance with filters.",
                 "operationId": "getStudentAttendancesList",
+                "parameters": [
+                    {
+                        "name": "class_id",
+                        "in": "query",
+                        "description": "Filter by class_id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "section_id",
+                        "in": "query",
+                        "description": "Filter by section_id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "academic_year_id",
+                        "in": "query",
+                        "description": "Filter by academic_year_id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "student_id",
+                        "in": "query",
+                        "description": "Filter by student_id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "student_code",
+                        "in": "query",
+                        "description": "Filter by student_code or admission_no",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Filter by attendance date (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status (Present, Late, Absent, Half Day, Leave)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by student name, roll_no, student_code, or admission_no",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "only_uploaded",
+                        "in": "query",
+                        "description": "Set to true to return only uploaded attendance records",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -12321,22 +12539,61 @@
                                                         "type": "integer"
                                                     },
                                                     "student_id": {
-                                                        "type": "string"
+                                                        "type": "integer"
+                                                    },
+                                                    "class_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "section_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "academic_year_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "roll_no": {
+                                                        "type": "string",
+                                                        "example": "102"
+                                                    },
+                                                    "photo": {
+                                                        "type": "string",
+                                                        "example": "http://localhost:8000/uploads/student_photos/example.jpg"
+                                                    },
+                                                    "student_name": {
+                                                        "type": "string",
+                                                        "example": "John Smith"
+                                                    },
+                                                    "student_code": {
+                                                        "type": "string",
+                                                        "example": "GS211"
+                                                    },
+                                                    "admission_no": {
+                                                        "type": "string",
+                                                        "example": "GS211"
                                                     },
                                                     "date": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2026-08-09"
                                                     },
                                                     "status": {
-                                                        "type": "boolean"
+                                                        "type": "string",
+                                                        "example": "Present"
                                                     },
-                                                    "created_at": {
-                                                        "type": "string"
+                                                    "note": {
+                                                        "type": "string",
+                                                        "example": "Doctor appointment"
                                                     },
-                                                    "updated_at": {
-                                                        "type": "string"
+                                                    "student": {
+                                                        "type": "object"
                                                     },
-                                                    "deleted_at": {
-                                                        "type": "string"
+                                                    "class": {
+                                                        "type": "object"
+                                                    },
+                                                    "section": {
+                                                        "type": "object"
+                                                    },
+                                                    "academic_year": {
+                                                        "type": "object"
                                                     }
                                                 },
                                                 "type": "object"
@@ -12347,12 +12604,6 @@
                                 }
                             }
                         }
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
                     }
                 },
                 "security": [
@@ -12365,14 +12616,50 @@
                 "tags": [
                     "4. Student Enrollment - StudentAttendance"
                 ],
-                "summary": "Store new student attendance",
-                "description": "Returns saved student attendance data",
+                "summary": "Store student attendance (single record or array)",
+                "description": "Store new student attendance (single or bulk array).",
                 "operationId": "storeStudentAttendance",
                 "requestBody": {
-                    "required": false,
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "student_code",
+                                    "date",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "student_code": {
+                                        "type": "string",
+                                        "example": "GS211"
+                                    },
+                                    "class_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "section_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "academic_year_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-08-09"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "Present"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Optional note"
+                                    }
+                                },
                                 "type": "object"
                             }
                         }
@@ -12391,32 +12678,9 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Success"
+                                            "example": "Attendance saved successfully"
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "student_id": {
-                                                    "type": "string"
-                                                },
-                                                "date": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "boolean"
-                                                },
-                                                "created_at": {
-                                                    "type": "string"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string"
-                                                },
-                                                "deleted_at": {
-                                                    "type": "string"
-                                                }
-                                            },
                                             "type": "object"
                                         }
                                     },
@@ -12424,15 +12688,6 @@
                                 }
                             }
                         }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
                     }
                 },
                 "security": [
@@ -12447,14 +12702,13 @@
                 "tags": [
                     "4. Student Enrollment - StudentAttendance"
                 ],
-                "summary": "Get student attendance information",
-                "description": "Returns student attendance data",
+                "summary": "Get student attendance detail",
+                "description": "Get attendance record by ID.",
                 "operationId": "getStudentAttendanceById",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "StudentAttendance id",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -12472,34 +12726,7 @@
                                             "type": "boolean",
                                             "example": true
                                         },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Success"
-                                        },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "student_id": {
-                                                    "type": "string"
-                                                },
-                                                "date": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "boolean"
-                                                },
-                                                "created_at": {
-                                                    "type": "string"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string"
-                                                },
-                                                "deleted_at": {
-                                                    "type": "string"
-                                                }
-                                            },
                                             "type": "object"
                                         }
                                     },
@@ -12507,15 +12734,6 @@
                                 }
                             }
                         }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
                     }
                 },
                 "security": [
@@ -12529,13 +12747,12 @@
                     "4. Student Enrollment - StudentAttendance"
                 ],
                 "summary": "Update existing student attendance",
-                "description": "Returns updated student attendance data",
+                "description": "Update existing attendance record.",
                 "operationId": "updateStudentAttendance",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "StudentAttendance id",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -12543,10 +12760,29 @@
                     }
                 ],
                 "requestBody": {
-                    "required": false,
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
+                                "properties": {
+                                    "student_code": {
+                                        "type": "string",
+                                        "example": "GS211"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "Present"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Updated note"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-08-09"
+                                    }
+                                },
                                 "type": "object"
                             }
                         }
@@ -12565,32 +12801,9 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Success"
+                                            "example": "Attendance updated successfully"
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "student_id": {
-                                                    "type": "string"
-                                                },
-                                                "date": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "boolean"
-                                                },
-                                                "created_at": {
-                                                    "type": "string"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string"
-                                                },
-                                                "deleted_at": {
-                                                    "type": "string"
-                                                }
-                                            },
                                             "type": "object"
                                         }
                                     },
@@ -12598,18 +12811,6 @@
                                 }
                             }
                         }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Resource Not Found"
                     }
                 },
                 "security": [
@@ -12617,37 +12818,73 @@
                         "sanctum": []
                     }
                 ]
-            },
-            "delete": {
+            }
+        },
+        "/api/student-attendances/import": {
+            "post": {
                 "tags": [
                     "4. Student Enrollment - StudentAttendance"
                 ],
-                "summary": "Delete existing student attendance",
-                "description": "Deletes a record and returns no content",
-                "operationId": "deleteStudentAttendance",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "StudentAttendance id",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
+                "summary": "Bulk import student attendance records",
+                "description": "Bulk import attendance records via file or JSON.",
+                "operationId": "importStudentAttendance",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "attendances": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "student_code": {
+                                                    "type": "string",
+                                                    "example": "ADM101"
+                                                },
+                                                "date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2025-05-05"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Present"
+                                                },
+                                                "note": {
+                                                    "type": "string",
+                                                    "example": "Imported note"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
-                    "204": {
-                        "description": "Successful operation"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Resource Not Found"
+                    "200": {
+                        "description": "Successful import",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Attendance imported successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -13040,9 +13277,81 @@
                     "4. Student Enrollment - Student"
                 ],
                 "summary": "Get list of Students",
-                "description": "Returns list of Students",
+                "description": "Returns list of Students with optional filters: academic_year_id, class_id, section_id, search, category_id, student_group_id, gender, status",
                 "operationId": "getStudentsList",
                 "parameters": [
+                    {
+                        "name": "academic_year_id",
+                        "in": "query",
+                        "description": "Filter by academic_year_id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "class_id",
+                        "in": "query",
+                        "description": "Filter by class_id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "section_id",
+                        "in": "query",
+                        "description": "Filter by section_id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by name, roll_no, student_code, admission_no, email, phone, etc.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "description": "Filter by category_id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "student_group_id",
+                        "in": "query",
+                        "description": "Filter by student_group_id",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "gender",
+                        "in": "query",
+                        "description": "Filter by gender",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -13109,6 +13418,9 @@
                                                     "last_name": {
                                                         "type": "string"
                                                     },
+                                                    "full_name": {
+                                                        "type": "string"
+                                                    },
                                                     "dob": {
                                                         "type": "string"
                                                     },
@@ -13145,6 +13457,9 @@
                                                     "section_id": {
                                                         "type": "integer"
                                                     },
+                                                    "academic_year_id": {
+                                                        "type": "integer"
+                                                    },
                                                     "address": {
                                                         "type": "string"
                                                     },
@@ -13158,6 +13473,15 @@
                                                         "type": "string"
                                                     },
                                                     "permanent_address": {
+                                                        "type": "string"
+                                                    },
+                                                    "apaar_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "aadharshila_no": {
+                                                        "type": "string"
+                                                    },
+                                                    "pen_no": {
                                                         "type": "string"
                                                     },
                                                     "emergency_phone": {
@@ -13249,14 +13573,12 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "multipart/form-data": {
+                        "application/json": {
                             "schema": {
                                 "required": [
                                     "admission_no",
-                                    "first_name",
                                     "class_id",
-                                    "section_id",
-                                    "academic_year_id"
+                                    "section_id"
                                 ],
                                 "properties": {
                                     "admission_no": {
@@ -13279,6 +13601,261 @@
                                     "last_name": {
                                         "type": "string",
                                         "example": "Doe"
+                                    },
+                                    "full_name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "john@example.com"
+                                    },
+                                    "class_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "section_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "academic_year_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "dob": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2010-01-01"
+                                    },
+                                    "gender": {
+                                        "type": "string",
+                                        "example": "male"
+                                    },
+                                    "religion": {
+                                        "type": "string",
+                                        "example": "Christianity"
+                                    },
+                                    "caste": {
+                                        "type": "string",
+                                        "example": "General"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "1234567890"
+                                    },
+                                    "blood_group": {
+                                        "type": "string",
+                                        "example": "O+"
+                                    },
+                                    "height": {
+                                        "type": "string",
+                                        "example": "150cm"
+                                    },
+                                    "weight": {
+                                        "type": "string",
+                                        "example": "45kg"
+                                    },
+                                    "current_address": {
+                                        "type": "string",
+                                        "example": "123 Main St"
+                                    },
+                                    "permanent_address": {
+                                        "type": "string",
+                                        "example": "456 Other St"
+                                    },
+                                    "father_name": {
+                                        "type": "string",
+                                        "example": "Richard Doe"
+                                    },
+                                    "father_phone": {
+                                        "type": "string",
+                                        "example": "0987654321"
+                                    },
+                                    "father_occupation": {
+                                        "type": "string",
+                                        "example": "Engineer"
+                                    },
+                                    "mother_name": {
+                                        "type": "string",
+                                        "example": "Jane Doe"
+                                    },
+                                    "mother_phone": {
+                                        "type": "string",
+                                        "example": "1122334455"
+                                    },
+                                    "mother_occupation": {
+                                        "type": "string",
+                                        "example": "Teacher"
+                                    },
+                                    "guardian_name": {
+                                        "type": "string",
+                                        "example": "Uncle Bob"
+                                    },
+                                    "guardian_phone": {
+                                        "type": "string",
+                                        "example": "6677889900"
+                                    },
+                                    "guardian_relation": {
+                                        "type": "string",
+                                        "example": "Uncle"
+                                    },
+                                    "bank_account_no": {
+                                        "type": "string",
+                                        "example": "123456789"
+                                    },
+                                    "bank_name": {
+                                        "type": "string",
+                                        "example": "Example Bank"
+                                    },
+                                    "ifsc_code": {
+                                        "type": "string",
+                                        "example": "EXAMP001"
+                                    },
+                                    "national_id_no": {
+                                        "type": "string",
+                                        "example": "NIC123456"
+                                    },
+                                    "local_id_no": {
+                                        "type": "string",
+                                        "example": "LOC123456"
+                                    },
+                                    "birth_certificate_no": {
+                                        "type": "string",
+                                        "example": "BC123456"
+                                    },
+                                    "apaar_id": {
+                                        "type": "string",
+                                        "example": "APAAR123456"
+                                    },
+                                    "aadharshila_no": {
+                                        "type": "string",
+                                        "example": "AADHAR123456"
+                                    },
+                                    "pen_no": {
+                                        "type": "string",
+                                        "example": "PEN123456"
+                                    },
+                                    "emergency_phone": {
+                                        "type": "string",
+                                        "example": "9988776655"
+                                    },
+                                    "father_email": {
+                                        "type": "string",
+                                        "example": "father@example.com"
+                                    },
+                                    "mother_email": {
+                                        "type": "string",
+                                        "example": "mother@example.com"
+                                    },
+                                    "dormitory_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "room_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "route_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "vehicle_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "alternate_phone": {
+                                        "type": "string",
+                                        "example": "5566778899"
+                                    },
+                                    "student_group_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "medical_history": {
+                                        "type": "string",
+                                        "example": "None"
+                                    },
+                                    "is_disabled": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "disable_reason": {
+                                        "type": "string",
+                                        "example": ""
+                                    },
+                                    "disable_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-01-01"
+                                    },
+                                    "guardian_is": {
+                                        "type": "string",
+                                        "example": "Father"
+                                    },
+                                    "previous_school_name": {
+                                        "type": "string",
+                                        "example": "Old School"
+                                    },
+                                    "previous_qualification": {
+                                        "type": "string",
+                                        "example": "Grade 8"
+                                    },
+                                    "emergency_contacts": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Bob"
+                                                },
+                                                "relation": {
+                                                    "type": "string",
+                                                    "example": "Uncle"
+                                                },
+                                                "phone": {
+                                                    "type": "string",
+                                                    "example": "1234"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "admission_no",
+                                    "class_id",
+                                    "section_id"
+                                ],
+                                "properties": {
+                                    "admission_no": {
+                                        "type": "string",
+                                        "example": "ADM123"
+                                    },
+                                    "admission_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-01-01"
+                                    },
+                                    "roll_no": {
+                                        "type": "string",
+                                        "example": "101"
+                                    },
+                                    "first_name": {
+                                        "type": "string",
+                                        "example": "John"
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "example": "Doe"
+                                    },
+                                    "full_name": {
+                                        "type": "string",
+                                        "example": "John Doe"
                                     },
                                     "email": {
                                         "type": "string",
@@ -13401,6 +13978,26 @@
                                         "type": "string",
                                         "example": "NIC123456"
                                     },
+                                    "local_id_no": {
+                                        "type": "string",
+                                        "example": "LOC123456"
+                                    },
+                                    "birth_certificate_no": {
+                                        "type": "string",
+                                        "example": "BC123456"
+                                    },
+                                    "apaar_id": {
+                                        "type": "string",
+                                        "example": "APAAR123456"
+                                    },
+                                    "aadharshila_no": {
+                                        "type": "string",
+                                        "example": "AADHAR123456"
+                                    },
+                                    "pen_no": {
+                                        "type": "string",
+                                        "example": "PEN123456"
+                                    },
                                     "emergency_phone": {
                                         "type": "string",
                                         "example": "9988776655"
@@ -13465,42 +14062,6 @@
                                     "previous_qualification": {
                                         "type": "string",
                                         "example": "Grade 8"
-                                    },
-                                    "emergency_contacts": {
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "Bob"
-                                                },
-                                                "relation": {
-                                                    "type": "string",
-                                                    "example": "Uncle"
-                                                },
-                                                "phone": {
-                                                    "type": "string",
-                                                    "example": "1234"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "documents": {
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "title": {
-                                                    "type": "string",
-                                                    "example": "Birth Certificate"
-                                                },
-                                                "file": {
-                                                    "type": "string",
-                                                    "format": "binary"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
                                     }
                                 },
                                 "type": "object"
@@ -13540,6 +14101,9 @@
                                                 "last_name": {
                                                     "type": "string"
                                                 },
+                                                "full_name": {
+                                                    "type": "string"
+                                                },
                                                 "dob": {
                                                     "type": "string"
                                                 },
@@ -13576,6 +14140,9 @@
                                                 "section_id": {
                                                     "type": "integer"
                                                 },
+                                                "academic_year_id": {
+                                                    "type": "integer"
+                                                },
                                                 "address": {
                                                     "type": "string"
                                                 },
@@ -13589,6 +14156,15 @@
                                                     "type": "string"
                                                 },
                                                 "permanent_address": {
+                                                    "type": "string"
+                                                },
+                                                "apaar_id": {
+                                                    "type": "string"
+                                                },
+                                                "aadharshila_no": {
+                                                    "type": "string"
+                                                },
+                                                "pen_no": {
                                                     "type": "string"
                                                 },
                                                 "emergency_phone": {
@@ -13741,6 +14317,9 @@
                                                 "last_name": {
                                                     "type": "string"
                                                 },
+                                                "full_name": {
+                                                    "type": "string"
+                                                },
                                                 "dob": {
                                                     "type": "string"
                                                 },
@@ -13777,6 +14356,9 @@
                                                 "section_id": {
                                                     "type": "integer"
                                                 },
+                                                "academic_year_id": {
+                                                    "type": "integer"
+                                                },
                                                 "address": {
                                                     "type": "string"
                                                 },
@@ -13790,6 +14372,15 @@
                                                     "type": "string"
                                                 },
                                                 "permanent_address": {
+                                                    "type": "string"
+                                                },
+                                                "apaar_id": {
+                                                    "type": "string"
+                                                },
+                                                "aadharshila_no": {
+                                                    "type": "string"
+                                                },
+                                                "pen_no": {
                                                     "type": "string"
                                                 },
                                                 "emergency_phone": {
@@ -13914,10 +14505,7 @@
                         "multipart/form-data": {
                             "schema": {
                                 "required": [
-                                    "first_name",
-                                    "class_id",
-                                    "section_id",
-                                    "academic_year_id"
+                                    "full_name"
                                 ],
                                 "properties": {
                                     "admission_no": {
@@ -13940,6 +14528,10 @@
                                     "last_name": {
                                         "type": "string",
                                         "example": "Doe"
+                                    },
+                                    "full_name": {
+                                        "type": "string",
+                                        "example": "John Doe"
                                     },
                                     "email": {
                                         "type": "string",
@@ -14065,6 +14657,18 @@
                                     "birth_certificate_no": {
                                         "type": "string",
                                         "example": "BC123456"
+                                    },
+                                    "apaar_id": {
+                                        "type": "string",
+                                        "example": "APAAR123456"
+                                    },
+                                    "aadharshila_no": {
+                                        "type": "string",
+                                        "example": "AADHAR123456"
+                                    },
+                                    "pen_no": {
+                                        "type": "string",
+                                        "example": "PEN123456"
                                     },
                                     "previous_school_details": {
                                         "type": "string",
@@ -14213,6 +14817,9 @@
                                                 "last_name": {
                                                     "type": "string"
                                                 },
+                                                "full_name": {
+                                                    "type": "string"
+                                                },
                                                 "dob": {
                                                     "type": "string"
                                                 },
@@ -14249,6 +14856,9 @@
                                                 "section_id": {
                                                     "type": "integer"
                                                 },
+                                                "academic_year_id": {
+                                                    "type": "integer"
+                                                },
                                                 "address": {
                                                     "type": "string"
                                                 },
@@ -14262,6 +14872,15 @@
                                                     "type": "string"
                                                 },
                                                 "permanent_address": {
+                                                    "type": "string"
+                                                },
+                                                "apaar_id": {
+                                                    "type": "string"
+                                                },
+                                                "aadharshila_no": {
+                                                    "type": "string"
+                                                },
+                                                "pen_no": {
                                                     "type": "string"
                                                 },
                                                 "emergency_phone": {
@@ -14426,10 +15045,9 @@
                                         "items": {
                                             "required": [
                                                 "admission_no",
-                                                "first_name",
+                                                "full_name",
                                                 "class_id",
-                                                "section_id",
-                                                "academic_year_id"
+                                                "section_id"
                                             ],
                                             "properties": {
                                                 "admission_no": {
@@ -14452,6 +15070,10 @@
                                                 "last_name": {
                                                     "type": "string",
                                                     "example": "Doe"
+                                                },
+                                                "full_name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
                                                 },
                                                 "email": {
                                                     "type": "string",
@@ -14561,6 +15183,26 @@
                                                 "national_id_no": {
                                                     "type": "string",
                                                     "example": "NIC123456"
+                                                },
+                                                "local_id_no": {
+                                                    "type": "string",
+                                                    "example": "LOC123456"
+                                                },
+                                                "birth_certificate_no": {
+                                                    "type": "string",
+                                                    "example": "BC123456"
+                                                },
+                                                "apaar_id": {
+                                                    "type": "string",
+                                                    "example": "APAAR123456"
+                                                },
+                                                "aadharshila_no": {
+                                                    "type": "string",
+                                                    "example": "AADHAR123456"
+                                                },
+                                                "pen_no": {
+                                                    "type": "string",
+                                                    "example": "PEN123456"
                                                 },
                                                 "emergency_phone": {
                                                     "type": "string",
@@ -17251,6 +17893,7 @@
                     "0. Authentication - Teacher"
                 ],
                 "summary": "Update teacher",
+                "description": "Updates teacher profile and associated user details",
                 "operationId": "updateTeacher",
                 "parameters": [
                     {
@@ -17267,6 +17910,27 @@
                     "content": {
                         "application/json": {
                             "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "full_name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "designation": {
+                                        "type": "string"
+                                    },
+                                    "qualification": {
+                                        "type": "string"
+                                    },
+                                    "joining_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
                                 "type": "object"
                             }
                         }
@@ -17274,30 +17938,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Updated",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Teacher updated successfully"
-                                        },
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error"
+                        "description": "Successful operation"
                     }
                 },
                 "security": [
@@ -18050,6 +18691,10 @@
                             "schema": {
                                 "properties": {
                                     "name": {
+                                        "type": "string",
+                                        "example": "Sarah Connor"
+                                    },
+                                    "full_name": {
                                         "type": "string",
                                         "example": "Sarah Connor"
                                     },

@@ -71,6 +71,7 @@ class GlobalSearchController extends Controller
                 ->where(function($query) use ($term) {
                     $query->where('first_name', 'LIKE', $term)
                           ->orWhere('last_name', 'LIKE', $term)
+                          ->orWhere('full_name', 'LIKE', $term)
                           ->orWhere('admission_no', 'LIKE', $term)
                           ->orWhere('email', 'LIKE', $term)
                           ->orWhere('phone', 'LIKE', $term);
@@ -88,7 +89,7 @@ class GlobalSearchController extends Controller
                 $results[] = [
                     'id' => $stu->id,
                     'student_id' => $stu->id,
-                    'name' => trim($stu->first_name . ' ' . $stu->last_name),
+                    'name' => $stu->full_name,
                     'type' => 'Student',
                     'details' => $classDetailStr . $admNoStr,
                     'photo' => $stu->photo ? url($stu->photo) : null,
@@ -102,7 +103,8 @@ class GlobalSearchController extends Controller
                 ->where(function($query) use ($term) {
                     $query->where('first_name', 'LIKE', $term)
                           ->orWhere('last_name', 'LIKE', $term)
-                          ->orWhere('staff_no', 'LIKE', $term)
+                          ->orWhere('full_name', 'LIKE', $term)
+                          ->orWhere('staff_code', 'LIKE', $term)
                           ->orWhere('email', 'LIKE', $term)
                           ->orWhere('phone', 'LIKE', $term);
                 })
@@ -137,7 +139,7 @@ class GlobalSearchController extends Controller
                 $results[] = [
                     'id' => $t->id,
                     'teacher_id' => $t->id,
-                    'name' => trim($t->first_name . ' ' . $t->last_name),
+                    'name' => $t->full_name,
                     'type' => 'Teacher',
                     'details' => $detailStr,
                     'photo' => $t->photo ? url($t->photo) : null,
@@ -173,7 +175,7 @@ class GlobalSearchController extends Controller
                 
                 $stuInfo = '';
                 if ($p->student) {
-                    $sFirstName = $p->student->first_name;
+                    $sFirstName = $p->student->full_name ?: $p->student->first_name;
                     $className = $p->student->class ? $p->student->class->name : '';
                     $sectionName = $p->student->section ? $p->student->section->name : '';
                     $classDetail = trim($className . $sectionName);
@@ -203,7 +205,8 @@ class GlobalSearchController extends Controller
                 ->where(function($query) use ($term) {
                     $query->where('first_name', 'LIKE', $term)
                           ->orWhere('last_name', 'LIKE', $term)
-                          ->orWhere('staff_no', 'LIKE', $term)
+                          ->orWhere('full_name', 'LIKE', $term)
+                          ->orWhere('staff_code', 'LIKE', $term)
                           ->orWhere('email', 'LIKE', $term)
                           ->orWhere('phone', 'LIKE', $term);
                 })
@@ -221,7 +224,7 @@ class GlobalSearchController extends Controller
                 $results[] = [
                     'id' => $s->id,
                     'staff_id' => $s->id,
-                    'name' => trim($s->first_name . ' ' . $s->last_name),
+                    'name' => $s->full_name,
                     'type' => 'Staffs',
                     'details' => $desigStr,
                     'photo' => $s->photo ? url($s->photo) : null,

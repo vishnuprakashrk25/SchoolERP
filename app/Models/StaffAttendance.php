@@ -12,6 +12,21 @@ class StaffAttendance extends Model
     protected $fillable = [
         'staff_id',
         'date',
-        'status'
+        'status',
+        'note'
     ];
+
+    protected $appends = [
+        'photo'
+    ];
+
+    public function staff()
+    {
+        return $this->belongsTo(Staff::class);
+    }
+
+    public function getPhotoAttribute()
+    {
+        return $this->staff?->photo;
+    }
 }

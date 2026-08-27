@@ -127,17 +127,22 @@ Route::prefix('front-office')->group(function () {
 //student
 Route::apiResource('student-categories', StudentCategoryController::class);
 Route::post('students/bulk', [StudentController::class, 'bulkStore']);
+Route::post('students/{id}', [StudentController::class, 'update']);
 Route::apiResource('students', StudentController::class);
 Route::apiResource('student-parents', StudentParentController::class);
 Route::get('parent/children', [StudentParentController::class, 'myChildren']);
 Route::apiResource('student-documents', StudentDocumentController::class);
+Route::post('student-attendances/import', [StudentAttendanceController::class, 'import']);
+Route::get('student-attendances/class-roster', [StudentAttendanceController::class, 'index']);
 Route::apiResource('student-attendance', StudentAttendanceController::class);
+Route::apiResource('student-attendances', StudentAttendanceController::class);
 Route::apiResource('student-multi-classes', StudentMultiClassController::class);
 //staff
 Route::apiResource('staff-departments', StaffDepartmentController::class);
 Route::post('staff/bulk', [StaffController::class, 'bulkStore']);
 Route::apiResource('staff', StaffController::class);
 Route::apiResource('staff-attendance', StaffAttendanceController::class);
+Route::apiResource('staff-attendances', StaffAttendanceController::class);
 //exam
 Route::apiResource('exams', ExamController::class);
 Route::apiResource('exam-schedules', ExamScheduleController::class);

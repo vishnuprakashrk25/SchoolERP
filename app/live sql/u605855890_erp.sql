@@ -1262,6 +1262,7 @@ CREATE TABLE `staff_attendances` (
   `staff_id` bigint(20) UNSIGNED DEFAULT NULL,
   `date` date DEFAULT NULL,
   `status` varchar(255) NOT NULL DEFAULT 'active',
+  `note` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL
@@ -1436,8 +1437,12 @@ INSERT INTO `student_academics` (`id`, `student_id`, `class_id`, `section_id`, `
 CREATE TABLE `student_attendances` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `student_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `class_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `section_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `academic_year_id` bigint(20) UNSIGNED DEFAULT NULL,
   `date` date DEFAULT NULL,
   `status` varchar(255) NOT NULL DEFAULT 'active',
+  `note` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL

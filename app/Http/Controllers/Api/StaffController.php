@@ -49,6 +49,7 @@ class StaffController extends Controller
      *                  @OA\Property(property="role", type="string"),
      *                  @OA\Property(property="first_name", type="string"),
      *                  @OA\Property(property="last_name", type="string"),
+     *                  @OA\Property(property="full_name", type="string"),
      *                  @OA\Property(property="father_name", type="string"),
      *                  @OA\Property(property="mother_name", type="string"),
      *                  @OA\Property(property="gender", type="string"),
@@ -128,6 +129,7 @@ class StaffController extends Controller
      *          @OA\MediaType(
      *              mediaType="multipart/form-data",
      *              @OA\Schema(
+     *                  required={"role","email"},
      *                  @OA\Property(property="email", type="string"),
      *                  @OA\Property(property="phone", type="string"),
      *                  @OA\Property(property="designation", type="string"),
@@ -137,6 +139,7 @@ class StaffController extends Controller
      *                  @OA\Property(property="role", type="string"),
      *                  @OA\Property(property="first_name", type="string"),
      *                  @OA\Property(property="last_name", type="string"),
+     *                  @OA\Property(property="full_name", type="string"),
      *                  @OA\Property(property="father_name", type="string"),
      *                  @OA\Property(property="mother_name", type="string"),
      *                  @OA\Property(property="gender", type="string"),
@@ -186,6 +189,7 @@ class StaffController extends Controller
      *                  @OA\Property(property="role", type="string"),
      *                  @OA\Property(property="first_name", type="string"),
      *                  @OA\Property(property="last_name", type="string"),
+     *                  @OA\Property(property="full_name", type="string"),
      *                  @OA\Property(property="father_name", type="string"),
      *                  @OA\Property(property="mother_name", type="string"),
      *                  @OA\Property(property="gender", type="string"),
@@ -242,7 +246,9 @@ class StaffController extends Controller
             'staff_no' => 'nullable|string',
             'category' => 'nullable|string',
             'role' => 'required',
-            'first_name' => 'required',
+            'full_name' => 'nullable|string',
+            'first_name' => 'nullable|string',
+            'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string',
             'designation' => 'nullable|string',
@@ -314,9 +320,14 @@ class StaffController extends Controller
             $data['other_document'] = '/uploads/staff_documents/' . $filename;
         }
 
-        return DB::transaction(function () use ($data) {
+        $fullName = $data['full_name'] ?? $data['name'] ?? trim(($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? ''));
+        $data['full_name'] = $fullName;
+        unset($data['name']);
+
+        return DB::transaction(function () use ($data, $fullName) {
             $user = User::create([
-                'name' => $data['first_name'] . (isset($data['last_name']) ? ' ' . $data['last_name'] : ''),
+                'name' => $fullName,
+                'full_name' => $fullName,
                 'email' => $data['email'],
                 'password' => Hash::make('123456'),
                 'is_active' => true,
@@ -393,6 +404,7 @@ class StaffController extends Controller
      *                  @OA\Property(property="role", type="string"),
      *                  @OA\Property(property="first_name", type="string"),
      *                  @OA\Property(property="last_name", type="string"),
+     *                  @OA\Property(property="full_name", type="string"),
      *                  @OA\Property(property="father_name", type="string"),
      *                  @OA\Property(property="mother_name", type="string"),
      *                  @OA\Property(property="gender", type="string"),
@@ -483,6 +495,7 @@ class StaffController extends Controller
      *                  @OA\Property(property="role", type="string"),
      *                  @OA\Property(property="first_name", type="string"),
      *                  @OA\Property(property="last_name", type="string"),
+     *                  @OA\Property(property="full_name", type="string"),
      *                  @OA\Property(property="father_name", type="string"),
      *                  @OA\Property(property="mother_name", type="string"),
      *                  @OA\Property(property="gender", type="string"),
@@ -532,6 +545,7 @@ class StaffController extends Controller
      *                  @OA\Property(property="role", type="string"),
      *                  @OA\Property(property="first_name", type="string"),
      *                  @OA\Property(property="last_name", type="string"),
+     *                  @OA\Property(property="full_name", type="string"),
      *                  @OA\Property(property="father_name", type="string"),
      *                  @OA\Property(property="mother_name", type="string"),
      *                  @OA\Property(property="gender", type="string"),
@@ -636,7 +650,25 @@ class StaffController extends Controller
             $data['other_document'] = '/uploads/staff_documents/' . $filename;
         }
 
+        if ($request->has('first_name') || $request->has('last_name') || $request->has('full_name') || $request->has('name')) {
+            $fullName = $data['full_name'] ?? $data['name'] ?? trim(($data['first_name'] ?? $item->first_name) . ' ' . ($data['last_name'] ?? $item->last_name));
+            $data['full_name'] = $fullName;
+            unset($data['name']);
+        }
+
         $item->update($data);
+
+        if ($item->user) {
+            $fullName = $item->full_name;
+            $userUpdate = [
+                'name' => $fullName,
+                'full_name' => $fullName
+            ];
+            if ($request->has('email')) {
+                $userUpdate['email'] = $request->email;
+            }
+            $item->user->update($userUpdate);
+        }
         return response()->json([
             'success' => true,
             'message' => 'Updated',
@@ -709,14 +741,17 @@ class StaffController extends Controller
      *                  type="array",
      *                  @OA\Items(
      *                      type="object",
-     *                      required={"staff_no","first_name","email","role"},
+     *                      required={"email","role"},
      *                      @OA\Property(property="email", type="string"),
      *                      @OA\Property(property="phone", type="string"),
      *                      @OA\Property(property="designation", type="string"),
-     *                      @OA\Property(property="staff_no", type="string"),
+     *                      @OA\Property(property="category", type="string", example="Teaching"),
+     *                      @OA\Property(property="staff_code", type="string", example="STF001"),
+     *                      @OA\Property(property="staff_no", type="string", example="STF001"),
      *                      @OA\Property(property="role", type="string"),
      *                      @OA\Property(property="first_name", type="string"),
      *                      @OA\Property(property="last_name", type="string"),
+     *                      @OA\Property(property="full_name", type="string"),
      *                      @OA\Property(property="father_name", type="string"),
      *                      @OA\Property(property="mother_name", type="string"),
      *                      @OA\Property(property="gender", type="string"),
@@ -781,13 +816,16 @@ class StaffController extends Controller
     {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'staffs' => 'required|array',
-            'staffs.*.staff_no' => 'required|distinct|unique:staff,staff_no',
+            'staffs.*.staff_code' => 'nullable|string',
+            'staffs.*.staff_no' => 'nullable|string',
+            'staffs.*.category' => 'nullable|string',
             'staffs.*.role' => 'required',
-            'staffs.*.first_name' => 'required',
+            'staffs.*.full_name' => 'nullable|string',
+            'staffs.*.first_name' => 'nullable|string',
+            'staffs.*.last_name' => 'nullable|string',
             'staffs.*.email' => 'required|email|distinct|unique:staff,email|unique:users,email',
             'staffs.*.phone' => 'nullable|string',
             'staffs.*.designation' => 'nullable|string',
-            'staffs.*.last_name' => 'nullable|string',
             'staffs.*.father_name' => 'nullable|string',
             'staffs.*.mother_name' => 'nullable|string',
             'staffs.*.gender' => 'nullable|string',
@@ -831,8 +869,17 @@ class StaffController extends Controller
             $createdStaffs = [];
 
             foreach ($request->staffs as $staffData) {
+                $staffCode = $staffData['staff_code'] ?? $staffData['staff_no'] ?? null;
+                if ($staffCode) {
+                    $staffData['staff_code'] = $staffCode;
+                }
+                $fullName = $staffData['full_name'] ?? $staffData['name'] ?? trim(($staffData['first_name'] ?? '') . ' ' . ($staffData['last_name'] ?? ''));
+                $staffData['full_name'] = $fullName;
+                unset($staffData['name']);
+
                 $user = User::create([
-                    'name' => $staffData['first_name'] . (isset($staffData['last_name']) ? ' ' . $staffData['last_name'] : ''),
+                    'name' => $fullName,
+                    'full_name' => $fullName,
                     'email' => $staffData['email'],
                     'password' => Hash::make('123456'),
                     'is_active' => true,

@@ -102,7 +102,8 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string',
+            'name' => 'nullable|string',
+            'full_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
             'roles' => 'nullable'
@@ -116,6 +117,9 @@ class UserController extends Controller
         }
 
         $input = $request->all();
+        $fullName = $input['full_name'] ?? $input['name'] ?? 'User';
+        $input['name'] = $fullName;
+        $input['full_name'] = $fullName;
         $input['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
         $item = User::create($input);
 
@@ -169,6 +173,7 @@ class UserController extends Controller
      *          required=true,
      *          @OA\JsonContent(
      *              @OA\Property(property="name", type="string", example="Sarah Connor"),
+     *              @OA\Property(property="full_name", type="string", example="Sarah Connor"),
      *              @OA\Property(property="email", type="string", example="sarah@school.com"),
      *              @OA\Property(property="password", type="string", example="newpassword"),
      *              @OA\Property(
@@ -189,7 +194,8 @@ class UserController extends Controller
     {
         $item = User::findOrFail($id);
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string',
+            'name' => 'nullable|string',
+            'full_name' => 'nullable|string',
             'email' => 'sometimes|required|email|unique:users,email,' . $id,
             'password' => 'nullable|string|min:6',
             'roles' => 'nullable'
@@ -203,6 +209,12 @@ class UserController extends Controller
         }
 
         $input = $request->all();
+        if (isset($input['full_name']) || isset($input['name'])) {
+            $fullName = $input['full_name'] ?? $input['name'];
+            $input['name'] = $fullName;
+            $input['full_name'] = $fullName;
+        }
+
         if (!empty($input['password'])) {
             $input['password'] = \Illuminate\Support\Facades\Hash::make($input['password']);
         } else {

@@ -38,46 +38,16 @@ class StudentParent extends Model
 
     public function getFatherPhotoAttribute($value)
     {
-        if (!$value) return null;
-        if (str_contains($value, 'storage/parent_photos/')) {
-            $value = str_replace('storage/parent_photos/', 'uploads/parent_photos/', $value);
-        }
-        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) return $value;
-        
-        $path = ltrim($value, '/');
-        if (str_starts_with($path, 'uploads/') && !str_starts_with($path, 'public/')) {
-            $path = 'public/' . $path;
-        }
-        return url($path);
+        return $value;
     }
 
     public function getMotherPhotoAttribute($value)
     {
-        if (!$value) return null;
-        if (str_contains($value, 'storage/parent_photos/')) {
-            $value = str_replace('storage/parent_photos/', 'uploads/parent_photos/', $value);
-        }
-        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) return $value;
-
-        $path = ltrim($value, '/');
-        if (str_starts_with($path, 'uploads/') && !str_starts_with($path, 'public/')) {
-            $path = 'public/' . $path;
-        }
-        return url($path);
+        return $value;
     }
 
     public function getGuardianPhotoAttribute($value)
     {
-        if (!$value) return null;
-        if (str_contains($value, 'storage/parent_photos/')) {
-            $value = str_replace('storage/parent_photos/', 'uploads/parent_photos/', $value);
-        }
-        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) return $value;
-
-        $path = ltrim($value, '/');
-        if (str_starts_with($path, 'uploads/') && !str_starts_with($path, 'public/')) {
-            $path = 'public/' . $path;
-        }
-        return url($path);
+        return $value;
     }
 }

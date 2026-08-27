@@ -14,6 +14,7 @@ class User extends Authenticatable
     protected $fillable = [
         'branch_id',
         'name',
+        'full_name',
         'email',
         'password',
         'is_active',
@@ -21,6 +22,23 @@ class User extends Authenticatable
         'google_refresh_token',
         'google_token_expires_at'
     ];
+
+    protected $appends = [
+        'full_name'
+    ];
+
+    public function getFullNameAttribute($value)
+    {
+        return $value ?? $this->attributes['name'] ?? null;
+    }
+
+    public function setFullNameAttribute($value)
+    {
+        $this->attributes['full_name'] = $value;
+        if (empty($this->attributes['name'])) {
+            $this->attributes['name'] = $value;
+        }
+    }
 
     protected $hidden = [
         'password',

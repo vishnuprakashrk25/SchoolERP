@@ -209,19 +209,21 @@ class TeacherController extends Controller
      *      operationId="updateTeacher",
      *      tags={"0. Authentication - Teacher"},
      *      summary="Update teacher",
+     *      description="Updates teacher profile and associated user details",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *      @OA\RequestBody(required=true, @OA\JsonContent(type="object")),
-     *      @OA\Response(
-     *          response=200,
-     *          description="Updated",
+     *      @OA\RequestBody(
+     *          required=true,
      *          @OA\JsonContent(
-     *              @OA\Property(property="success", type="boolean", example=true),
-     *              @OA\Property(property="message", type="string", example="Teacher updated successfully"),
-     *              @OA\Property(property="data", type="object")
+     *              @OA\Property(property="name", type="string"),
+     *              @OA\Property(property="full_name", type="string"),
+     *              @OA\Property(property="email", type="string"),
+     *              @OA\Property(property="designation", type="string"),
+     *              @OA\Property(property="qualification", type="string"),
+     *              @OA\Property(property="joining_date", type="string", format="date")
      *          )
      *      ),
-     *      @OA\Response(response=422, description="Validation error")
+     *      @OA\Response(response=200, description="Successful operation")
      * )
      */
     public function update(Request $request, $id)
@@ -230,9 +232,13 @@ class TeacherController extends Controller
         $user = $teacher->user;
 
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,' . ($user ? $user->id : ''),
-            'designation' => 'sometimes|string',
+            'name' => 'nullable|string',
+            'full_name' => 'nullable|string',
+            'email' => 'nullable|email|unique:users,email,' . ($user->id ?? 0),
+            'password' => 'nullable|string|min:6',
+            'designation' => 'nullable|string',
+            'qualification' => 'nullable|string',
+            'joining_date' => 'nullable|date'
         ]);
 
         if ($validator->fails()) {
@@ -240,8 +246,20 @@ class TeacherController extends Controller
         }
 
         DB::transaction(function () use ($request, $teacher, $user) {
-            if ($user && ($request->has('name') || $request->has('email'))) {
-                $user->update($request->only('name', 'email'));
+            $fullName = $request->full_name ?? $request->name;
+
+            if ($user) {
+                $userUpdate = [];
+                if ($fullName) {
+                    $userUpdate['name'] = $fullName;
+                    $userUpdate['full_name'] = $fullName;
+                }
+                if ($request->has('email')) {
+                    $userUpdate['email'] = $request->email;
+                }
+                if (!empty($userUpdate)) {
+                    $user->update($userUpdate);
+                }
             }
 
             if ($user && $request->has('password')) {
@@ -252,7 +270,11 @@ class TeacherController extends Controller
             if ($request->has('designation')) $teacherData['designation'] = $request->designation;
             if ($request->has('qualification')) $teacherData['qualifications'] = $request->qualification;
             if ($request->has('joining_date')) $teacherData['date_of_joining'] = $request->joining_date;
-            if ($request->has('name')) $teacherData['first_name'] = $request->name;
+            if ($fullName) {
+                $teacherData['name'] = $fullName;
+                $teacherData['full_name'] = $fullName;
+                $teacherData['first_name'] = $fullName;
+            }
             if ($request->has('email')) $teacherData['email'] = $request->email;
 
             if (!empty($teacherData)) {
