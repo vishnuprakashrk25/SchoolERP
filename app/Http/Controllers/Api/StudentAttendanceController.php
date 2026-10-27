@@ -8,6 +8,7 @@ use App\Models\StudentAttendance;
 use App\Models\Student;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class StudentAttendanceController extends Controller
 {
@@ -610,5 +611,231 @@ class StudentAttendanceController extends Controller
 
         return $this->store($request);
     }
+
+    /**
+     * @OA\Get(
+     *      path="/api/student-attendances/monthly-report",
+     *      operationId="getMonthlyStudentAttendanceReport",
+     *      tags={"4. Student Enrollment - StudentAttendance"},
+     *      summary="Student Attendance Monthly Report (Tab & Matrix Grid)",
+     *      description="Returns a monthly student attendance matrix matching the UI design with P, L, A, F, H, Le, %, and daily columns with weekday names.",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="student_id", in="query", required=false, description="Filter for single student", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="class_id", in="query", required=false, description="Filter by class", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="section_id", in="query", required=false, description="Filter by section", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="month", in="query", required=false, description="Month (1-12, defaults to current month)", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="year", in="query", required=false, description="Year (YYYY, defaults to current year)", @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="title", type="string", example="Student Attendance Report P:0 L:0 A:0 F:0 H:0 Le:0"),
+     *              @OA\Property(property="summary", type="object",
+     *                  @OA\Property(property="P", type="integer", example=0),
+     *                  @OA\Property(property="L", type="integer", example=0),
+     *                  @OA\Property(property="A", type="integer", example=0),
+     *                  @OA\Property(property="F", type="integer", example=0),
+     *                  @OA\Property(property="H", type="integer", example=0),
+     *                  @OA\Property(property="Le", type="integer", example=0)
+     *              ),
+     *              @OA\Property(property="legend", type="object"),
+     *              @OA\Property(property="days_header", type="array", @OA\Items(type="object")),
+     *              @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *          )
+     *      )
+     * )
+     */
+    public function monthlyReport(Request $request, $studentIdParam = null)
+    {
+        $year = (int) $request->input('year', now()->year);
+        $month = (int) $request->input('month', now()->month);
+        $studentId = $studentIdParam ?? $request->input('student_id');
+        $classId = $request->input('class_id');
+        $sectionId = $request->input('section_id');
+
+        $firstDate = Carbon::createFromDate($year, $month, 1)->startOfDay();
+        $daysInMonth = $firstDate->daysInMonth;
+
+        // Build days header with day numbers and 3-letter weekday names (e.g. 1 Thu, 2 Fri...)
+        $daysHeader = [];
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $curDate = Carbon::createFromDate($year, $month, $d);
+            $isWeekend = ($curDate->dayOfWeek === Carbon::SUNDAY);
+            $daysHeader[] = [
+                'day'        => $d,
+                'day_name'   => $curDate->format('D'),
+                'is_weekend' => $isWeekend,
+                'date'       => $curDate->toDateString(),
+            ];
+        }
+
+        // Query students
+        $studentsQuery = Student::query()->with(['class:id,name', 'section:id,name']);
+
+        if (!empty($studentId)) {
+            $studentsQuery->where('id', $studentId);
+        } else {
+            if (!empty($classId)) {
+                $studentsQuery->where('class_id', $classId);
+            }
+            if (!empty($sectionId)) {
+                $studentsQuery->where('section_id', $sectionId);
+            }
+            if ($request->filled('academic_year_id')) {
+                $studentsQuery->where('academic_year_id', $request->academic_year_id);
+            }
+        }
+
+        $students = $studentsQuery->orderBy('admission_no')->orderBy('first_name')->get();
+
+        if ($students->isEmpty() && !empty($studentId)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Student not found'
+            ], 404);
+        }
+
+        $studentIds = $students->pluck('id')->toArray();
+
+        // Fetch attendances for this month
+        $attendances = StudentAttendance::whereIn('student_id', $studentIds)
+            ->whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->get()
+            ->groupBy('student_id');
+
+        // Global counters for the top title header: "Student Attendance Report P:0 L:0 A:0 F:0 H:0 Le:0"
+        $globalCounts = [
+            'P'  => 0,
+            'L'  => 0,
+            'A'  => 0,
+            'F'  => 0,
+            'H'  => 0,
+            'Le' => 0,
+        ];
+
+        $reportRows = [];
+
+        foreach ($students as $student) {
+            $studentAtts = $attendances->get($student->id, collect());
+            $byDate = [];
+            foreach ($studentAtts as $att) {
+                $dStr = Carbon::parse($att->date)->toDateString();
+                $byDate[$dStr] = $att;
+            }
+
+            $p = 0; $l = 0; $a = 0; $f = 0; $h = 0; $le = 0;
+            $dailyAttendance = [];
+
+            for ($d = 1; $d <= $daysInMonth; $d++) {
+                $curDate = Carbon::createFromDate($year, $month, $d);
+                $dateStr = $curDate->toDateString();
+                $isWeekend = ($curDate->dayOfWeek === Carbon::SUNDAY);
+
+                $attRecord = $byDate[$dateStr] ?? null;
+                $statusCode = '';
+
+                if ($attRecord) {
+                    $rawStatus = strtolower(trim($attRecord->status));
+                    if ($rawStatus === 'present' || $rawStatus === 'p') {
+                        $statusCode = 'P';
+                        $p++;
+                    } elseif ($rawStatus === 'late' || $rawStatus === 'l') {
+                        $statusCode = 'L';
+                        $l++;
+                    } elseif ($rawStatus === 'absent' || $rawStatus === 'a') {
+                        $statusCode = 'A';
+                        $a++;
+                    } elseif (str_contains($rawStatus, 'half') || $rawStatus === 'f') {
+                        $statusCode = 'F';
+                        $f++;
+                    } elseif ($rawStatus === 'holiday' || $rawStatus === 'h') {
+                        $statusCode = 'H';
+                        $h++;
+                    } elseif ($rawStatus === 'leave' || $rawStatus === 'le') {
+                        $statusCode = 'Le';
+                        $le++;
+                    } else {
+                        $statusCode = strtoupper(substr($rawStatus, 0, 1));
+                    }
+                } else {
+                    if ($isWeekend) {
+                        $statusCode = 'W';
+                    } else {
+                        $statusCode = '';
+                    }
+                }
+
+                $dailyAttendance[$d] = $statusCode;
+            }
+
+            $globalCounts['P']  += $p;
+            $globalCounts['L']  += $l;
+            $globalCounts['A']  += $a;
+            $globalCounts['F']  += $f;
+            $globalCounts['H']  += $h;
+            $globalCounts['Le'] += $le;
+
+            $workingDays = $p + $l + $a + $f + $le;
+            if ($workingDays > 0) {
+                $attendedPoints = $p + $l + ($f * 0.5);
+                $percentage = round(($attendedPoints / $workingDays) * 100) . '%';
+            } else {
+                $percentage = '100%';
+            }
+
+            $fullName = $student->full_name ?: trim($student->first_name . ' ' . $student->last_name);
+
+            $reportRows[] = [
+                'student_id'      => $student->id,
+                'name'            => $fullName,
+                'admission_no'    => $student->admission_no ?: $student->student_code,
+                'roll_no'         => $student->roll_no,
+                'class_name'      => $student->class ? $student->class->name : null,
+                'section_name'    => $student->section ? $student->section->name : null,
+                'P'               => $p,
+                'L'               => $l,
+                'A'               => $a,
+                'F'               => $f,
+                'H'               => $h,
+                'Le'              => $le,
+                'percentage'      => $percentage,
+                'days'            => $dailyAttendance,
+            ];
+        }
+
+        $summaryText = sprintf(
+            'Student Attendance Report P:%d L:%d A:%d F:%d H:%d Le:%d',
+            $globalCounts['P'],
+            $globalCounts['L'],
+            $globalCounts['A'],
+            $globalCounts['F'],
+            $globalCounts['H'],
+            $globalCounts['Le']
+        );
+
+        return response()->json([
+            'success'        => true,
+            'month'          => $month,
+            'year'           => $year,
+            'month_name'     => Carbon::createFromDate($year, $month, 1)->format('F Y'),
+            'title'          => $summaryText,
+            'summary'        => $globalCounts,
+            'legend'         => [
+                'P'  => 'Present',
+                'L'  => 'Late',
+                'A'  => 'Absent',
+                'F'  => 'Half Day',
+                'H'  => 'Holiday',
+                'Le' => 'Leave',
+                'W'  => 'Weekend',
+            ],
+            'days_header'    => $daysHeader,
+            'total_students' => count($reportRows),
+            'data'           => $reportRows,
+        ]);
+    }
 }
+
 

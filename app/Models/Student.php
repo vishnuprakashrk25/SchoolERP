@@ -23,6 +23,7 @@ class Student extends Model
         'class_id',
         'section_id',
         'academic_year_id',
+        'category_id',
         'dob',
         'gender',
         'religion',
@@ -223,6 +224,23 @@ class Student extends Model
     public function emergencyContacts()
     {
         return $this->hasMany(StudentEmergencyContact::class);
+    }
+
+    public function studentIncidents()
+    {
+        return $this->hasMany(StudentIncident::class, 'student_id');
+    }
+
+    public function behaviourRecords()
+    {
+        return $this->hasMany(StudentIncident::class, 'student_id');
+    }
+
+    public function getBehaviourPointsAttribute()
+    {
+        $positive = $this->studentIncidents()->where('is_negative', false)->sum('point');
+        $negative = $this->studentIncidents()->where('is_negative', true)->sum('point');
+        return $positive - $negative;
     }
 
     public function getPhotoAttribute($value)

@@ -17,20 +17,24 @@ use Illuminate\Routing\Controller as BaseController;
  * )
  *
  * @OA\Server(
- *      url="https://dev.cyberduce.com",
- *      description="Live Server"
+ *      url="/",
+ *      description="Current Host (Auto-detects localhost or live domain)"
+ * )
+ * @OA\Server(
+ *      url="http://127.0.0.1:8000",
+ *      description="Local Artisan Server (127.0.0.1:8000)"
  * )
  * @OA\Server(
  *      url="http://localhost:8000",
- *      description="Local Development Server (Artisan serve)"
+ *      description="Local Development Server (localhost:8000)"
+ * )
+ * @OA\Server(
+ *      url="https://dev.cyberduce.com",
+ *      description="Live Server (Hostinger)"
  * )
  * @OA\Server(
  *      url="http://localhost/erp-school/public",
  *      description="Local XAMPP Server"
- * )
- * @OA\Server(
- *      url=L5_SWAGGER_CONST_HOST,
- *      description="Configured Server Host (from .env)"
  * )
  *
  * @OA\SecurityScheme(

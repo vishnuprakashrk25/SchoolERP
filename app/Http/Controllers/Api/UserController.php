@@ -9,6 +9,11 @@ use App\Models\User;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth:sanctum', 'role:super-admin|admin']);
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -128,8 +133,20 @@ class UserController extends Controller
             if (is_string($roles)) {
                 $roles = array_map('trim', explode(',', $roles));
             }
+            if (in_array('super-admin', $roles) && !$request->user()?->hasRole('super-admin')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only Super Admin can assign the super-admin role.'
+                ], 403);
+            }
             $item->syncRoles($roles);
         } elseif ($request->has('role')) {
+            if ($request->role === 'super-admin' && !$request->user()?->hasRole('super-admin')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only Super Admin can assign the super-admin role.'
+                ], 403);
+            }
             $item->assignRole($request->role);
         }
 
@@ -193,6 +210,15 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $item = User::findOrFail($id);
+
+        // Disallow non-super-admin from updating a super-admin user
+        if ($item->hasRole('super-admin') && !$request->user()?->hasRole('super-admin')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only Super Admin can modify a Super Admin user.'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'nullable|string',
             'full_name' => 'nullable|string',
@@ -228,8 +254,20 @@ class UserController extends Controller
             if (is_string($roles)) {
                 $roles = array_map('trim', explode(',', $roles));
             }
+            if (in_array('super-admin', $roles) && !$request->user()?->hasRole('super-admin')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only Super Admin can assign the super-admin role.'
+                ], 403);
+            }
             $item->syncRoles($roles);
         } elseif ($request->has('role')) {
+            if ($request->role === 'super-admin' && !$request->user()?->hasRole('super-admin')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only Super Admin can assign the super-admin role.'
+                ], 403);
+            }
             $item->syncRoles([$request->role]);
         }
 
@@ -278,9 +316,24 @@ class UserController extends Controller
      *      )
      * )
      */
-        public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $item = User::findOrFail($id);
+
+        if ($item->hasRole('super-admin') && !$request->user()?->hasRole('super-admin')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only Super Admin can delete a Super Admin user.'
+            ], 403);
+        }
+
+        if ($request->user()?->id === $item->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete your own account.'
+            ], 422);
+        }
+
         $item->delete();
         return response()->json([
             'success' => true,

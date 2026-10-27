@@ -31,6 +31,14 @@ class ClassController extends Controller
      *                  @OA\Property(property="name", type="string"),
      *                  @OA\Property(property="branch_id", type="integer"),
      *                  @OA\Property(property="academic_year_id", type="integer"),
+     *                  @OA\Property(property="category_id", type="integer", nullable=true),
+     *                  @OA\Property(
+     *                      property="category",
+     *                      type="object",
+     *                      nullable=true,
+     *                      @OA\Property(property="id", type="integer"),
+     *                      @OA\Property(property="name", type="string")
+     *                  ),
      *                  @OA\Property(property="created_at", type="string"),
      *                  @OA\Property(property="updated_at", type="string"),
      *                  @OA\Property(property="deleted_at", type="string")
@@ -51,7 +59,7 @@ class ClassController extends Controller
 
     public function index()
     {
-        $classes = Classes::with(['academicYear', 'sections'])->get();
+        $classes = Classes::with(['academicYear', 'category:id,name', 'sections'])->get();
 
         return response()->json([
             'success'=>true,
@@ -69,10 +77,11 @@ class ClassController extends Controller
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(
-     *              required={"name","academic_year_id","branch_id"},
-     *              @OA\Property(property="name", type="string", example="name"),
-     *              @OA\Property(property="academic_year_id", type="integer", example="1"),
-     *              @OA\Property(property="branch_id", type="integer", example="1")
+     *              required={"name","academic_year_id"},
+     *              @OA\Property(property="name", type="string", example="Class 3"),
+     *              @OA\Property(property="academic_year_id", type="integer", example=1),
+     *              @OA\Property(property="branch_id", type="integer", nullable=true, example=1),
+     *              @OA\Property(property="category_id", type="integer", nullable=true, example=1, description="Student category ID (e.g. Rainbow - 3, Planet, etc.)")
      *          )
      *      ),
      *      @OA\Response(
@@ -88,6 +97,7 @@ class ClassController extends Controller
      *                  @OA\Property(property="name", type="string"),
      *                  @OA\Property(property="branch_id", type="integer"),
      *                  @OA\Property(property="academic_year_id", type="integer"),
+     *                  @OA\Property(property="category_id", type="integer", nullable=true),
      *                  @OA\Property(property="created_at", type="string"),
      *                  @OA\Property(property="updated_at", type="string"),
      *                  @OA\Property(property="deleted_at", type="string")
@@ -115,7 +125,8 @@ class ClassController extends Controller
         $validator = Validator::make($request->all(),[
             'name'=>'required',
             'academic_year_id'=>'required',
-             'branch_id'=>'required',
+            'branch_id'=>'nullable|exists:branches,id',
+            'category_id'=>'nullable|exists:student_categories,id',
         ]);
 
         if($validator->fails()){
@@ -124,7 +135,12 @@ class ClassController extends Controller
             ],422);
         }
 
-        $class = Classes::create($request->all());
+        $data = $request->all();
+        if (!$request->filled('branch_id')) {
+            $data['branch_id'] = ($request->user() && $request->user()->branch_id) ? $request->user()->branch_id : null;
+        }
+
+        $class = Classes::create($data);
 
         if ($request->has('sections') && is_array($request->sections)) {
             foreach ($request->sections as $sectionName) {
@@ -134,6 +150,8 @@ class ClassController extends Controller
                 ]);
             }
         }
+
+        $class->load(['academicYear', 'category:id,name', 'sections']);
 
         return response()->json([
             'success'=>true,
@@ -170,6 +188,7 @@ class ClassController extends Controller
      *                  @OA\Property(property="name", type="string"),
      *                  @OA\Property(property="branch_id", type="integer"),
      *                  @OA\Property(property="academic_year_id", type="integer"),
+     *                  @OA\Property(property="category_id", type="integer", nullable=true),
      *                  @OA\Property(property="created_at", type="string"),
      *                  @OA\Property(property="updated_at", type="string"),
      *                  @OA\Property(property="deleted_at", type="string")
@@ -193,9 +212,12 @@ class ClassController extends Controller
 
     public function show($id)
     {
-        $class = Classes::findOrFail($id);
+        $class = Classes::with(['academicYear', 'category:id,name', 'sections'])->findOrFail($id);
 
-        return response()->json($class);
+        return response()->json([
+            'success' => true,
+            'data' => $class
+        ]);
     }
     /**
      * @OA\Put(
@@ -217,10 +239,11 @@ class ClassController extends Controller
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(
-     *              required={"name","academic_year_id","branch_id"},
+     *              required={"name","academic_year_id"},
      *              @OA\Property(property="name", type="string", example="name"),
      *              @OA\Property(property="academic_year_id", type="integer", example="1"),
-     *              @OA\Property(property="branch_id", type="integer", example="1")
+     *              @OA\Property(property="branch_id", type="integer", nullable=true, example="1"),
+     *              @OA\Property(property="category_id", type="integer", nullable=true, example=1, description="Student category ID")
      *          )
      *      ),
      *      @OA\Response(
@@ -236,6 +259,7 @@ class ClassController extends Controller
      *                  @OA\Property(property="name", type="string"),
      *                  @OA\Property(property="branch_id", type="integer"),
      *                  @OA\Property(property="academic_year_id", type="integer"),
+     *                  @OA\Property(property="category_id", type="integer", nullable=true),
      *                  @OA\Property(property="created_at", type="string"),
      *                  @OA\Property(property="updated_at", type="string"),
      *                  @OA\Property(property="deleted_at", type="string")
@@ -268,7 +292,8 @@ class ClassController extends Controller
         $validator = Validator::make($request->all(),[
             'name'=>'required',
             'academic_year_id'=>'required',
-             'branch_id'=>'required',
+            'branch_id'=>'nullable|exists:branches,id',
+            'category_id'=>'nullable|exists:student_categories,id',
         ]);
 
         if($validator->fails()){
@@ -289,9 +314,12 @@ class ClassController extends Controller
             }
         }
 
+        $class->load(['academicYear', 'category:id,name', 'sections']);
+
         return response()->json([
             'success'=>true,
-            'message'=>'Updated'
+            'message'=>'Updated',
+            'data'=>$class
         ]);
     }
     /**

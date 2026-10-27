@@ -11,6 +11,7 @@ $moduleMapping = [
     'BranchController' => '1. Core System',
     'AcademicYearController' => '1. Core System',
     'UserController' => '1. Core System',
+    'RoleController' => '1. Core System',
     
     // Phase 2: Staff / HR
     'StaffDepartmentController' => '2. Staff & HR',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Services\AccountNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -129,9 +130,13 @@ class TeacherController extends Controller
                 'is_active' => true,
             ]);
 
-            // Assign Teacher role if Spatie roles are properly seeded
-            if (DB::table('roles')->where('name', 'Teacher')->exists()) {
-                $user->assignRole('Teacher');
+            // Assign Teacher role safely across guards
+            try {
+                \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'web']);
+                \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'sanctum']);
+                $user->assignRole('teacher');
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Could not assign teacher role: " . $e->getMessage());
             }
 
             $teacher = Teacher::create([
@@ -145,13 +150,8 @@ class TeacherController extends Controller
                 'date_of_joining' => $request->joining_date,
             ]);
 
-            // Send password reset / activation email
-            try {
-                \Illuminate\Support\Facades\Password::sendResetLink(['email' => $user->email]);
-            } catch (\Exception $e) {
-                // Log or ignore email failures to not block transaction/response
-                \Illuminate\Support\Facades\Log::warning("Could not send password reset email to teacher: " . $e->getMessage());
-            }
+            // Send welcome password reset / setup email
+            AccountNotificationService::sendWelcomeResetEmail($user);
 
             return response()->json([
                 'success' => true,

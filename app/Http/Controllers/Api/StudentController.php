@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\User;
+use App\Services\AccountNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +15,7 @@ use App\Models\StudentParent;
 use App\Models\GeneralSetting;
 use App\Models\AcademicYear;
 use App\Models\Classes;
+use App\Models\Staff;
 
 class StudentController extends Controller
 {
@@ -276,6 +278,7 @@ class StudentController extends Controller
      *              @OA\Property(property="class_id", type="integer", example=1),
      *              @OA\Property(property="section_id", type="integer", example=1),
      *              @OA\Property(property="academic_year_id", type="integer", example=1),
+     *              @OA\Property(property="category_id", type="integer", nullable=true, example=1, description="Student category ID. If omitted, auto-assigned from selected class"),
      *              @OA\Property(property="dob", type="string", format="date", example="2010-01-01"),
      *              @OA\Property(property="gender", type="string", example="male"),
      *              @OA\Property(property="religion", type="string", example="Christianity"),
@@ -345,6 +348,7 @@ class StudentController extends Controller
      *              @OA\Property(property="class_id", type="integer", example=1),
      *              @OA\Property(property="section_id", type="integer", example=1),
      *              @OA\Property(property="academic_year_id", type="integer", example=1),
+     *              @OA\Property(property="category_id", type="integer", nullable=true, example=1, description="Student category ID. If omitted, auto-assigned from selected class"),
      *              @OA\Property(property="dob", type="string", format="date", example="2010-01-01"),
      *              @OA\Property(property="gender", type="string", example="male"),
      *              @OA\Property(property="religion", type="string", example="Christianity"),
@@ -492,6 +496,7 @@ class StudentController extends Controller
             'class_id' => 'required|exists:classes,id',
             'section_id' => 'required|exists:sections,id',
             'academic_year_id' => 'nullable|exists:academic_years,id',
+            'category_id' => 'nullable|exists:student_categories,id',
             'gender' => 'nullable|string',
             'apaar_id' => 'nullable|string',
             'aadharshila_no' => 'nullable|string',
@@ -535,20 +540,30 @@ class StudentController extends Controller
             'password' => Hash::make('123456')
         ]);
 
-        $user->assignRole('student');
-
-        // Send password reset email to student
-        if ($user->email && filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
-            try {
-                \Illuminate\Support\Facades\Password::sendResetLink(['email' => $user->email]);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning("Could not send password reset email to student: " . $e->getMessage());
-            }
+        // Ensure student role exists for current guard and assign safely
+        try {
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'student', 'guard_name' => 'sanctum']);
+            $user->assignRole('student');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Could not assign student role: " . $e->getMessage());
         }
+
+        // Send welcome password reset / setup email to student
+        AccountNotificationService::sendWelcomeResetEmail($user);
 
         $photoPath = $this->processPhotoUpload($request, 'photo', 'uploads/student_photos');
 
         $academicYearId = $this->resolveAcademicYearId($request->academic_year_id, $request->class_id);
+
+        // Auto-assign Student Category from Class if not explicitly provided
+        $categoryId = $request->category_id;
+        if (empty($categoryId) && !empty($request->class_id)) {
+            $classObj = Classes::find($request->class_id);
+            if ($classObj && $classObj->category_id) {
+                $categoryId = $classObj->category_id;
+            }
+        }
 
         $student = Student::create([
             'user_id' => $user->id,
@@ -564,6 +579,7 @@ class StudentController extends Controller
             'class_id' => $request->class_id,
             'section_id' => $request->section_id,
             'academic_year_id' => $academicYearId,
+            'category_id' => $categoryId,
             'dob' => $request->dob,
             'gender' => $request->gender,
             'religion' => $request->religion,
@@ -647,6 +663,7 @@ class StudentController extends Controller
         if ($parentEmail && filter_var($parentEmail, FILTER_VALIDATE_EMAIL)) {
             try {
                 $parentUser = User::where('email', $parentEmail)->first();
+                $isNewParent = false;
                 if (!$parentUser) {
                     $parentUser = User::create([
                         'name' => $parentName,
@@ -655,11 +672,18 @@ class StudentController extends Controller
                         'is_active' => true,
                     ]);
 
-                    if (\Illuminate\Support\Facades\DB::table('roles')->where('name', 'parent')->exists()) {
+                    try {
+                        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'web']);
+                        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'sanctum']);
                         $parentUser->assignRole('parent');
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning("Could not assign parent role: " . $e->getMessage());
                     }
+                    $isNewParent = true;
                 }
-                \Illuminate\Support\Facades\Password::sendResetLink(['email' => $parentEmail]);
+                if ($isNewParent) {
+                    AccountNotificationService::sendWelcomeResetEmail($parentUser);
+                }
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::warning("Could not auto-create parent user or send password reset: " . $e->getMessage());
             }
@@ -831,7 +855,9 @@ class StudentController extends Controller
             'vehicle',
             'dormitory',
             'room',
-            'emergencyContacts'
+            'emergencyContacts',
+            'studentIncidents.incident',
+            'studentIncidents.assignedBy:id,name,full_name,email'
         ])->find($id);
 
         if (!$student) {
@@ -881,6 +907,7 @@ class StudentController extends Controller
      *              @OA\Property(property="class_id", type="integer", example=1),
      *              @OA\Property(property="section_id", type="integer", example=1),
      *              @OA\Property(property="academic_year_id", type="integer", example=1),
+     *              @OA\Property(property="category_id", type="integer", nullable=true, example=1, description="Student category ID"),
      *              @OA\Property(property="dob", type="string", format="date", example="2010-01-01"),
      *              @OA\Property(property="gender", type="string", example="male"),
      *              @OA\Property(property="religion", type="string", example="Christianity"),
@@ -1056,6 +1083,7 @@ class StudentController extends Controller
             'class_id' => 'sometimes|required|exists:classes,id',
             'section_id' => 'sometimes|required|exists:sections,id',
             'academic_year_id' => 'nullable|exists:academic_years,id',
+            'category_id' => 'nullable|exists:student_categories,id',
             'gender' => 'nullable|string',
             'apaar_id' => 'nullable|string',
             'aadharshila_no' => 'nullable|string',
@@ -1094,6 +1122,15 @@ class StudentController extends Controller
         );
         if ($academicYearId) {
             $updateData['academic_year_id'] = $academicYearId;
+        }
+
+        // Auto-assign category from Class if category_id not explicitly provided and class is present/updated
+        if (!$request->filled('category_id') && ($request->filled('class_id') || (empty($student->category_id) && !empty($student->class_id)))) {
+            $targetClassId = $request->class_id ?? $student->class_id;
+            $classObj = Classes::find($targetClassId);
+            if ($classObj && $classObj->category_id) {
+                $updateData['category_id'] = $classObj->category_id;
+            }
         }
 
         if ($request->has('first_name') || $request->has('last_name') || $request->has('full_name')) {
@@ -1242,6 +1279,12 @@ class StudentController extends Controller
      */
     public function destroy($id)
     {
+        if (!auth()->user()?->hasAnyRole(['super-admin', 'admin', 'staff'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only administrators can delete student records.'
+            ], 403);
+        }
 
         $student = Student::find($id);
 
@@ -1429,16 +1472,16 @@ class StudentController extends Controller
                     'password' => Hash::make('123456')
                 ]);
 
-                $user->assignRole('student');
-
-                // Send password reset email to student (bulk)
-                if ($user->email && filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
-                    try {
-                        \Illuminate\Support\Facades\Password::sendResetLink(['email' => $user->email]);
-                    } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::warning("Could not send password reset email to student (bulk): " . $e->getMessage());
-                    }
+                try {
+                    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+                    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'student', 'guard_name' => 'sanctum']);
+                    $user->assignRole('student');
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("Could not assign student role (bulk): " . $e->getMessage());
                 }
+
+                // Send welcome password reset / setup email to student (bulk)
+                AccountNotificationService::sendWelcomeResetEmail($user);
 
                 $academicYearId = $this->resolveAcademicYearId(
                     $studentData['academic_year_id'] ?? null,
@@ -1539,6 +1582,7 @@ class StudentController extends Controller
                 if ($parentEmail && filter_var($parentEmail, FILTER_VALIDATE_EMAIL)) {
                     try {
                         $parentUser = User::where('email', $parentEmail)->first();
+                        $isNewParent = false;
                         if (!$parentUser) {
                             $parentUser = User::create([
                                 'name' => $parentName,
@@ -1547,11 +1591,18 @@ class StudentController extends Controller
                                 'is_active' => true,
                             ]);
 
-                            if (\Illuminate\Support\Facades\DB::table('roles')->where('name', 'parent')->exists()) {
+                            try {
+                                \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'web']);
+                                \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'sanctum']);
                                 $parentUser->assignRole('parent');
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::warning("Could not assign parent role (bulk): " . $e->getMessage());
                             }
+                            $isNewParent = true;
                         }
-                        \Illuminate\Support\Facades\Password::sendResetLink(['email' => $parentEmail]);
+                        if ($isNewParent) {
+                            AccountNotificationService::sendWelcomeResetEmail($parentUser);
+                        }
                     } catch (\Exception $e) {
                         \Illuminate\Support\Facades\Log::warning("Could not auto-create parent user or send password reset (bulk): " . $e->getMessage());
                     }
@@ -1663,6 +1714,261 @@ class StudentController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/api/students/additional-contact/siblings",
+     *      operationId="getSiblingsDropdownList",
+     *      tags={"4. Student Enrollment - Student"},
+     *      summary="List siblings by class and section for Additional Contact modal",
+     *      description="Fetches a list of students in a given class and section for selecting a sibling.",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="class_id", in="query", required=false, @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="section_id", in="query", required=false, @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="search", in="query", required=false, @OA\Schema(type="string")),
+     *      @OA\Response(response=200, description="Successful operation")
+     * )
+     */
+    public function getSiblings(Request $request)
+    {
+        $query = Student::query()
+            ->select('students.id', 'students.first_name', 'students.last_name', 'students.full_name', 'students.admission_no', 'students.roll_no', 'students.class_id', 'students.section_id', 'students.photo')
+            ->with(['class:id,name', 'section:id,name', 'parents:id,student_id,father_name,mother_name,guardian_name']);
+
+        if ($request->filled('class_id')) {
+            $query->where('students.class_id', $request->input('class_id'));
+        }
+
+        if ($request->filled('section_id')) {
+            $query->where('students.section_id', $request->input('section_id'));
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('students.full_name', 'like', "%{$search}%")
+                  ->orWhere('students.first_name', 'like', "%{$search}%")
+                  ->orWhere('students.last_name', 'like', "%{$search}%")
+                  ->orWhere('students.admission_no', 'like', "%{$search}%");
+            });
+        }
+
+        $siblings = $query->orderBy('students.full_name', 'asc')->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $siblings
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/api/students/additional-contact/sibling/{id}",
+     *      operationId="getSiblingContactDetails",
+     *      tags={"4. Student Enrollment - Student"},
+     *      summary="Get parent and guardian details of a selected sibling",
+     *      description="Retrieves father, mother, and guardian info from a sibling student to autofill the Add Student form.",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(response=200, description="Successful operation"),
+     *      @OA\Response(response=404, description="Student not found")
+     * )
+     */
+    public function getSiblingContactInfo($id)
+    {
+        $student = Student::with(['parents', 'class:id,name', 'section:id,name'])->find($id);
+
+        if (!$student) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sibling student not found'
+            ], 404);
+        }
+
+        $parents = $student->parents;
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'source'              => 'sibling',
+                'sibling_id'          => $student->id,
+                'sibling_name'        => $student->full_name,
+                'admission_no'        => $student->admission_no,
+                'class_id'            => $student->class_id,
+                'class_name'          => $student->class?->name,
+                'section_id'          => $student->section_id,
+                'section_name'        => $student->section?->name,
+
+                // Father Details
+                'father_name'         => $parents?->father_name,
+                'father_phone'        => $parents?->father_phone,
+                'father_email'        => $parents?->father_email,
+                'father_occupation'   => $parents?->father_occupation,
+                'father_photo'        => $parents?->father_photo,
+
+                // Mother Details
+                'mother_name'         => $parents?->mother_name,
+                'mother_phone'        => $parents?->mother_phone,
+                'mother_email'        => $parents?->mother_email,
+                'mother_occupation'   => $parents?->mother_occupation,
+                'mother_photo'        => $parents?->mother_photo,
+
+                // Guardian Details
+                'guardian_is'         => $parents?->guardian_is ?? 'father',
+                'guardian_name'       => $parents?->guardian_name ?? $parents?->father_name ?? $parents?->mother_name,
+                'guardian_relation'   => $parents?->guardian_relation ?? ($parents?->guardian_is === 'mother' ? 'Mother' : 'Father'),
+                'guardian_phone'      => $parents?->guardian_phone ?? $parents?->father_phone ?? $parents?->mother_phone,
+                'guardian_email'      => $parents?->guardian_email ?? $parents?->father_email ?? $parents?->mother_email,
+                'guardian_occupation' => $parents?->guardian_occupation ?? $parents?->father_occupation ?? $parents?->mother_occupation,
+                'guardian_address'    => $parents?->guardian_address ?? $student->current_address,
+                'guardian_photo'      => $parents?->guardian_photo,
+
+                // Addresses
+                'current_address'     => $student->current_address,
+                'permanent_address'   => $student->permanent_address,
+            ]
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/api/students/additional-contact/staff",
+     *      operationId="getStaffDropdownList",
+     *      tags={"4. Student Enrollment - Student"},
+     *      summary="List all staff members for Additional Contact dropdown",
+     *      description="Fetches a list of staff members with name, role, phone, and email for selecting staff as contact.",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="search", in="query", required=false, @OA\Schema(type="string")),
+     *      @OA\Response(response=200, description="Successful operation")
+     * )
+     */
+    public function getStaffDropdown(Request $request)
+    {
+        $query = Staff::query()
+            ->select('id', 'first_name', 'last_name', 'full_name', 'staff_code', 'role', 'designation', 'phone', 'email', 'photo', 'current_address');
+
+        if ($request->filled('search')) {
+            $search = trim($request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('full_name', 'like', "%{$search}%")
+                  ->orWhere('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('staff_code', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $staffList = $query->orderBy('full_name', 'asc')->get()->map(function ($staff) {
+            $staff->staff_no = $staff->staff_code;
+            return $staff;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data'    => $staffList
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/api/students/additional-contact/staff/{id}",
+     *      operationId="getStaffContactDetails",
+     *      tags={"4. Student Enrollment - Student"},
+     *      summary="Get contact details of a selected staff member",
+     *      description="Retrieves a staff member's info formatted as parent/guardian to autofill the Add Student form.",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(response=200, description="Successful operation"),
+     *      @OA\Response(response=404, description="Staff not found")
+     * )
+     */
+    public function getStaffContactInfo($id)
+    {
+        $staff = Staff::find($id);
+
+        if (!$staff) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Staff member not found'
+            ], 404);
+        }
+
+        $fullName = $staff->full_name ?? trim(($staff->first_name ?? '') . ' ' . ($staff->last_name ?? ''));
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'source'              => 'staff',
+                'staff_id'            => $staff->id,
+                'staff_no'            => $staff->staff_no ?? $staff->staff_code,
+                'name'                => $fullName,
+                'full_name'           => $fullName,
+                'phone'               => $staff->phone,
+                'email'               => $staff->email,
+                'designation'         => $staff->designation,
+                'role'                => $staff->role,
+                'gender'              => $staff->gender,
+                'photo'               => $staff->photo,
+
+                // Formatted as Guardian fields for instant form population
+                'guardian_is'         => 'other',
+                'guardian_name'       => $fullName,
+                'guardian_relation'   => 'Staff / School Member',
+                'guardian_phone'      => $staff->phone,
+                'guardian_email'      => $staff->email,
+                'guardian_occupation' => $staff->designation ?? $staff->role ?? 'Staff',
+                'guardian_address'    => $staff->current_address,
+                'guardian_photo'      => $staff->photo,
+
+                'current_address'     => $staff->current_address,
+                'permanent_address'   => $staff->permanent_address,
+            ]
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *      path="/api/students/additional-contact",
+     *      operationId="resolveAdditionalContact",
+     *      tags={"4. Student Enrollment - Student"},
+     *      summary="Resolve and return Additional Contact details for form auto-fill",
+     *      description="Unified endpoint called when clicking 'Save Information' in the Add Additional Contact modal.",
+     *      security={{"sanctum":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"type"},
+     *              @OA\Property(property="type", type="string", enum={"sibling", "staff"}, example="sibling"),
+     *              @OA\Property(property="sibling_id", type="integer", example=1),
+     *              @OA\Property(property="staff_id", type="integer", example=1)
+     *          )
+     *      ),
+     *      @OA\Response(response=200, description="Successful operation"),
+     *      @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    public function resolveAdditionalContact(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'type'       => 'required|in:sibling,staff',
+            'sibling_id' => 'required_if:type,sibling|nullable|integer|exists:students,id',
+            'staff_id'   => 'required_if:type,staff|nullable|integer|exists:staff,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        if ($request->input('type') === 'sibling') {
+            return $this->getSiblingContactInfo($request->input('sibling_id'));
+        }
+
+        return $this->getStaffContactInfo($request->input('staff_id'));
     }
 
 }

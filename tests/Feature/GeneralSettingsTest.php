@@ -65,6 +65,7 @@ class GeneralSettingsTest extends TestCase
             ->putJson('/api/general-settings', [
                 'school_name' => 'Raza Ul Uloom Higher Secondary School',
                 'site_title' => 'RUIHSS',
+                'state' => 'Jammu and Kashmir',
                 'email' => 'admin@ruihss.in',
                 'phone' => '+917298010134',
                 'academic_year_id' => $year->id,
@@ -76,6 +77,7 @@ class GeneralSettingsTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonPath('success', true);
         $this->assertEquals('Raza Ul Uloom Higher Secondary School', $response->json('data.school_name'));
+        $this->assertEquals('Jammu and Kashmir', $response->json('data.state'));
         $this->assertEquals('INR', $response->json('data.currency'));
         $this->assertEquals(60, $response->json('data.carry_forward_fees_due_days'));
     }

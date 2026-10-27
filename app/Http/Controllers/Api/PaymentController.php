@@ -108,7 +108,14 @@ class PaymentController extends Controller
      */
         public function store(Request $request)
     {
-                $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+        if (!$request->user()?->hasAnyRole(['super-admin', 'admin', 'cashier', 'accountant', 'staff'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only finance staff or administrators can record payments.'
+            ], 403);
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'student_fee_id' => 'required|integer',
             'amount' => 'required',
             'payment_date' => 'required',

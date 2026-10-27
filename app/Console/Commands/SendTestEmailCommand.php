@@ -8,6 +8,7 @@ use App\Models\Teacher;
 use App\Models\Student;
 use App\Models\StudentParent;
 use App\Models\StudentAcademic;
+use App\Services\AccountNotificationService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -98,12 +99,12 @@ class SendTestEmailCommand extends Command
             'designation' => 'Instructor',
         ]);
 
-        // Send reset email for teacher
-        try {
-            \Illuminate\Support\Facades\Password::sendResetLink(['email' => $email]);
+        // Send welcome reset email for teacher
+        $sent = AccountNotificationService::sendWelcomeResetEmail($teacherUser);
+        if ($sent) {
             $this->info("Password reset email sent to Teacher: {$email}");
-        } catch (\Exception $e) {
-            $this->error("Failed sending reset link to teacher: " . $e->getMessage());
+        } else {
+            $this->error("Failed sending reset link to teacher: {$email}");
         }
 
         // Clean user again for parent test (since same email is used)
@@ -158,11 +159,11 @@ class SendTestEmailCommand extends Command
             $parentUser->assignRole('parent');
         }
 
-        try {
-            \Illuminate\Support\Facades\Password::sendResetLink(['email' => $email]);
+        $sentParent = AccountNotificationService::sendWelcomeResetEmail($parentUser);
+        if ($sentParent) {
             $this->info("Password reset email sent to Parent: {$email}");
-        } catch (\Exception $e) {
-            $this->error("Failed sending reset link to parent: " . $e->getMessage());
+        } else {
+            $this->error("Failed sending reset link to parent: {$email}");
         }
 
         $this->info("Done! Please check your email inbox / Mailpit / logs.");

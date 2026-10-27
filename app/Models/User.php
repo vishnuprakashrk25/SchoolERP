@@ -11,6 +11,8 @@ class User extends Authenticatable
 {
     use HasApiTokens, Notifiable, HasRoles;
 
+    protected $guard_name = 'web';
+
     protected $fillable = [
         'branch_id',
         'name',
@@ -20,7 +22,10 @@ class User extends Authenticatable
         'is_active',
         'google_access_token',
         'google_refresh_token',
-        'google_token_expires_at'
+        'google_token_expires_at',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'two_factor_confirmed_at'
     ];
 
     protected $appends = [
@@ -52,5 +57,10 @@ class User extends Authenticatable
     public function events()
     {
         return $this->hasMany(Event::class);
+    }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
     }
 }

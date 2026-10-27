@@ -66,9 +66,10 @@ class EventController extends Controller
     public function index(Request $request)
     {
         $start = $request->query('start');
-        $end = $request->query('end');
+        $end   = $request->query('end');
+        $role  = $request->query('role');
 
-        $query = Event::query();
+        $query = Event::query()->with('user:id,name,email');
 
         if ($start && $end) {
             $query->where(function($q) use ($start, $end) {
@@ -77,7 +78,13 @@ class EventController extends Controller
             });
         }
 
-        $events = $query->get();
+        if ($role) {
+            $query->where(function($q) use ($role) {
+                $q->where('role', $role)->orWhere('role', 'All');
+            });
+        }
+
+        $events = $query->orderBy('start_date', 'asc')->get();
 
         return response()->json([
             'success' => true,
@@ -116,8 +123,8 @@ class EventController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'title'       => 'required|string|max:255',
-            'start_date'  => 'required|date_format:Y-m-d H:i:s',
-            'end_date'    => 'nullable|date_format:Y-m-d H:i:s|after_or_equal:start_date',
+            'start_date'  => 'required|date',
+            'end_date'    => 'nullable|date|after_or_equal:start_date',
             'color'       => 'nullable|string|max:20',
             'description' => 'required|string',
             'role'        => 'required|string',
@@ -208,8 +215,8 @@ class EventController extends Controller
 
         $validator = Validator::make($request->all(), [
             'title'       => 'sometimes|string|max:255',
-            'start_date'  => 'sometimes|date_format:Y-m-d H:i:s',
-            'end_date'    => 'sometimes|nullable|date_format:Y-m-d H:i:s|after_or_equal:start_date',
+            'start_date'  => 'sometimes|date',
+            'end_date'    => 'sometimes|nullable|date|after_or_equal:start_date',
             'color'       => 'sometimes|nullable|string|max:20',
             'description' => 'sometimes|string',
             'role'        => 'sometimes|string',

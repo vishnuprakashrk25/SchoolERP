@@ -61,6 +61,7 @@ class GeneralSettingsController extends Controller
      *              @OA\Property(property="school_name", type="string", example="RAZA UL ULOOM ISLAMIA HIGHER SECONDARY SCHOOL POONCH"),
      *              @OA\Property(property="site_title", type="string", example="RUIHSS POONCH"),
      *              @OA\Property(property="address", type="string", example="Parade Ground, Old City, Poonch, Jammu and Kashmir 185101"),
+     *              @OA\Property(property="state", type="string", example="Jammu and Kashmir"),
      *              @OA\Property(property="phone", type="string", example="+917298010134"),
      *              @OA\Property(property="email", type="string", example="admin@ruihss.in"),
      *              @OA\Property(property="fees_income_head", type="string", example="Annual Fees Collection"),
@@ -111,6 +112,7 @@ class GeneralSettingsController extends Controller
             'site_title' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'carry_forward_fees_due_days' => 'nullable|integer',
         ]);
@@ -132,6 +134,7 @@ class GeneralSettingsController extends Controller
             'school_name',
             'site_title',
             'address',
+            'state',
             'phone',
             'email',
             'fees_income_head',
@@ -204,7 +207,7 @@ class GeneralSettingsController extends Controller
     public function uploadLogo(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120',
+            'logo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
 
         if ($validator->fails()) {
@@ -284,7 +287,7 @@ class GeneralSettingsController extends Controller
     public function uploadFavicon(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'favicon' => 'required|image|mimes:jpeg,png,jpg,gif,svg,ico,webp|max:2048',
+            'favicon' => 'required|image|mimes:jpeg,png,jpg,gif,ico,webp|max:2048',
         ]);
 
         if ($validator->fails()) {

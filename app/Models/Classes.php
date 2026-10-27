@@ -13,12 +13,18 @@ class Classes extends Model
         'name',
         'code',
         'branch_id',
-        'academic_year_id'
+        'academic_year_id',
+        'category_id'
     ];
 
     public function academicYear()
     {
         return $this->belongsTo(AcademicYear::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(StudentCategory::class, 'category_id');
     }
 
     public function sections()

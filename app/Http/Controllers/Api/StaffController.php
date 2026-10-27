@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Staff;
 use App\Models\User;
+use App\Services\AccountNotificationService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 
@@ -334,8 +335,12 @@ class StaffController extends Controller
             ]);
 
             // Assign staff role (teacher/staff/admin) if it exists
-            if (DB::table('roles')->where('name', $data['role'])->exists()) {
+            try {
+                \Spatie\Permission\Models\Role::firstOrCreate(['name' => $data['role'], 'guard_name' => 'web']);
+                \Spatie\Permission\Models\Role::firstOrCreate(['name' => $data['role'], 'guard_name' => 'sanctum']);
                 $user->assignRole($data['role']);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Could not assign staff role: " . $e->getMessage());
             }
 
             // Check if staff member is ALSO a parent of a student in the school
@@ -344,21 +349,23 @@ class StaffController extends Controller
                 ->orWhere('guardian_email', $data['email'])
                 ->exists();
 
-            if ($isParent && DB::table('roles')->where('name', 'parent')->exists()) {
-                if (!$user->hasRole('parent')) {
-                    $user->assignRole('parent');
+            if ($isParent) {
+                try {
+                    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'web']);
+                    \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'sanctum']);
+                    if (!$user->hasRole('parent')) {
+                        $user->assignRole('parent');
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("Could not assign parent role: " . $e->getMessage());
                 }
             }
 
             $data['user_id'] = $user->id;
             $item = Staff::create($data);
 
-            // Send password reset / activation email
-            try {
-                \Illuminate\Support\Facades\Password::sendResetLink(['email' => $user->email]);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning("Could not send password reset email to staff: " . $e->getMessage());
-            }
+            // Send welcome password reset / setup email
+            AccountNotificationService::sendWelcomeResetEmail($user);
 
             return response()->json([
                 'success' => true,
@@ -716,6 +723,13 @@ class StaffController extends Controller
      */
         public function destroy($id)
     {
+        if (!auth()->user()?->hasAnyRole(['super-admin', 'admin'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Only administrators can delete staff records.'
+            ], 403);
+        }
+
         $item = Staff::findOrFail($id);
         $item->delete();
         return response()->json([
@@ -885,20 +899,20 @@ class StaffController extends Controller
                     'is_active' => true,
                 ]);
 
-                if (DB::table('roles')->where('name', $staffData['role'])->exists()) {
+                try {
+                    \Spatie\Permission\Models\Role::firstOrCreate(['name' => $staffData['role'], 'guard_name' => 'web']);
+                    \Spatie\Permission\Models\Role::firstOrCreate(['name' => $staffData['role'], 'guard_name' => 'sanctum']);
                     $user->assignRole($staffData['role']);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("Could not assign staff role in bulk: " . $e->getMessage());
                 }
 
                 $staffData['user_id'] = $user->id;
                 $staff = Staff::create($staffData);
                 $createdStaffs[] = $staff->id;
 
-                // Send password reset / activation email
-                try {
-                    \Illuminate\Support\Facades\Password::sendResetLink(['email' => $user->email]);
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::warning("Could not send password reset email to staff (bulk): " . $e->getMessage());
-                }
+                // Send welcome password reset / setup email
+                AccountNotificationService::sendWelcomeResetEmail($user);
             }
 
             DB::commit();

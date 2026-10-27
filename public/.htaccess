@@ -19,3 +19,12 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Security: Block direct access to sensitive extensions and config files
+<FilesMatch "^\.(env|git|editorconfig)">
+    Require all denied
+</FilesMatch>
+<FilesMatch "\.(zip|sql|lock|example|log|bak|orig)$">
+    Require all denied
+</FilesMatch>
+

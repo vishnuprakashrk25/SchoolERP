@@ -11,18 +11,26 @@ class GoogleCalendarController extends Controller
     /**
      * Helper to configure Google Client
      */
-    private function getGoogleClient()
-    {
-        $client = new Client();
-        $client->setClientId(config('services.google.client_id'));
-        $client->setClientSecret(config('services.google.client_secret'));
-        $client->setRedirectUri(config('services.google.redirect'));
-        $client->addScope('https://www.googleapis.com/auth/calendar.events');
-        $client->setAccessType('offline');
-        $client->setPrompt('consent');
+     private function getGoogleClient()
+     {
+         $clientId = config('services.google.client_id');
+         $clientSecret = config('services.google.client_secret');
+         $redirectUri = config('services.google.redirect');
 
-        return $client;
-    }
+         if (empty($clientId) || empty($clientSecret)) {
+             return null;
+         }
+
+         $client = new Client();
+         $client->setClientId($clientId);
+         $client->setClientSecret($clientSecret);
+         $client->setRedirectUri($redirectUri);
+         $client->addScope('https://www.googleapis.com/auth/calendar.events');
+         $client->setAccessType('offline');
+         $client->setPrompt('consent');
+
+         return $client;
+     }
 
     /**
      * @OA\Get(
@@ -45,6 +53,23 @@ class GoogleCalendarController extends Controller
     public function redirectToGoogle(Request $request)
     {
         $client = $this->getGoogleClient();
+        if (!$client) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Google Calendar OAuth credentials (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET) are not configured in .env'
+            ], 422);
+        }
+
+        // Attach encrypted state with current user ID to preserve identity across external browser redirect
+        $user = auth()->user();
+        if ($user) {
+            $state = \Illuminate\Support\Facades\Crypt::encryptString(json_encode([
+                'user_id'   => $user->id,
+                'timestamp' => now()->timestamp,
+            ]));
+            $client->setState($state);
+        }
+
         $authUrl = $client->createAuthUrl();
 
         return response()->json([
@@ -59,13 +84,19 @@ class GoogleCalendarController extends Controller
      *      operationId="handleGoogleCallback",
      *      tags={"Google Calendar Integration"},
      *      summary="Handle Google OAuth callback",
-     *      description="Exchanges Google authorization code for access and refresh tokens.",
-     *      security={{"sanctum":{}}},
+     *      description="Exchanges Google authorization code for access and refresh tokens. Automatically called by Google redirect.",
      *      @OA\Parameter(
      *          name="code",
      *          in="query",
      *          required=true,
      *          description="Authorization code returned by Google OAuth flow",
+     *          @OA\Schema(type="string")
+     *      ),
+     *      @OA\Parameter(
+     *          name="state",
+     *          in="query",
+     *          required=false,
+     *          description="Encrypted user state token generated during redirect",
      *          @OA\Schema(type="string")
      *      ),
      *      @OA\Response(
@@ -99,6 +130,13 @@ class GoogleCalendarController extends Controller
 
         try {
             $client = $this->getGoogleClient();
+            if (!$client) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Google Calendar OAuth credentials are not configured in .env'
+                ], 500);
+            }
+
             $token = $client->fetchAccessTokenWithAuthCode($code);
 
             if (isset($token['error'])) {
@@ -108,7 +146,19 @@ class GoogleCalendarController extends Controller
                 ], 400);
             }
 
+            // Authenticated user or resolve from encrypted state
             $user = auth()->user();
+            if (!$user && $request->filled('state')) {
+                try {
+                    $stateData = json_decode(\Illuminate\Support\Facades\Crypt::decryptString($request->input('state')), true);
+                    if (!empty($stateData['user_id'])) {
+                        $user = \App\Models\User::find($stateData['user_id']);
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning('Google OAuth state decryption failed: ' . $e->getMessage());
+                }
+            }
+
             if ($user) {
                 $user->update([
                     'google_access_token'     => $token['access_token'] ?? null,

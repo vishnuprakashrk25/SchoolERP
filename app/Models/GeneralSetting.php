@@ -12,6 +12,7 @@ class GeneralSetting extends Model
         'school_name',
         'site_title',
         'address',
+        'state',
         'phone',
         'email',
         'fees_income_head',

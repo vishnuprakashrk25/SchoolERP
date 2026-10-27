@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Validator;
 
 class ExamResultController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth:sanctum', 'role:super-admin|admin|teacher|staff'])->except(['index', 'show']);
+    }
+
     /**
      * @OA\Get(
      *      path="/api/exam-results",
