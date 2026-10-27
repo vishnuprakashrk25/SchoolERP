@@ -26,6 +26,10 @@
             "description": "Live Server (Hostinger)"
         },
         {
+            "url": "https://yesmlr.yesindiaschools.com",
+            "description": "Yes India Schools Live Server"
+        },
+        {
             "url": "http://localhost/erp-school/public",
             "description": "Local XAMPP Server"
         }

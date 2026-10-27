@@ -33,6 +33,10 @@ use Illuminate\Routing\Controller as BaseController;
  *      description="Live Server (Hostinger)"
  * )
  * @OA\Server(
+ *      url="https://yesmlr.yesindiaschools.com",
+ *      description="Yes India Schools Live Server"
+ * )
+ * @OA\Server(
  *      url="http://localhost/erp-school/public",
  *      description="Local XAMPP Server"
  * )
