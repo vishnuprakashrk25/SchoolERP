@@ -212,8 +212,10 @@ class SidebarMenuSeeder extends Seeder
             ],
         ];
 
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
         SidebarSubMenu::truncate();
         SidebarMenu::truncate();
+        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
 
         $menuOrder = 1;
         foreach ($sidebarData as $sectionData) {

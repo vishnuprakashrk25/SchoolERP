@@ -38,13 +38,39 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Faker\Factory as Faker;
+
+class SafeDummyGenerator
+{
+    public function __get($prop)
+    {
+        return match ($prop) {
+            'name' => 'User ' . mt_rand(100, 999),
+            'firstName' => 'Member' . mt_rand(10, 99),
+            'lastName' => 'Demo',
+            'phoneNumber' => '98' . mt_rand(10000000, 99999999),
+            'safeEmail' => 'user' . uniqid() . '@example.com',
+            'address' => 'Sample Address #' . mt_rand(1, 100),
+            default => 'Sample ' . $prop,
+        };
+    }
+
+    public function __call($method, $args)
+    {
+        return match ($method) {
+            'name' => 'Person ' . mt_rand(100, 999),
+            'date' => date('Y-m-d', strtotime('-' . mt_rand(5, 15) . ' years')),
+            'unique' => $this,
+            'randomElement' => !empty($args[0]) ? $args[0][array_rand($args[0])] : 'male',
+            default => 'Sample ' . $method,
+        };
+    }
+}
 
 class MasterDummyDataSeeder extends Seeder
 {
     public function run(): void
     {
-        $faker = Faker::create();
+        $faker = class_exists(\Faker\Factory::class) ? \Faker\Factory::create() : new SafeDummyGenerator();
 
         // 1. ROLES & PERMISSIONS
         $this->seedRoles();
@@ -237,17 +263,24 @@ class MasterDummyDataSeeder extends Seeder
 
     private function seedRoles()
     {
-        $roles = ['admin', 'teacher', 'staff', 'student', 'parent'];
-        foreach ($roles as $role) {
-            Role::firstOrCreate(['name' => $role]);
-        }
+        $roles = ['super-admin', 'admin', 'teacher', 'staff', 'student', 'parent'];
+        $guards = ['web', 'sanctum'];
 
-        $perms = ['manage_admission', 'view_reports', 'manage_academics', 'manage_fees'];
-        foreach ($perms as $perm) {
-            Permission::firstOrCreate(['name' => $perm]);
-        }
+        foreach ($guards as $guard) {
+            foreach ($roles as $role) {
+                Role::firstOrCreate(['name' => $role, 'guard_name' => $guard]);
+            }
 
-        $admin = Role::where('name', 'admin')->first();
-        $admin->syncPermissions(Permission::all());
+            $perms = ['manage_admission', 'view_reports', 'manage_academics', 'manage_fees'];
+            foreach ($perms as $perm) {
+                Permission::firstOrCreate(['name' => $perm, 'guard_name' => $guard]);
+            }
+
+            $admin = Role::where('name', 'admin')->where('guard_name', $guard)->first();
+            if ($admin) {
+                $guardPerms = Permission::where('guard_name', $guard)->get();
+                $admin->syncPermissions($guardPerms);
+            }
+        }
     }
 }
