@@ -17,6 +17,14 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Redirect /reset-password from backend URL directly to the frontend SPA
+Route::get('/reset-password', function (\Illuminate\Http\Request $request) {
+    $frontendUrl = env('FRONTEND_URL', 'https://yesmlr.yesindiaschools.com');
+    $query = $request->getQueryString();
+    $target = rtrim($frontendUrl, '/') . '/reset-password' . ($query ? '?' . $query : '');
+    return redirect()->away($target);
+});
+
 Route::get('/storage-link', function () {
     $target = storage_path('app/public');
     $link = public_path('storage');
