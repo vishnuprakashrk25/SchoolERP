@@ -136,11 +136,22 @@ class RoleController extends Controller
     {
         $query = Role::with('permissions');
 
+        if ($request->filled('guard_name')) {
+            $query->where('guard_name', $request->guard_name);
+        }
+
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
         $roles = $query->orderBy('name', 'asc')->get();
+
+        // If no specific guard is requested, deduplicate by role name (preferring 'web') so UI dropdowns show single entries
+        if (!$request->filled('guard_name')) {
+            $roles = $roles->sortBy(function ($role) {
+                return $role->guard_name === 'web' ? 0 : 1;
+            })->unique('name')->values();
+        }
 
         $roleIds = $roles->pluck('id')->toArray();
         $userCounts = DB::table('model_has_roles')
