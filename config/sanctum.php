@@ -15,11 +15,58 @@ return [
     |
     */
 
-    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s',
-        'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1,yesmlr.yesindiaschools.com,app.cyberduce.com,dev.cyberduce.com',
-        Sanctum::currentApplicationUrlWithPort()
-    ))),
+    'stateful' => (function () {
+        $domains = [];
+
+        // 1. Explicit Sanctum stateful domains from .env
+        if ($envSanctum = env('SANCTUM_STATEFUL_DOMAINS')) {
+            foreach (explode(',', $envSanctum) as $domain) {
+                $clean = trim($domain);
+                if ($clean !== '') {
+                    $domains[] = $clean;
+                }
+            }
+        }
+
+        // 2. Automatically derive domains from CORS_ALLOWED_ORIGINS in .env if set
+        if ($envCors = env('CORS_ALLOWED_ORIGINS')) {
+            foreach (explode(',', $envCors) as $origin) {
+                $clean = trim($origin);
+                if ($clean !== '') {
+                    $host = parse_url($clean, PHP_URL_HOST);
+                    $port = parse_url($clean, PHP_URL_PORT);
+                    if ($host) {
+                        $domains[] = $host . ($port ? ':' . $port : '');
+                    } else {
+                        $domains[] = preg_replace('#^https?://#', '', rtrim($clean, '/'));
+                    }
+                }
+            }
+        }
+
+        // 3. Fallback defaults
+        if (empty($domains)) {
+            $domains = [
+                'localhost',
+                'localhost:3000',
+                '127.0.0.1',
+                '127.0.0.1:8000',
+                '::1',
+                'yesmlr.yesindiaschools.com',
+                'app.cyberduce.com',
+                'dev.cyberduce.com',
+            ];
+        } else {
+            $domains = array_merge($domains, ['localhost', 'localhost:3000', '127.0.0.1', '127.0.0.1:8000', '::1']);
+        }
+
+        $appUrl = trim(Sanctum::currentApplicationUrlWithPort(), ', ');
+        if ($appUrl && !in_array($appUrl, $domains)) {
+            $domains[] = $appUrl;
+        }
+
+        return array_values(array_unique(array_filter($domains)));
+    })(),
 
     /*
     |--------------------------------------------------------------------------
