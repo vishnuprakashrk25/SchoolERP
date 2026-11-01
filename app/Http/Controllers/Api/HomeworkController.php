@@ -123,9 +123,9 @@ class HomeworkController extends Controller
      *          @OA\MediaType(
      *              mediaType="multipart/form-data",
      *              @OA\Schema(
-     *                  required={"class_id", "section_id", "subject_id", "homework_date", "submission_date", "marks", "description"},
+     *                  required={"class_id", "subject_id", "homework_date", "submission_date", "marks", "description"},
      *                  @OA\Property(property="class_id", type="integer", example=1),
-     *                  @OA\Property(property="section_id", type="integer", example=1),
+     *                  @OA\Property(property="section_id", type="integer", nullable=true, example=1),
      *                  @OA\Property(property="subject_id", type="integer", example=1),
      *                  @OA\Property(property="homework_date", type="string", format="date", example="2025-11-03"),
      *                  @OA\Property(property="submission_date", type="string", format="date", example="2025-11-12"),
@@ -143,7 +143,7 @@ class HomeworkController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'class_id'        => 'required|exists:classes,id',
-            'section_id'      => 'required|exists:sections,id',
+            'section_id'      => 'nullable|exists:sections,id',
             'subject_id'      => 'required|exists:subjects,id',
             'homework_date'   => 'required|date',
             'submission_date' => 'required|date|after_or_equal:homework_date',
@@ -163,8 +163,12 @@ class HomeworkController extends Controller
         $filePath = null;
         if ($request->hasFile('file') && $request->file('file')->isValid()) {
             $file = $request->file('file');
+            $uploadDir = public_path('uploads/homework');
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
             $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/homework'), $filename);
+            $file->move($uploadDir, $filename);
             $filePath = 'uploads/homework/' . $filename;
         }
 
@@ -189,9 +193,20 @@ class HomeworkController extends Controller
         ]);
 
         // Auto-initialize pending submissions for all active students in this class & section
-        $students = Student::where('class_id', $request->class_id)
-            ->where('section_id', $request->section_id)
-            ->where('status', 1)
+        $students = Student::where('status', 1)
+            ->where(function ($q) use ($request) {
+                $q->where(function ($sq) use ($request) {
+                    $sq->where('class_id', $request->class_id);
+                    if ($request->filled('section_id')) {
+                        $sq->where('section_id', $request->section_id);
+                    }
+                })->orWhereHas('studentAcademics', function ($aq) use ($request) {
+                    $aq->where('class_id', $request->class_id);
+                    if ($request->filled('section_id')) {
+                        $aq->where('section_id', $request->section_id);
+                    }
+                });
+            })
             ->get();
 
         foreach ($students as $student) {
@@ -204,6 +219,10 @@ class HomeworkController extends Controller
         }
 
         $homework->load(['class:id,name', 'section:id,name', 'subject:id,name', 'createdBy:id,name,email']);
+        $homework->loadCount([
+            'submissions',
+            'submissions as evaluated_count' => fn ($q) => $q->whereIn('status', ['evaluated', 'completed'])->whereNotNull('marks')
+        ]);
 
         return response()->json([
             'success' => true,
@@ -233,7 +252,12 @@ class HomeworkController extends Controller
             'createdBy:id,name,email',
             'evaluatedBy:id,name,email',
             'submissions.student:id,full_name,admission_no,roll_no'
-        ])->find($id);
+        ])
+        ->withCount([
+            'submissions',
+            'submissions as evaluated_count' => fn ($q) => $q->whereIn('status', ['evaluated', 'completed'])->whereNotNull('marks')
+        ])
+        ->find($id);
 
         if (!$homework) {
             return response()->json(['success' => false, 'message' => 'Homework not found'], 404);
@@ -298,13 +322,21 @@ class HomeworkController extends Controller
 
         if ($request->hasFile('file') && $request->file('file')->isValid()) {
             $file = $request->file('file');
+            $uploadDir = public_path('uploads/homework');
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
             $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/homework'), $filename);
+            $file->move($uploadDir, $filename);
             $data['file'] = 'uploads/homework/' . $filename;
         }
 
         $homework->update($data);
         $homework->load(['class:id,name', 'section:id,name', 'subject:id,name', 'createdBy:id,name,email']);
+        $homework->loadCount([
+            'submissions',
+            'submissions as evaluated_count' => fn ($q) => $q->whereIn('status', ['evaluated', 'completed'])->whereNotNull('marks')
+        ]);
 
         return response()->json([
             'success' => true,
@@ -505,10 +537,95 @@ class HomeworkController extends Controller
                     'marks'              => $totalMarks,
                     'obtained_marks'     => $obtainedMarks,
                     'marks_summary_text' => $obtainedMarks !== null ? "{$obtainedMarks} ({$percentage}%) " . ($isPass ? 'Pass' : 'Fail') : 'Pending',
-                    'student_homework'   => $submission->submission_file ? asset($submission->submission_file) : ($hw->file ? asset($hw->file) : null),
+                    'student_homework'   => $this->formatUrl($submission->submission_file) ?? $this->formatUrl($hw->file),
                     'description'        => $submission->description ?? ($submission->student_notes ?? 'Well crafted'),
                 ]
             ]
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *      path="/api/homeworks/{id}/submit",
+     *      operationId="submitHomework",
+     *      tags={"Student - Home Work"},
+     *      summary="Submit homework as a student or parent",
+     *      description="Allows a student or parent to upload completed homework attachment or notes.",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", in="path", required=true, description="Homework ID", @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\MediaType(
+     *              mediaType="multipart/form-data",
+     *              @OA\Schema(
+     *                  @OA\Property(property="student_id", type="integer", description="Student ID (optional if logged in as student)"),
+     *                  @OA\Property(property="submission_file", type="string", format="binary", description="File upload up to 100MB"),
+     *                  @OA\Property(property="student_notes", type="string", description="Optional notes or text answer")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(response=200, description="Homework submitted successfully")
+     * )
+     */
+    public function submit(Request $request, $id)
+    {
+        $homework = Homework::find($id);
+        if (!$homework) {
+            return response()->json(['success' => false, 'message' => 'Homework not found'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'student_id'      => 'nullable|exists:students,id',
+            'submission_file' => 'nullable|file|max:102400',
+            'student_notes'   => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $studentId = $request->student_id;
+        if (!$studentId) {
+            $studentId = Student::where('user_id', auth()->id())->value('id');
+        }
+
+        if (!$studentId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Student ID is required or must be linked to logged-in user'
+            ], 422);
+        }
+
+        $submission = HomeworkSubmission::firstOrNew([
+            'homework_id' => $homework->id,
+            'student_id'  => $studentId,
+        ]);
+
+        if ($request->hasFile('submission_file') && $request->file('submission_file')->isValid()) {
+            $file = $request->file('submission_file');
+            $uploadDir = public_path('uploads/homework_submissions');
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move($uploadDir, $filename);
+            $submission->submission_file = 'uploads/homework_submissions/' . $filename;
+        }
+
+        if ($request->filled('student_notes')) {
+            $submission->student_notes = $request->student_notes;
+        }
+
+        $submission->submission_date = now();
+        if (!in_array($submission->status, ['completed', 'evaluated'])) {
+            $submission->status = 'submitted';
+        }
+        $submission->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Homework submitted successfully',
+            'data'    => $submission
         ]);
     }
 
@@ -605,7 +722,7 @@ class HomeworkController extends Controller
             'created_by'       => $hw->createdBy?->name ?? 'Admin',
             'evaluated_by'     => $hw->evaluatedBy?->name ?? '-',
             'description'      => $hw->description,
-            'file'             => $hw->file ? asset($hw->file) : null,
+            'file'             => $this->formatUrl($hw->file),
             'status'           => $hw->status ?? 'active',
             'submissions_count'=> $hw->submissions_count ?? 0,
             'evaluated_count'  => $hw->evaluated_count ?? 0,
@@ -626,7 +743,7 @@ class HomeworkController extends Controller
                     'submission_date' => $sub->submission_date ? \Carbon\Carbon::parse($sub->submission_date)->format('d/m/Y') : null,
                     'evaluation_date' => $sub->evaluation_date ? \Carbon\Carbon::parse($sub->evaluation_date)->format('d/m/Y') : null,
                     'description'     => $sub->description,
-                    'submission_file' => $sub->submission_file ? asset($sub->submission_file) : null,
+                    'submission_file' => $this->formatUrl($sub->submission_file),
                 ];
             });
         }
@@ -664,6 +781,21 @@ class HomeworkController extends Controller
             'evaluation_date' => $sub->evaluation_date ? \Carbon\Carbon::parse($sub->evaluation_date)->format('d/m/Y') : ($hw?->evaluation_date ? \Carbon\Carbon::parse($hw->evaluation_date)->format('d/m/Y') : null),
             'status'          => ucfirst($sub->status ?? 'Pending'), // Completed, Pending, Evaluated
             'has_evaluation'  => $obtainedMarks !== null,
+            'submission_file' => $this->formatUrl($sub->submission_file),
         ];
+    }
+
+    /**
+     * Format file URL safely
+     */
+    private function formatUrl(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+        return asset($path);
     }
 }

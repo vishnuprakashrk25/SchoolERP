@@ -127,6 +127,7 @@ class ClassController extends Controller
             'academic_year_id'=>'required',
             'branch_id'=>'nullable|exists:branches,id',
             'category_id'=>'nullable|exists:student_categories,id',
+            'sections'=>'nullable|array',
         ]);
 
         if($validator->fails()){
@@ -294,6 +295,7 @@ class ClassController extends Controller
             'academic_year_id'=>'required',
             'branch_id'=>'nullable|exists:branches,id',
             'category_id'=>'nullable|exists:student_categories,id',
+            'sections'=>'nullable|array',
         ]);
 
         if($validator->fails()){

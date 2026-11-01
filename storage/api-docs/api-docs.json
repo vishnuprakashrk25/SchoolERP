@@ -4214,7 +4214,6 @@
                             "schema": {
                                 "required": [
                                     "class_id",
-                                    "section_id",
                                     "teacher_ids"
                                 ],
                                 "properties": {
@@ -4222,7 +4221,8 @@
                                         "type": "integer"
                                     },
                                     "section_id": {
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "nullable": true
                                     },
                                     "teacher_ids": {
                                         "type": "array",
@@ -8778,7 +8778,6 @@
                             "schema": {
                                 "required": [
                                     "class_id",
-                                    "section_id",
                                     "subject_id",
                                     "homework_date",
                                     "submission_date",
@@ -8792,7 +8791,8 @@
                                     },
                                     "section_id": {
                                         "type": "integer",
-                                        "example": 1
+                                        "example": 1,
+                                        "nullable": true
                                     },
                                     "subject_id": {
                                         "type": "integer",
@@ -9072,6 +9072,62 @@
                     },
                     "404": {
                         "description": "Submission not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/homeworks/{id}/submit": {
+            "post": {
+                "tags": [
+                    "Student - Home Work"
+                ],
+                "summary": "Submit homework as a student or parent",
+                "description": "Allows a student or parent to upload completed homework attachment or notes.",
+                "operationId": "submitHomework",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Homework ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "student_id": {
+                                        "description": "Student ID (optional if logged in as student)",
+                                        "type": "integer"
+                                    },
+                                    "submission_file": {
+                                        "description": "File upload up to 100MB",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "student_notes": {
+                                        "description": "Optional notes or text answer",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Homework submitted successfully"
                     }
                 },
                 "security": [
@@ -11869,13 +11925,13 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "class_id",
                                     "name"
                                 ],
                                 "properties": {
                                     "class_id": {
                                         "type": "integer",
-                                        "example": "1"
+                                        "example": "1",
+                                        "nullable": true
                                     },
                                     "name": {
                                         "type": "string",
@@ -11908,7 +11964,8 @@
                                                     "type": "integer"
                                                 },
                                                 "class_id": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "nullable": true
                                                 },
                                                 "name": {
                                                     "type": "string"
@@ -12051,13 +12108,13 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "class_id",
                                     "name"
                                 ],
                                 "properties": {
                                     "class_id": {
                                         "type": "integer",
-                                        "example": "1"
+                                        "example": "1",
+                                        "nullable": true
                                     },
                                     "name": {
                                         "type": "string",
@@ -12090,7 +12147,8 @@
                                                     "type": "integer"
                                                 },
                                                 "class_id": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "nullable": true
                                                 },
                                                 "name": {
                                                     "type": "string"
@@ -15669,6 +15727,10 @@
                                                     "admission_no": {
                                                         "type": "string"
                                                     },
+                                                    "roll_no": {
+                                                        "type": "string",
+                                                        "example": "101"
+                                                    },
                                                     "first_name": {
                                                         "type": "string"
                                                     },
@@ -15677,6 +15739,18 @@
                                                     },
                                                     "full_name": {
                                                         "type": "string"
+                                                    },
+                                                    "remark_point": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "remark_points": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "behaviour_points": {
+                                                        "type": "integer",
+                                                        "example": 5
                                                     },
                                                     "dob": {
                                                         "type": "string"
@@ -15834,8 +15908,7 @@
                             "schema": {
                                 "required": [
                                     "admission_no",
-                                    "class_id",
-                                    "section_id"
+                                    "class_id"
                                 ],
                                 "properties": {
                                     "admission_no": {
@@ -15873,7 +15946,8 @@
                                     },
                                     "section_id": {
                                         "type": "integer",
-                                        "example": 1
+                                        "example": 1,
+                                        "nullable": true
                                     },
                                     "academic_year_id": {
                                         "type": "integer",
@@ -15896,11 +15970,13 @@
                                     },
                                     "religion": {
                                         "type": "string",
-                                        "example": "Christianity"
+                                        "example": "Christianity",
+                                        "nullable": true
                                     },
                                     "caste": {
                                         "type": "string",
-                                        "example": "General"
+                                        "example": "General",
+                                        "nullable": true
                                     },
                                     "phone": {
                                         "type": "string",
@@ -16091,8 +16167,7 @@
                             "schema": {
                                 "required": [
                                     "admission_no",
-                                    "class_id",
-                                    "section_id"
+                                    "class_id"
                                 ],
                                 "properties": {
                                     "admission_no": {
@@ -16130,7 +16205,8 @@
                                     },
                                     "section_id": {
                                         "type": "integer",
-                                        "example": 1
+                                        "example": 1,
+                                        "nullable": true
                                     },
                                     "academic_year_id": {
                                         "type": "integer",
@@ -16153,11 +16229,13 @@
                                     },
                                     "religion": {
                                         "type": "string",
-                                        "example": "Christianity"
+                                        "example": "Christianity",
+                                        "nullable": true
                                     },
                                     "caste": {
                                         "type": "string",
-                                        "example": "General"
+                                        "example": "General",
+                                        "nullable": true
                                     },
                                     "phone": {
                                         "type": "string",
@@ -16580,6 +16658,10 @@
                                                 "admission_no": {
                                                     "type": "string"
                                                 },
+                                                "roll_no": {
+                                                    "type": "string",
+                                                    "example": "101"
+                                                },
                                                 "first_name": {
                                                     "type": "string"
                                                 },
@@ -16588,6 +16670,18 @@
                                                 },
                                                 "full_name": {
                                                     "type": "string"
+                                                },
+                                                "remark_point": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "remark_points": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "behaviour_points": {
+                                                    "type": "integer",
+                                                    "example": 5
                                                 },
                                                 "dob": {
                                                     "type": "string"
@@ -16812,7 +16906,8 @@
                                     },
                                     "section_id": {
                                         "type": "integer",
-                                        "example": 1
+                                        "example": 1,
+                                        "nullable": true
                                     },
                                     "academic_year_id": {
                                         "type": "integer",
@@ -16835,11 +16930,13 @@
                                     },
                                     "religion": {
                                         "type": "string",
-                                        "example": "Christianity"
+                                        "example": "Christianity",
+                                        "nullable": true
                                     },
                                     "caste": {
                                         "type": "string",
-                                        "example": "General"
+                                        "example": "General",
+                                        "nullable": true
                                     },
                                     "phone": {
                                         "type": "string",
@@ -17321,8 +17418,7 @@
                                             "required": [
                                                 "admission_no",
                                                 "full_name",
-                                                "class_id",
-                                                "section_id"
+                                                "class_id"
                                             ],
                                             "properties": {
                                                 "admission_no": {
@@ -17360,7 +17456,8 @@
                                                 },
                                                 "section_id": {
                                                     "type": "integer",
-                                                    "example": 1
+                                                    "example": 1,
+                                                    "nullable": true
                                                 },
                                                 "academic_year_id": {
                                                     "type": "integer",
@@ -17377,11 +17474,13 @@
                                                 },
                                                 "religion": {
                                                     "type": "string",
-                                                    "example": "Christianity"
+                                                    "example": "Christianity",
+                                                    "nullable": true
                                                 },
                                                 "caste": {
                                                     "type": "string",
-                                                    "example": "General"
+                                                    "example": "General",
+                                                    "nullable": true
                                                 },
                                                 "phone": {
                                                     "type": "string",

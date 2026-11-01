@@ -66,7 +66,8 @@ INSERT INTO `roles` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VAL
 (2, 'admin', 'web', NOW(), NOW()),
 (3, 'principal', 'web', NOW(), NOW()),
 (4, 'teacher', 'web', NOW(), NOW()),
-(5, 'parent', 'web', NOW(), NOW())
+(5, 'parent', 'web', NOW(), NOW()),
+(6, 'driver', 'web', NOW(), NOW())
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 -- ======================================================================
@@ -123,7 +124,13 @@ INSERT INTO `permissions` (`name`, `guard_name`, `created_at`, `updated_at`) VAL
 ('view_child_fees', 'web', NOW(), NOW()),
 ('view_child_results', 'web', NOW(), NOW()),
 ('view_child_timetable', 'web', NOW(), NOW()),
-('view_child_homework', 'web', NOW(), NOW())
+('view_child_homework', 'web', NOW(), NOW()),
+('view_transport', 'web', NOW(), NOW()),
+('view_assigned_routes', 'web', NOW(), NOW()),
+('view_vehicles', 'web', NOW(), NOW()),
+('view_student_transport_list', 'web', NOW(), NOW()),
+('manage_vehicles', 'web', NOW(), NOW()),
+('manage_routes', 'web', NOW(), NOW())
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 SET FOREIGN_KEY_CHECKS = 1;

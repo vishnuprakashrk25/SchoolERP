@@ -793,6 +793,16 @@ class RoleController extends Controller
         return $this->syncRolePermissions($request, 'principal');
     }
 
+    public function getDriverPermissions(Request $request)
+    {
+        return $this->getRolePermissions('driver');
+    }
+
+    public function assignDriverPermissions(Request $request)
+    {
+        return $this->syncRolePermissions($request, 'driver');
+    }
+
     public function syncPermissions(Request $request, $id)
     {
         return $this->syncRolePermissions($request, $id);

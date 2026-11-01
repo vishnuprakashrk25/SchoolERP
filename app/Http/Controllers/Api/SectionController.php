@@ -72,8 +72,8 @@ class SectionController extends Controller
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(
-     *              required={"class_id","name"},
-     *              @OA\Property(property="class_id", type="integer", example="1"),
+     *              required={"name"},
+     *              @OA\Property(property="class_id", type="integer", nullable=true, example="1"),
      *              @OA\Property(property="name", type="string", example="name")
      *          )
      *      ),
@@ -87,7 +87,7 @@ class SectionController extends Controller
      *                  property="data",
      *                  type="object",
      *                  @OA\Property(property="id", type="integer"),
-     *                  @OA\Property(property="class_id", type="integer"),
+     *                  @OA\Property(property="class_id", type="integer", nullable=true),
      *                  @OA\Property(property="name", type="string"),
      *                  @OA\Property(property="created_at", type="string"),
      *                  @OA\Property(property="updated_at", type="string"),
@@ -112,8 +112,8 @@ class SectionController extends Controller
         public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'class_id' => 'required',
-            'name' => 'required'
+            'class_id' => 'nullable|exists:classes,id',
+            'name' => 'required|string|max:255'
         ]);
 
         if ($validator->fails()) {
@@ -127,7 +127,7 @@ class SectionController extends Controller
         return response()->json([
             'success' => true,
             'data' => $item
-        ]);
+        ], 201);
     }
 
     /**
@@ -214,8 +214,8 @@ class SectionController extends Controller
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(
-     *              required={"class_id","name"},
-     *              @OA\Property(property="class_id", type="integer", example="1"),
+     *              required={"name"},
+     *              @OA\Property(property="class_id", type="integer", nullable=true, example="1"),
      *              @OA\Property(property="name", type="string", example="name")
      *          )
      *      ),
@@ -229,7 +229,7 @@ class SectionController extends Controller
      *                  property="data",
      *                  type="object",
      *                  @OA\Property(property="id", type="integer"),
-     *                  @OA\Property(property="class_id", type="integer"),
+     *                  @OA\Property(property="class_id", type="integer", nullable=true),
      *                  @OA\Property(property="name", type="string"),
      *                  @OA\Property(property="created_at", type="string"),
      *                  @OA\Property(property="updated_at", type="string"),
@@ -259,8 +259,8 @@ class SectionController extends Controller
     {
         $item = Section::findOrFail($id);
         $validator = Validator::make($request->all(), [
-            'class_id' => 'required',
-            'name' => 'required'
+            'class_id' => 'nullable|exists:classes,id',
+            'name' => 'required|string|max:255'
         ]);
 
         if ($validator->fails()) {

@@ -194,6 +194,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('homework-report', [HomeworkController::class, 'report']);
     Route::get('homework-report/evaluation/{submissionId}', [HomeworkController::class, 'evaluationSummary']);
     Route::post('homeworks/{id}/evaluate', [HomeworkController::class, 'evaluate']);
+    Route::post('homeworks/{id}/submit', [HomeworkController::class, 'submit']);
     Route::post('homeworks/{id}', [HomeworkController::class, 'update']);
     Route::apiResource('homeworks', HomeworkController::class);
     Route::get('homework-list', [HomeworkController::class, 'index']);

@@ -263,7 +263,7 @@ class MasterDummyDataSeeder extends Seeder
 
     private function seedRoles()
     {
-        $roles = ['super-admin', 'admin', 'teacher', 'staff', 'student', 'parent'];
+        $roles = ['super-admin', 'admin', 'teacher', 'staff', 'student', 'parent', 'driver'];
         $guards = ['web', 'sanctum'];
 
         foreach ($guards as $guard) {

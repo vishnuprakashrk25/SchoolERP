@@ -18,3 +18,7 @@ yarn-error.log
 /.idea
 /.vscode
 *.zip
+/public/uploads/homework/*
+!/public/uploads/homework/.gitkeep
+/public/uploads/homework_submissions/*
+!/public/uploads/homework_submissions/.gitkeep

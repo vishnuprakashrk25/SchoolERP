@@ -55,9 +55,9 @@ class ClassTeacherController extends Controller
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(
-     *              required={"class_id", "section_id", "teacher_ids"},
+     *              required={"class_id", "teacher_ids"},
      *              @OA\Property(property="class_id", type="integer"),
-     *              @OA\Property(property="section_id", type="integer"),
+     *              @OA\Property(property="section_id", type="integer", nullable=true),
      *              @OA\Property(property="teacher_ids", type="array", @OA\Items(type="integer"))
      *          )
      *      ),
@@ -69,7 +69,7 @@ class ClassTeacherController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'class_id' => 'required|exists:classes,id',
-            'section_id' => 'required|exists:sections,id',
+            'section_id' => 'nullable|exists:sections,id',
             'teacher_ids' => 'required|array',
             'teacher_ids.*' => 'exists:staff,id',
         ]);

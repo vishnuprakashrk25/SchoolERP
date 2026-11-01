@@ -16,12 +16,13 @@ class RoleSeeder extends Seeder
 
 public function run()
 {
-    $admin   = Role::create(['name' => 'admin']);
-    $teacher = Role::create(['name' => 'teacher']);
-    $staff   = Role::create(['name' => 'staff']);
+    $admin   = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    $teacher = Role::firstOrCreate(['name' => 'teacher', 'guard_name' => 'web']);
+    $staff   = Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
+    $driver  = Role::firstOrCreate(['name' => 'driver', 'guard_name' => 'web']);
 
-    Permission::create(['name' => 'manage_admission']);
-    Permission::create(['name' => 'view_reports']);
+    Permission::firstOrCreate(['name' => 'manage_admission', 'guard_name' => 'web']);
+    Permission::firstOrCreate(['name' => 'view_reports', 'guard_name' => 'web']);
 
     $admin->givePermissionTo(Permission::all());
 }

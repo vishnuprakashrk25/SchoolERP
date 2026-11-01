@@ -65,8 +65,88 @@ class Student extends Model
     ];
 
     protected $appends = [
-        'full_name'
+        'full_name',
+        'remark_point',
+        'remark_points',
+        'behaviour_points',
     ];
+
+    protected static function booted()
+    {
+        static::deleting(function ($student) {
+            // Delete the student's personal user login if present
+            if ($student->user) {
+                try {
+                    $student->user->delete();
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("Could not delete student user: " . $e->getMessage());
+                }
+            }
+
+            // Check parent records
+            $parent = $student->parents;
+            if ($parent) {
+                $parentEmails = array_unique(array_filter([
+                    $parent->father_email ? trim($parent->father_email) : null,
+                    $parent->mother_email ? trim($parent->mother_email) : null,
+                    $parent->guardian_email ? trim($parent->guardian_email) : null,
+                ]));
+
+                $parentPhones = array_unique(array_filter([
+                    $parent->father_phone ? trim($parent->father_phone) : null,
+                    $parent->mother_phone ? trim($parent->mother_phone) : null,
+                    $parent->guardian_phone ? trim($parent->guardian_phone) : null,
+                ]));
+
+                // Delete this student's specific parent record
+                try {
+                    $parent->delete();
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("Could not delete student_parents record: " . $e->getMessage());
+                }
+
+                // Check if this parent has other active (non-deleted) students in the school
+                $hasOtherStudents = false;
+                if (!empty($parentEmails) || !empty($parentPhones)) {
+                    $hasOtherStudents = static::where('id', '!=', $student->id)
+                        ->whereHas('parents', function ($q) use ($parentEmails, $parentPhones) {
+                            $q->where(function ($subQ) use ($parentEmails, $parentPhones) {
+                                if (!empty($parentEmails)) {
+                                    $subQ->whereIn('father_email', $parentEmails)
+                                         ->orWhereIn('mother_email', $parentEmails)
+                                         ->orWhereIn('guardian_email', $parentEmails);
+                                }
+                                if (!empty($parentPhones)) {
+                                    $subQ->orWhereIn('father_phone', $parentPhones)
+                                         ->orWhereIn('mother_phone', $parentPhones)
+                                         ->orWhereIn('guardian_phone', $parentPhones);
+                                }
+                            });
+                        })->exists();
+                }
+
+                // If parent has NO other students in the school, clean up the parent User account
+                if (!$hasOtherStudents && !empty($parentEmails)) {
+                    foreach ($parentEmails as $email) {
+                        $user = User::where('email', $email)->first();
+                        if ($user) {
+                            try {
+                                // If user also has other roles (e.g., teacher, staff, admin, driver), keep user and only revoke parent role
+                                $otherRoles = $user->roles()->whereNotIn('name', ['parent'])->count();
+                                if ($otherRoles > 0) {
+                                    $user->removeRole('parent');
+                                } else {
+                                    $user->delete();
+                                }
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::warning("Could not delete or update parent user: " . $e->getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
 
     public function getFullNameAttribute($value)
     {
@@ -236,11 +316,57 @@ class Student extends Model
         return $this->hasMany(StudentIncident::class, 'student_id');
     }
 
+    public function getRollNoAttribute($value)
+    {
+        if ($value !== null && $value !== '') {
+            return (string) $value;
+        }
+
+        if ($this->relationLoaded('studentAcademics')) {
+            $academic = $this->studentAcademics->firstWhere('academic_year_id', $this->academic_year_id)
+                ?? $this->studentAcademics->sortByDesc('id')->first();
+            if ($academic && !empty($academic->roll_no)) {
+                return (string) $academic->roll_no;
+            }
+        } else {
+            $academicRollNo = $this->studentAcademics()
+                ->when($this->academic_year_id, fn($q) => $q->where('academic_year_id', $this->academic_year_id))
+                ->latest('id')
+                ->value('roll_no');
+            if (!empty($academicRollNo)) {
+                return (string) $academicRollNo;
+            }
+        }
+
+        return null;
+    }
+
+    public function getRemarkPointAttribute()
+    {
+        if ($this->relationLoaded('studentIncidents')) {
+            $positive = (int) $this->studentIncidents->where('is_negative', false)->sum('point');
+            $negative = (int) $this->studentIncidents->where('is_negative', true)->sum('point');
+            return $positive - $negative;
+        }
+
+        $positive = (int) $this->studentIncidents()->where('is_negative', false)->sum('point');
+        $negative = (int) $this->studentIncidents()->where('is_negative', true)->sum('point');
+        return $positive - $negative;
+    }
+
+    public function getRemarkPointsAttribute()
+    {
+        return $this->remark_point;
+    }
+
+    public function getRemarksPointAttribute()
+    {
+        return $this->remark_point;
+    }
+
     public function getBehaviourPointsAttribute()
     {
-        $positive = $this->studentIncidents()->where('is_negative', false)->sum('point');
-        $negative = $this->studentIncidents()->where('is_negative', true)->sum('point');
-        return $positive - $negative;
+        return $this->remark_point;
     }
 
     public function getPhotoAttribute($value)

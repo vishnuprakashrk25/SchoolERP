@@ -25,6 +25,7 @@ class PermissionSeeder extends Seeder
         $parentRole     = Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'web']);
         $staffRole      = Role::firstOrCreate(['name' => 'staff', 'guard_name' => 'web']);
         $studentRole    = Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+        $driverRole     = Role::firstOrCreate(['name' => 'driver', 'guard_name' => 'web']);
 
         // 2. Comprehensive School ERP Permissions
         $permissions = [
@@ -100,6 +101,14 @@ class PermissionSeeder extends Seeder
             'view_child_results',
             'view_child_timetable',
             'view_child_homework',
+
+            // Transport & Driver
+            'view_transport',
+            'view_assigned_routes',
+            'view_vehicles',
+            'view_student_transport_list',
+            'manage_vehicles',
+            'manage_routes',
         ];
 
         foreach ($permissions as $permName) {
@@ -163,6 +172,15 @@ class PermissionSeeder extends Seeder
             'view_child_results',
             'view_child_timetable',
             'view_child_homework',
+        ]);
+
+        // 7. Default permissions for Driver
+        $driverRole->syncPermissions([
+            'view_events',
+            'view_transport',
+            'view_assigned_routes',
+            'view_vehicles',
+            'view_student_transport_list',
         ]);
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();

@@ -59,9 +59,13 @@ class StudentController extends Controller
      *                  @OA\Property(property="id", type="integer"),
      *                  @OA\Property(property="user_id", type="integer"),
      *                  @OA\Property(property="admission_no", type="string"),
+     *                  @OA\Property(property="roll_no", type="string", example="101"),
      *                  @OA\Property(property="first_name", type="string"),
      *                  @OA\Property(property="last_name", type="string"),
      *                  @OA\Property(property="full_name", type="string"),
+     *                  @OA\Property(property="remark_point", type="integer", example=5),
+     *                  @OA\Property(property="remark_points", type="integer", example=5),
+     *                  @OA\Property(property="behaviour_points", type="integer", example=5),
      *                  @OA\Property(property="dob", type="string"),
      *                  @OA\Property(property="gender", type="string"),
      *                  @OA\Property(property="phone", type="string"),
@@ -130,7 +134,8 @@ class StudentController extends Controller
             'category',
             'parents',
             'studentAcademics.academicYear',
-            'emergencyContacts'
+            'emergencyContacts',
+            'studentIncidents:id,student_id,point,is_negative'
         ]);
 
         // Academic Year, Class, Section Filters
@@ -203,6 +208,7 @@ class StudentController extends Controller
                   ->orWhere('students.admission_no', 'like', $term)
                   ->orWhere('students.student_code', 'like', $term)
                   ->orWhere('students.roll_no', 'like', $term)
+                  ->orWhereHas('studentAcademics', fn($sq) => $sq->where('roll_no', 'like', $term))
                   ->orWhere('students.email', 'like', $term)
                   ->orWhere('students.phone', 'like', $term)
                   ->orWhere('students.apaar_id', 'like', $term)
@@ -267,7 +273,7 @@ class StudentController extends Controller
      *          @OA\MediaType(
      *              mediaType="application/json",
      *              @OA\Schema(
-     *              required={"admission_no","class_id","section_id"},
+     *              required={"admission_no","class_id"},
      *              @OA\Property(property="admission_no", type="string", example="ADM123"),
      *              @OA\Property(property="admission_date", type="string", format="date", example="2023-01-01"),
      *              @OA\Property(property="roll_no", type="string", example="101"),
@@ -276,13 +282,13 @@ class StudentController extends Controller
      *              @OA\Property(property="full_name", type="string", example="John Doe"),
      *              @OA\Property(property="email", type="string", example="john@example.com"),
      *              @OA\Property(property="class_id", type="integer", example=1),
-     *              @OA\Property(property="section_id", type="integer", example=1),
+     *              @OA\Property(property="section_id", type="integer", nullable=true, example=1),
      *              @OA\Property(property="academic_year_id", type="integer", example=1),
      *              @OA\Property(property="category_id", type="integer", nullable=true, example=1, description="Student category ID. If omitted, auto-assigned from selected class"),
      *              @OA\Property(property="dob", type="string", format="date", example="2010-01-01"),
      *              @OA\Property(property="gender", type="string", example="male"),
-     *              @OA\Property(property="religion", type="string", example="Christianity"),
-     *              @OA\Property(property="caste", type="string", example="General"),
+     *              @OA\Property(property="religion", type="string", nullable=true, example="Christianity"),
+     *              @OA\Property(property="caste", type="string", nullable=true, example="General"),
      *              @OA\Property(property="phone", type="string", example="1234567890"),
      *              @OA\Property(property="blood_group", type="string", example="O+"),
      *              @OA\Property(property="height", type="string", example="150cm"),
@@ -337,7 +343,7 @@ class StudentController extends Controller
      *          @OA\MediaType(
      *              mediaType="multipart/form-data",
      *              @OA\Schema(
-     *              required={"admission_no","class_id","section_id"},
+     *              required={"admission_no","class_id"},
      *              @OA\Property(property="admission_no", type="string", example="ADM123"),
      *              @OA\Property(property="admission_date", type="string", format="date", example="2023-01-01"),
      *              @OA\Property(property="roll_no", type="string", example="101"),
@@ -346,13 +352,13 @@ class StudentController extends Controller
      *              @OA\Property(property="full_name", type="string", example="John Doe"),
      *              @OA\Property(property="email", type="string", example="john@example.com"),
      *              @OA\Property(property="class_id", type="integer", example=1),
-     *              @OA\Property(property="section_id", type="integer", example=1),
+     *              @OA\Property(property="section_id", type="integer", nullable=true, example=1),
      *              @OA\Property(property="academic_year_id", type="integer", example=1),
      *              @OA\Property(property="category_id", type="integer", nullable=true, example=1, description="Student category ID. If omitted, auto-assigned from selected class"),
      *              @OA\Property(property="dob", type="string", format="date", example="2010-01-01"),
      *              @OA\Property(property="gender", type="string", example="male"),
-     *              @OA\Property(property="religion", type="string", example="Christianity"),
-     *              @OA\Property(property="caste", type="string", example="General"),
+     *              @OA\Property(property="religion", type="string", nullable=true, example="Christianity"),
+     *              @OA\Property(property="caste", type="string", nullable=true, example="General"),
      *              @OA\Property(property="phone", type="string", example="1234567890"),
      *              @OA\Property(property="blood_group", type="string", example="O+"),
      *              @OA\Property(property="height", type="string", example="150cm"),
@@ -494,7 +500,10 @@ class StudentController extends Controller
             'last_name' => 'nullable|string',
             'email' => 'nullable|email|unique:users,email|unique:students,email',
             'class_id' => 'required|exists:classes,id',
-            'section_id' => 'required|exists:sections,id',
+            'section_id' => 'nullable|exists:sections,id',
+            'caste' => 'nullable|string',
+            'religion' => 'nullable|string',
+            'blood_group' => 'nullable|string',
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'category_id' => 'nullable|exists:student_categories,id',
             'gender' => 'nullable|string',
@@ -694,7 +703,8 @@ class StudentController extends Controller
                 'student_id' => $student->id,
                 'academic_year_id' => $academicYearId,
                 'class_id' => $request->class_id,
-                'section_id' => $request->section_id
+                'section_id' => $request->section_id,
+                'roll_no' => $request->roll_no
             ]);
         }
 
@@ -764,9 +774,13 @@ class StudentController extends Controller
      *                  @OA\Property(property="id", type="integer"),
      *                  @OA\Property(property="user_id", type="integer"),
      *                  @OA\Property(property="admission_no", type="string"),
+     *                  @OA\Property(property="roll_no", type="string", example="101"),
      *                  @OA\Property(property="first_name", type="string"),
      *                  @OA\Property(property="last_name", type="string"),
      *                  @OA\Property(property="full_name", type="string"),
+     *                  @OA\Property(property="remark_point", type="integer", example=5),
+     *                  @OA\Property(property="remark_points", type="integer", example=5),
+     *                  @OA\Property(property="behaviour_points", type="integer", example=5),
      *                  @OA\Property(property="dob", type="string"),
      *                  @OA\Property(property="gender", type="string"),
      *                  @OA\Property(property="phone", type="string"),
@@ -905,13 +919,13 @@ class StudentController extends Controller
      *              @OA\Property(property="full_name", type="string", example="John Doe"),
      *              @OA\Property(property="email", type="string", example="john@example.com"),
      *              @OA\Property(property="class_id", type="integer", example=1),
-     *              @OA\Property(property="section_id", type="integer", example=1),
+     *              @OA\Property(property="section_id", type="integer", nullable=true, example=1),
      *              @OA\Property(property="academic_year_id", type="integer", example=1),
      *              @OA\Property(property="category_id", type="integer", nullable=true, example=1, description="Student category ID"),
      *              @OA\Property(property="dob", type="string", format="date", example="2010-01-01"),
      *              @OA\Property(property="gender", type="string", example="male"),
-     *              @OA\Property(property="religion", type="string", example="Christianity"),
-     *              @OA\Property(property="caste", type="string", example="General"),
+     *              @OA\Property(property="religion", type="string", nullable=true, example="Christianity"),
+     *              @OA\Property(property="caste", type="string", nullable=true, example="General"),
      *              @OA\Property(property="phone", type="string", example="1234567890"),
      *              @OA\Property(property="blood_group", type="string", example="O+"),
      *              @OA\Property(property="current_address", type="string", example="123 Main St"),
@@ -1081,7 +1095,10 @@ class StudentController extends Controller
             'student_code' => 'nullable|string|unique:students,student_code,' . $id,
             'email' => 'nullable|email|unique:users,email,' . $student->user_id . '|unique:students,email,' . $id,
             'class_id' => 'sometimes|required|exists:classes,id',
-            'section_id' => 'sometimes|required|exists:sections,id',
+            'section_id' => 'nullable|exists:sections,id',
+            'caste' => 'nullable|string',
+            'religion' => 'nullable|string',
+            'blood_group' => 'nullable|string',
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'category_id' => 'nullable|exists:student_categories,id',
             'gender' => 'nullable|string',
@@ -1198,9 +1215,18 @@ class StudentController extends Controller
         $sectionId = $request->section_id ?? $latestAcademic?->section_id ?? $student->section_id;
 
         if ($academicYearId && $classId && $sectionId) {
+            $academicData = [
+                'class_id' => $classId,
+                'section_id' => $sectionId,
+            ];
+            if ($request->has('roll_no')) {
+                $academicData['roll_no'] = $request->roll_no;
+            } elseif (!empty($student->roll_no)) {
+                $academicData['roll_no'] = $student->roll_no;
+            }
             StudentAcademic::updateOrCreate(
                 ['student_id' => $student->id, 'academic_year_id' => $academicYearId],
-                ['class_id' => $classId, 'section_id' => $sectionId]
+                $academicData
             );
         }
 
@@ -1286,20 +1312,56 @@ class StudentController extends Controller
             ], 403);
         }
 
-        $student = Student::find($id);
+        $student = Student::with(['parents', 'user'])->find($id);
 
         if (!$student) {
             return response()->json([
                 'success' => false,
                 'message' => 'Student not found'
-            ]);
+            ], 404);
+        }
+
+        $parent = $student->parents;
+        $parentEmails = array_unique(array_filter([
+            $parent?->father_email ? trim($parent->father_email) : null,
+            $parent?->mother_email ? trim($parent->mother_email) : null,
+            $parent?->guardian_email ? trim($parent->guardian_email) : null,
+        ]));
+        $parentPhones = array_unique(array_filter([
+            $parent?->father_phone ? trim($parent->father_phone) : null,
+            $parent?->mother_phone ? trim($parent->mother_phone) : null,
+            $parent?->guardian_phone ? trim($parent->guardian_phone) : null,
+        ]));
+
+        $hasOtherStudents = false;
+        if (!empty($parentEmails) || !empty($parentPhones)) {
+            $hasOtherStudents = Student::where('id', '!=', $student->id)
+                ->whereHas('parents', function ($q) use ($parentEmails, $parentPhones) {
+                    $q->where(function ($subQ) use ($parentEmails, $parentPhones) {
+                        if (!empty($parentEmails)) {
+                            $subQ->whereIn('father_email', $parentEmails)
+                                 ->orWhereIn('mother_email', $parentEmails)
+                                 ->orWhereIn('guardian_email', $parentEmails);
+                        }
+                        if (!empty($parentPhones)) {
+                            $subQ->orWhereIn('father_phone', $parentPhones)
+                                 ->orWhereIn('mother_phone', $parentPhones)
+                                 ->orWhereIn('guardian_phone', $parentPhones);
+                        }
+                    });
+                })->exists();
         }
 
         $student->delete();
 
+        $message = $hasOtherStudents
+            ? 'Student deleted. Parent account kept because they have other enrolled student(s) in this school.'
+            : 'Student and associated parent record deleted.';
+
         return response()->json([
             'success' => true,
-            'message' => 'Student deleted'
+            'message' => $message,
+            'parent_kept' => $hasOtherStudents
         ]);
     }
 
@@ -1321,7 +1383,7 @@ class StudentController extends Controller
      *                  type="array",
      *                  @OA\Items(
      *                      type="object",
-     *                      required={"admission_no","full_name","class_id","section_id"},
+     *                      required={"admission_no","full_name","class_id"},
      *                      @OA\Property(property="admission_no", type="string", example="ADM123"),
      *                      @OA\Property(property="admission_date", type="string", format="date", example="2023-01-01"),
      *                      @OA\Property(property="roll_no", type="string", example="101"),
@@ -1330,12 +1392,12 @@ class StudentController extends Controller
      *                      @OA\Property(property="full_name", type="string", example="John Doe"),
      *                      @OA\Property(property="email", type="string", example="john@example.com"),
      *                      @OA\Property(property="class_id", type="integer", example=1),
-     *                      @OA\Property(property="section_id", type="integer", example=1),
+     *                      @OA\Property(property="section_id", type="integer", nullable=true, example=1),
      *                      @OA\Property(property="academic_year_id", type="integer", example=1),
      *                      @OA\Property(property="dob", type="string", format="date", example="2010-01-01"),
      *                      @OA\Property(property="gender", type="string", example="male"),
-     *                      @OA\Property(property="religion", type="string", example="Christianity"),
-     *                      @OA\Property(property="caste", type="string", example="General"),
+     *                      @OA\Property(property="religion", type="string", nullable=true, example="Christianity"),
+     *                      @OA\Property(property="caste", type="string", nullable=true, example="General"),
      *                      @OA\Property(property="phone", type="string", example="1234567890"),
      *                      @OA\Property(property="blood_group", type="string", example="O+"),
      *                      @OA\Property(property="height", type="string", example="150cm"),
@@ -1426,7 +1488,10 @@ class StudentController extends Controller
             'students.*.last_name' => 'nullable|string',
             'students.*.email' => 'nullable|email|distinct|unique:users,email|unique:students,email',
             'students.*.class_id' => 'required|exists:classes,id',
-            'students.*.section_id' => 'required|exists:sections,id',
+            'students.*.section_id' => 'nullable|exists:sections,id',
+            'students.*.caste' => 'nullable|string',
+            'students.*.religion' => 'nullable|string',
+            'students.*.blood_group' => 'nullable|string',
             'students.*.academic_year_id' => 'nullable|exists:academic_years,id',
             'students.*.gender' => 'nullable|string',
             'students.*.apaar_id' => 'nullable|string',
@@ -1613,7 +1678,8 @@ class StudentController extends Controller
                         'student_id' => $student->id,
                         'academic_year_id' => $academicYearId,
                         'class_id' => $classId,
-                        'section_id' => $sectionId
+                        'section_id' => $sectionId,
+                        'roll_no' => $studentData['roll_no'] ?? null
                     ]);
                 }
 
