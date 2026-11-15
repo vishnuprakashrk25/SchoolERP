@@ -62,7 +62,17 @@ class PhoneCallLogController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        $log = PhoneCallLog::create($request->all());
+        $data = $request->all();
+        if (empty($data['date'])) {
+            $data['date'] = now()->toDateString();
+        }
+        if (!empty($data['next_follow_up_date']) && empty($data['follow_up_date'])) {
+            $data['follow_up_date'] = $data['next_follow_up_date'];
+        } elseif (!empty($data['follow_up_date']) && empty($data['next_follow_up_date'])) {
+            $data['next_follow_up_date'] = $data['follow_up_date'];
+        }
+
+        $log = PhoneCallLog::create($data);
 
         return response()->json(['success' => true, 'data' => $log], 201);
     }
@@ -113,7 +123,13 @@ class PhoneCallLogController extends Controller
     public function update(Request $request, $id)
     {
         $log = PhoneCallLog::findOrFail($id);
-        $log->update($request->all());
+        $data = $request->all();
+        if (!empty($data['next_follow_up_date']) && empty($data['follow_up_date'])) {
+            $data['follow_up_date'] = $data['next_follow_up_date'];
+        } elseif (!empty($data['follow_up_date']) && empty($data['next_follow_up_date'])) {
+            $data['next_follow_up_date'] = $data['follow_up_date'];
+        }
+        $log->update($data);
         return response()->json(['success' => true, 'message' => 'Phone call log updated successfully', 'data' => $log]);
     }
 

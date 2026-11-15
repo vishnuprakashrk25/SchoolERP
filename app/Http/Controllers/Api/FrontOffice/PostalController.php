@@ -61,7 +61,12 @@ class PostalController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        $postal = PostalReceive::create($request->all());
+        $data = $request->all();
+        if (empty($data['date'])) {
+            $data['date'] = now()->toDateString();
+        }
+
+        $postal = PostalReceive::create($data);
 
         return response()->json(['success' => true, 'data' => $postal], 201);
     }
@@ -117,7 +122,12 @@ class PostalController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        $postal = PostalDispatch::create($request->all());
+        $data = $request->all();
+        if (empty($data['date'])) {
+            $data['date'] = now()->toDateString();
+        }
+
+        $postal = PostalDispatch::create($data);
 
         return response()->json(['success' => true, 'data' => $postal], 201);
     }

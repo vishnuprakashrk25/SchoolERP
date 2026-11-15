@@ -17,6 +17,7 @@ class PhoneCallLog extends Model
         'date',
         'description',
         'next_follow_up_date',
+        'follow_up_date',
         'call_duration',
         'note',
         'call_type',

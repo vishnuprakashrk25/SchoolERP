@@ -18,5 +18,6 @@ class PostalReceive extends Model
         'note',
         'to_title',
         'date',
+        'file',
     ];
 }

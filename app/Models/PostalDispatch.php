@@ -18,5 +18,6 @@ class PostalDispatch extends Model
         'note',
         'from_title',
         'date',
+        'file',
     ];
 }
