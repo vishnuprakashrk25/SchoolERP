@@ -71,8 +71,14 @@ class ExamScheduleController extends Controller
      *      description="Returns saved exam schedule data",
      *      security={{"sanctum":{}}},
      *      @OA\RequestBody(
-     *          required=false,
-     *          @OA\JsonContent(type="object")
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"exam_id", "class_id", "subject_id", "exam_date"},
+     *              @OA\Property(property="exam_id", type="integer", example=1),
+     *              @OA\Property(property="class_id", type="integer", example=1),
+     *              @OA\Property(property="subject_id", type="integer", example=1),
+     *              @OA\Property(property="exam_date", type="string", format="date", example="2026-11-20")
+     *          )
      *      ),
      *      @OA\Response(
      *          response=201,
@@ -215,7 +221,12 @@ class ExamScheduleController extends Controller
      *      ),
      *      @OA\RequestBody(
      *          required=false,
-     *          @OA\JsonContent(type="object")
+     *          @OA\JsonContent(
+     *              @OA\Property(property="exam_id", type="integer", example=1),
+     *              @OA\Property(property="class_id", type="integer", example=1),
+     *              @OA\Property(property="subject_id", type="integer", example=1),
+     *              @OA\Property(property="exam_date", type="string", format="date", example="2026-11-20")
+     *          )
      *      ),
      *      @OA\Response(
      *          response=200,

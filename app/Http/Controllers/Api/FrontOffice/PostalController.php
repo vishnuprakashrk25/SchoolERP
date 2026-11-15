@@ -123,6 +123,25 @@ class PostalController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *      path="/api/front-office/postal-receives/{id}",
+     *      operationId="getPostalReceiveById",
+     *      tags={"1. Reception & Admission - Front Office"},
+     *      summary="Get received postal details",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(response=200, description="Successful operation")
+     * )
+     */
+    public function showReceive($id)
+    {
+        return response()->json([
+            'success' => true,
+            'data' => PostalReceive::findOrFail($id)
+        ]);
+    }
+
+    /**
      * @OA\Put(
      *      path="/api/front-office/postal-receives/{id}",
      *      operationId="updatePostalReceive",
@@ -166,6 +185,25 @@ class PostalController extends Controller
     {
         PostalReceive::findOrFail($id)->delete();
         return response()->json(['success' => true, 'message' => 'Deleted']);
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/api/front-office/postal-dispatches/{id}",
+     *      operationId="getPostalDispatchById",
+     *      tags={"1. Reception & Admission - Front Office"},
+     *      summary="Get dispatched postal details",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *      @OA\Response(response=200, description="Successful operation")
+     * )
+     */
+    public function showDispatch($id)
+    {
+        return response()->json([
+            'success' => true,
+            'data' => PostalDispatch::findOrFail($id)
+        ]);
     }
 
     /**
