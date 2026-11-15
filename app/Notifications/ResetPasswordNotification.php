@@ -45,9 +45,39 @@ class ResetPasswordNotification extends Notification
 
         $schoolName = $settings->school_name ?? $settings->site_title ?? 'YASEEN ENGLISH SCHOOL - MALOORA';
 
-        // Read Frontend URL strictly from .env (FRONTEND_URL)
-        $frontendUrl = config('app.frontend_url') ?: env('FRONTEND_URL') ?: 'http://localhost:3000';
-        $resetUrl = rtrim($frontendUrl, '/') . '/reset-password?token=' . $this->code . '&email=' . urlencode($notifiable->email);
+        // Determine Frontend URL:
+        // 1. Check if request originated from an allowed frontend domain (e.g. app.cyberduce.com or yesmlr.yesindiaschools.com)
+        $detectedFrontend = null;
+        if ($origin = (request()?->headers?->get('origin') ?: request()?->headers?->get('referer'))) {
+            $parsed = parse_url($origin);
+            if (!empty($parsed['host'])) {
+                $host = strtolower($parsed['host']);
+                $scheme = $parsed['scheme'] ?? 'https';
+                $port = !empty($parsed['port']) ? ':' . $parsed['port'] : '';
+                $candidate = $scheme . '://' . $host . $port;
+
+                $allowed = array_merge(
+                    (array) config('cors.allowed_origins', []),
+                    array_map('trim', explode(',', (string) (config('app.frontend_url') ?: env('FRONTEND_URL', ''))))
+                );
+
+                foreach ($allowed as $item) {
+                    if ($item && str_contains(strtolower($item), $host)) {
+                        $detectedFrontend = $candidate;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 2. Fallback to FRONTEND_URL from .env / config
+        if (!$detectedFrontend) {
+            $envUrls = config('app.frontend_url') ?: env('FRONTEND_URL') ?: 'https://app.cyberduce.com';
+            $firstUrl = trim(explode(',', $envUrls)[0]);
+            $detectedFrontend = $firstUrl ?: 'https://app.cyberduce.com';
+        }
+
+        $resetUrl = rtrim($detectedFrontend, '/') . '/reset-password?token=' . $this->code . '&email=' . urlencode($notifiable->email);
 
         $recipientName = $notifiable->full_name ?? $notifiable->name ?? 'User';
 

@@ -19,7 +19,10 @@ Route::get('/', function () {
 
 // Redirect /reset-password from backend URL directly to the frontend SPA
 Route::get('/reset-password', function (\Illuminate\Http\Request $request) {
-    $frontendUrl = config('app.frontend_url') ?: env('FRONTEND_URL') ?: 'http://localhost:3000';
+    $frontendUrl = config('app.frontend_url') ?: env('FRONTEND_URL') ?: 'https://app.cyberduce.com';
+    if (str_contains($frontendUrl, ',')) {
+        $frontendUrl = trim(explode(',', $frontendUrl)[0]);
+    }
     $query = $request->getQueryString();
     $target = rtrim($frontendUrl, '/') . '/reset-password' . ($query ? '?' . $query : '');
     return redirect()->away($target);
