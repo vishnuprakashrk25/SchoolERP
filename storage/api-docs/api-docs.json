@@ -8367,6 +8367,79 @@
                     }
                 ]
             },
+            "put": {
+                "tags": [
+                    "1. Reception & Admission - Front Office"
+                ],
+                "summary": "Update phone call log",
+                "operationId": "updatePhoneCallLog",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Salim Kumar"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+91 9876543210"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-15"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Follow-up on admission query"
+                                    },
+                                    "next_follow_up_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-22"
+                                    },
+                                    "call_duration": {
+                                        "type": "string",
+                                        "example": "03:45"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Parent confirmed visit on Monday"
+                                    },
+                                    "call_type": {
+                                        "type": "string",
+                                        "example": "Outgoing"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
             "delete": {
                 "tags": [
                     "1. Reception & Admission - Front Office"
@@ -8550,6 +8623,70 @@
             }
         },
         "/api/front-office/postal-receives/{id}": {
+            "put": {
+                "tags": [
+                    "1. Reception & Admission - Front Office"
+                ],
+                "summary": "Update received postal",
+                "operationId": "updatePostalReceive",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "from_title": {
+                                        "type": "string",
+                                        "example": "District Education Office"
+                                    },
+                                    "reference_no": {
+                                        "type": "string",
+                                        "example": "DEO/2026/8941"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "Civil Station, Malappuram"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Updated note"
+                                    },
+                                    "to_title": {
+                                        "type": "string",
+                                        "example": "Principal"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-15"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
             "delete": {
                 "tags": [
                     "1. Reception & Admission - Front Office"
@@ -8579,6 +8716,70 @@
             }
         },
         "/api/front-office/postal-dispatches/{id}": {
+            "put": {
+                "tags": [
+                    "1. Reception & Admission - Front Office"
+                ],
+                "summary": "Update dispatched postal",
+                "operationId": "updatePostalDispatch",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "to_title": {
+                                        "type": "string",
+                                        "example": "Director of Public Instruction"
+                                    },
+                                    "reference_no": {
+                                        "type": "string",
+                                        "example": "YES/OUT/2026/102"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "Vikas Bhavan, Thiruvananthapuram"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Updated note"
+                                    },
+                                    "from_title": {
+                                        "type": "string",
+                                        "example": "Yaseen English School Maloora"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-15"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
             "delete": {
                 "tags": [
                     "1. Reception & Admission - Front Office"

@@ -160,9 +160,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('complaints', ComplaintController::class);
         Route::get('postal-receives', [PostalController::class, 'getReceives']);
         Route::post('postal-receives', [PostalController::class, 'storeReceive']);
+        Route::put('postal-receives/{id}', [PostalController::class, 'updateReceive']);
         Route::delete('postal-receives/{id}', [PostalController::class, 'deleteReceive']);
         Route::get('postal-dispatches', [PostalController::class, 'getDispatches']);
         Route::post('postal-dispatches', [PostalController::class, 'storeDispatch']);
+        Route::put('postal-dispatches/{id}', [PostalController::class, 'updateDispatch']);
         Route::delete('postal-dispatches/{id}', [PostalController::class, 'deleteDispatch']);
         Route::apiResource('phone-call-logs', PhoneCallLogController::class);
     });

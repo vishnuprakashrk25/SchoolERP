@@ -87,6 +87,37 @@ class PhoneCallLogController extends Controller
     }
 
     /**
+     * @OA\Put(
+     *      path="/api/front-office/phone-call-logs/{id}",
+     *      operationId="updatePhoneCallLog",
+     *      tags={"1. Reception & Admission - Front Office"},
+     *      summary="Update phone call log",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="name", type="string", example="Salim Kumar"),
+     *              @OA\Property(property="phone", type="string", example="+91 9876543210"),
+     *              @OA\Property(property="date", type="string", format="date", example="2026-11-15"),
+     *              @OA\Property(property="description", type="string", example="Follow-up on admission query"),
+     *              @OA\Property(property="next_follow_up_date", type="string", format="date", example="2026-11-22"),
+     *              @OA\Property(property="call_duration", type="string", example="03:45"),
+     *              @OA\Property(property="note", type="string", example="Parent confirmed visit on Monday"),
+     *              @OA\Property(property="call_type", type="string", example="Outgoing")
+     *          )
+     *      ),
+     *      @OA\Response(response=200, description="Updated")
+     * )
+     */
+    public function update(Request $request, $id)
+    {
+        $log = PhoneCallLog::findOrFail($id);
+        $log->update($request->all());
+        return response()->json(['success' => true, 'message' => 'Phone call log updated successfully', 'data' => $log]);
+    }
+
+    /**
      * @OA\Delete(
      *      path="/api/front-office/phone-call-logs/{id}",
      *      operationId="deletePhoneCallLog",

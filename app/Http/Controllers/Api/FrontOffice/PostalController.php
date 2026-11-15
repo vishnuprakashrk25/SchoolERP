@@ -123,6 +123,35 @@ class PostalController extends Controller
     }
 
     /**
+     * @OA\Put(
+     *      path="/api/front-office/postal-receives/{id}",
+     *      operationId="updatePostalReceive",
+     *      tags={"1. Reception & Admission - Front Office"},
+     *      summary="Update received postal",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="from_title", type="string", example="District Education Office"),
+     *              @OA\Property(property="reference_no", type="string", example="DEO/2026/8941"),
+     *              @OA\Property(property="address", type="string", example="Civil Station, Malappuram"),
+     *              @OA\Property(property="note", type="string", example="Updated note"),
+     *              @OA\Property(property="to_title", type="string", example="Principal"),
+     *              @OA\Property(property="date", type="string", format="date", example="2026-11-15")
+     *          )
+     *      ),
+     *      @OA\Response(response=200, description="Updated")
+     * )
+     */
+    public function updateReceive(Request $request, $id)
+    {
+        $postal = PostalReceive::findOrFail($id);
+        $postal->update($request->all());
+        return response()->json(['success' => true, 'message' => 'Postal receive updated successfully', 'data' => $postal]);
+    }
+
+    /**
      * @OA\Delete(
      *      path="/api/front-office/postal-receives/{id}",
      *      operationId="deletePostalReceive",
@@ -137,6 +166,35 @@ class PostalController extends Controller
     {
         PostalReceive::findOrFail($id)->delete();
         return response()->json(['success' => true, 'message' => 'Deleted']);
+    }
+
+    /**
+     * @OA\Put(
+     *      path="/api/front-office/postal-dispatches/{id}",
+     *      operationId="updatePostalDispatch",
+     *      tags={"1. Reception & Admission - Front Office"},
+     *      summary="Update dispatched postal",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="to_title", type="string", example="Director of Public Instruction"),
+     *              @OA\Property(property="reference_no", type="string", example="YES/OUT/2026/102"),
+     *              @OA\Property(property="address", type="string", example="Vikas Bhavan, Thiruvananthapuram"),
+     *              @OA\Property(property="note", type="string", example="Updated note"),
+     *              @OA\Property(property="from_title", type="string", example="Yaseen English School Maloora"),
+     *              @OA\Property(property="date", type="string", format="date", example="2026-11-15")
+     *          )
+     *      ),
+     *      @OA\Response(response=200, description="Updated")
+     * )
+     */
+    public function updateDispatch(Request $request, $id)
+    {
+        $postal = PostalDispatch::findOrFail($id);
+        $postal->update($request->all());
+        return response()->json(['success' => true, 'message' => 'Postal dispatch updated successfully', 'data' => $postal]);
     }
 
     /**
