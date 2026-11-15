@@ -113,7 +113,18 @@ class AdmissionQueryController extends Controller
      *      summary="Update admission inquiry",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *      @OA\RequestBody(required=true, @OA\JsonContent(type="object")),
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="name", type="string", example="Mohammed Rafi"),
+     *              @OA\Property(property="phone", type="string", example="+91 9876543210"),
+     *              @OA\Property(property="email", type="string", format="email", example="rafi@example.com"),
+     *              @OA\Property(property="message", type="string", example="Interested in Class 5 admission"),
+     *              @OA\Property(property="follow_up_date", type="string", format="date", example="2026-11-20"),
+     *              @OA\Property(property="source", type="string", example="Online Portal"),
+     *              @OA\Property(property="status", type="string", example="contacted")
+     *          )
+     *      ),
      *      @OA\Response(response=200, description="Updated successfully"),
      *      @OA\Response(response=422, description="Validation error")
      * )

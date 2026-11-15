@@ -249,7 +249,27 @@ class FeeStructureController extends Controller
      *      summary="Update Fee Structure",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", required=true, in="path", @OA\Schema(type="integer")),
-     *      @OA\RequestBody(required=true, @OA\JsonContent(type="object")),
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="name", type="string", example="Class 5 General Fee 2026-27"),
+     *              @OA\Property(property="academic_year_id", type="integer", example=1),
+     *              @OA\Property(property="class_id", type="integer", example=1),
+     *              @OA\Property(property="section_id", type="integer", nullable=true, example=null),
+     *              @OA\Property(property="category_id", type="integer", nullable=true, example=null),
+     *              @OA\Property(property="academic_category_id", type="integer", nullable=true, example=null),
+     *              @OA\Property(property="description", type="string", example="Updated fee plan"),
+     *              @OA\Property(
+     *                  property="items",
+     *                  type="array",
+     *                  @OA\Items(
+     *                      @OA\Property(property="fee_type_id", type="integer", example=1),
+     *                      @OA\Property(property="amount", type="number", example=1200.00),
+     *                      @OA\Property(property="due_date", type="string", format="date", example="2026-05-10")
+     *                  )
+     *              )
+     *          )
+     *      ),
      *      @OA\Response(response=200, description="Successful operation"),
      *      @OA\Response(response=404, description="Not Found"),
      *      @OA\Response(response=422, description="Validation Error")

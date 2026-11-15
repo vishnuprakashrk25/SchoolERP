@@ -34,7 +34,14 @@ class ClassRoomController extends Controller
      *      tags={"3. Academic Infrastructure - Class Room"},
      *      summary="Store new class room",
      *      security={{"sanctum":{}}},
-     *      @OA\RequestBody(required=true, @OA\JsonContent(required={"name"}, type="object")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"name"},
+     *              @OA\Property(property="name", type="string", example="Room 101 - Primary Wing"),
+     *              @OA\Property(property="capacity", type="integer", example=40)
+     *          )
+     *      ),
      *      @OA\Response(response=201, description="Created")
      * )
      */
@@ -81,6 +88,13 @@ class ClassRoomController extends Controller
      *      summary="Update class room",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="name", type="string", example="Room 101 - Primary Wing"),
+     *              @OA\Property(property="capacity", type="integer", example=45)
+     *          )
+     *      ),
      *      @OA\Response(response=200, description="Updated")
      * )
      */

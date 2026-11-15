@@ -34,7 +34,20 @@ class PhoneCallLogController extends Controller
      *      tags={"1. Reception & Admission - Front Office"},
      *      summary="Store new phone call log",
      *      security={{"sanctum":{}}},
-     *      @OA\RequestBody(required=true, @OA\JsonContent(required={"name", "phone"}, type="object")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"name", "phone"},
+     *              @OA\Property(property="name", type="string", example="Salim Kumar"),
+     *              @OA\Property(property="phone", type="string", example="+91 9876543210"),
+     *              @OA\Property(property="date", type="string", format="date", example="2026-11-15"),
+     *              @OA\Property(property="description", type="string", example="Inquiry about Class 1 admission criteria"),
+     *              @OA\Property(property="next_follow_up_date", type="string", format="date", example="2026-11-20"),
+     *              @OA\Property(property="call_duration", type="string", example="05:30"),
+     *              @OA\Property(property="note", type="string", example="Parent will visit school office on Friday"),
+     *              @OA\Property(property="call_type", type="string", example="Incoming")
+     *          )
+     *      ),
      *      @OA\Response(response=201, description="Created")
      * )
      */

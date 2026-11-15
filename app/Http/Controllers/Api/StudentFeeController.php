@@ -297,7 +297,18 @@ class StudentFeeController extends Controller
      *      tags={"5. Finance & Fee Collection - StudentFee"},
      *      summary="Store individual student fee",
      *      security={{"sanctum":{}}},
-     *      @OA\RequestBody(required=true, @OA\JsonContent(type="object")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"student_id", "fee_structure_id"},
+     *              @OA\Property(property="student_id", type="integer", example=12),
+     *              @OA\Property(property="fee_structure_id", type="integer", example=1),
+     *              @OA\Property(property="academic_year_id", type="integer", nullable=true, example=1),
+     *              @OA\Property(property="amount", type="number", nullable=true, example=2500.00),
+     *              @OA\Property(property="due_date", type="string", format="date", example="2026-06-15"),
+     *              @OA\Property(property="remarks", type="string", example="Term 1 fee obligation")
+     *          )
+     *      ),
      *      @OA\Response(response=201, description="Successful operation"),
      *      @OA\Response(response=422, description="Validation Error")
      * )
@@ -373,7 +384,14 @@ class StudentFeeController extends Controller
      *      summary="Update existing Student Fee",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", required=true, in="path", @OA\Schema(type="integer")),
-     *      @OA\RequestBody(required=true, @OA\JsonContent(type="object")),
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="due_date", type="string", format="date", example="2026-07-01"),
+     *              @OA\Property(property="remarks", type="string", example="Extended due date as per parent request"),
+     *              @OA\Property(property="status", type="string", example="pending")
+     *          )
+     *      ),
      *      @OA\Response(response=200, description="Successful operation"),
      *      @OA\Response(response=404, description="Not Found")
      * )

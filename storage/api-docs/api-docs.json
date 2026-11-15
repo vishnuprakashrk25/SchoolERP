@@ -919,10 +919,42 @@
                     }
                 ],
                 "requestBody": {
-                    "required": true,
+                    "required": false,
                     "content": {
                         "application/json": {
                             "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Mohammed Rafi"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+91 9876543210"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "rafi@example.com"
+                                    },
+                                    "message": {
+                                        "type": "string",
+                                        "example": "Interested in Class 5 admission"
+                                    },
+                                    "follow_up_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-20"
+                                    },
+                                    "source": {
+                                        "type": "string",
+                                        "example": "Online Portal"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "contacted"
+                                    }
+                                },
                                 "type": "object"
                             }
                         }
@@ -4017,6 +4049,16 @@
                                 "required": [
                                     "name"
                                 ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Room 101 - Primary Wing"
+                                    },
+                                    "capacity": {
+                                        "type": "integer",
+                                        "example": 40
+                                    }
+                                },
                                 "type": "object"
                             }
                         }
@@ -4078,6 +4120,26 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Room 101 - Primary Wing"
+                                    },
+                                    "capacity": {
+                                        "type": "integer",
+                                        "example": 45
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Updated"
@@ -7213,10 +7275,64 @@
                     }
                 ],
                 "requestBody": {
-                    "required": true,
+                    "required": false,
                     "content": {
                         "application/json": {
                             "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Class 5 General Fee 2026-27"
+                                    },
+                                    "academic_year_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "class_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "section_id": {
+                                        "type": "integer",
+                                        "example": null,
+                                        "nullable": true
+                                    },
+                                    "category_id": {
+                                        "type": "integer",
+                                        "example": null,
+                                        "nullable": true
+                                    },
+                                    "academic_category_id": {
+                                        "type": "integer",
+                                        "example": null,
+                                        "nullable": true
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Updated fee plan"
+                                    },
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "fee_type_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "amount": {
+                                                    "type": "number",
+                                                    "example": 1200
+                                                },
+                                                "due_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2026-05-10"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
                                 "type": "object"
                             }
                         }
@@ -7962,6 +8078,37 @@
                                     "phone",
                                     "message"
                                 ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Mohammed Rafi"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+91 9876543210"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "rafi@example.com"
+                                    },
+                                    "message": {
+                                        "type": "string",
+                                        "example": "Bus route 3 arrived 20 minutes late today."
+                                    },
+                                    "complaint_type": {
+                                        "type": "string",
+                                        "example": "Transport"
+                                    },
+                                    "source": {
+                                        "type": "string",
+                                        "example": "Phone Call"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "pending"
+                                    }
+                                },
                                 "type": "object"
                             }
                         }
@@ -8026,6 +8173,47 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Mohammed Rafi"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+91 9876543210"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "rafi@example.com"
+                                    },
+                                    "message": {
+                                        "type": "string",
+                                        "example": "Bus route 3 issue resolved with driver"
+                                    },
+                                    "complaint_type": {
+                                        "type": "string",
+                                        "example": "Transport"
+                                    },
+                                    "source": {
+                                        "type": "string",
+                                        "example": "Phone Call"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "resolved"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Updated"
@@ -8098,6 +8286,42 @@
                                     "name",
                                     "phone"
                                 ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Salim Kumar"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+91 9876543210"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-15"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Inquiry about Class 1 admission criteria"
+                                    },
+                                    "next_follow_up_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-20"
+                                    },
+                                    "call_duration": {
+                                        "type": "string",
+                                        "example": "05:30"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Parent will visit school office on Friday"
+                                    },
+                                    "call_type": {
+                                        "type": "string",
+                                        "example": "Incoming"
+                                    }
+                                },
                                 "type": "object"
                             }
                         }
@@ -8204,6 +8428,33 @@
                                     "from_title",
                                     "reference_no"
                                 ],
+                                "properties": {
+                                    "from_title": {
+                                        "type": "string",
+                                        "example": "District Education Office"
+                                    },
+                                    "reference_no": {
+                                        "type": "string",
+                                        "example": "DEO/2026/8941"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "Civil Station, Malappuram"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Annual inspection circular received"
+                                    },
+                                    "to_title": {
+                                        "type": "string",
+                                        "example": "Principal"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-15"
+                                    }
+                                },
                                 "type": "object"
                             }
                         }
@@ -8254,6 +8505,33 @@
                                     "to_title",
                                     "reference_no"
                                 ],
+                                "properties": {
+                                    "to_title": {
+                                        "type": "string",
+                                        "example": "Director of Public Instruction"
+                                    },
+                                    "reference_no": {
+                                        "type": "string",
+                                        "example": "YES/OUT/2026/102"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "Vikas Bhavan, Thiruvananthapuram"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "Student scholarship enrollment list dispatched"
+                                    },
+                                    "from_title": {
+                                        "type": "string",
+                                        "example": "Yaseen English School Maloora"
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-15"
+                                    }
+                                },
                                 "type": "object"
                             }
                         }
@@ -19771,6 +20049,39 @@
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "student_id",
+                                    "fee_structure_id"
+                                ],
+                                "properties": {
+                                    "student_id": {
+                                        "type": "integer",
+                                        "example": 12
+                                    },
+                                    "fee_structure_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "academic_year_id": {
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
+                                    },
+                                    "amount": {
+                                        "type": "number",
+                                        "example": 2500,
+                                        "nullable": true
+                                    },
+                                    "due_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-06-15"
+                                    },
+                                    "remarks": {
+                                        "type": "string",
+                                        "example": "Term 1 fee obligation"
+                                    }
+                                },
                                 "type": "object"
                             }
                         }
@@ -19988,10 +20299,25 @@
                     }
                 ],
                 "requestBody": {
-                    "required": true,
+                    "required": false,
                     "content": {
                         "application/json": {
                             "schema": {
+                                "properties": {
+                                    "due_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-07-01"
+                                    },
+                                    "remarks": {
+                                        "type": "string",
+                                        "example": "Extended due date as per parent request"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "pending"
+                                    }
+                                },
                                 "type": "object"
                             }
                         }

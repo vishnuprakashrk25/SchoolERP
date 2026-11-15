@@ -34,7 +34,19 @@ class ComplaintController extends Controller
      *      tags={"1. Reception & Admission - Front Office"},
      *      summary="Store new complaint",
      *      security={{"sanctum":{}}},
-     *      @OA\RequestBody(required=true, @OA\JsonContent(required={"name", "phone", "message"}, type="object")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"name", "phone", "message"},
+     *              @OA\Property(property="name", type="string", example="Mohammed Rafi"),
+     *              @OA\Property(property="phone", type="string", example="+91 9876543210"),
+     *              @OA\Property(property="email", type="string", format="email", example="rafi@example.com"),
+     *              @OA\Property(property="message", type="string", example="Bus route 3 arrived 20 minutes late today."),
+     *              @OA\Property(property="complaint_type", type="string", example="Transport"),
+     *              @OA\Property(property="source", type="string", example="Phone Call"),
+     *              @OA\Property(property="status", type="string", example="pending")
+     *          )
+     *      ),
      *      @OA\Response(response=201, description="Created"),
      *      @OA\Response(response=422, description="Validation error")
      * )
@@ -87,6 +99,18 @@ class ComplaintController extends Controller
      *      summary="Update complaint",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="name", type="string", example="Mohammed Rafi"),
+     *              @OA\Property(property="phone", type="string", example="+91 9876543210"),
+     *              @OA\Property(property="email", type="string", format="email", example="rafi@example.com"),
+     *              @OA\Property(property="message", type="string", example="Bus route 3 issue resolved with driver"),
+     *              @OA\Property(property="complaint_type", type="string", example="Transport"),
+     *              @OA\Property(property="source", type="string", example="Phone Call"),
+     *              @OA\Property(property="status", type="string", example="resolved")
+     *          )
+     *      ),
      *      @OA\Response(response=200, description="Updated")
      * )
      */

@@ -35,7 +35,18 @@ class PostalController extends Controller
      *      tags={"1. Reception & Admission - Front Office"},
      *      summary="Store new received postal",
      *      security={{"sanctum":{}}},
-     *      @OA\RequestBody(required=true, @OA\JsonContent(required={"from_title", "reference_no"}, type="object")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"from_title", "reference_no"},
+     *              @OA\Property(property="from_title", type="string", example="District Education Office"),
+     *              @OA\Property(property="reference_no", type="string", example="DEO/2026/8941"),
+     *              @OA\Property(property="address", type="string", example="Civil Station, Malappuram"),
+     *              @OA\Property(property="note", type="string", example="Annual inspection circular received"),
+     *              @OA\Property(property="to_title", type="string", example="Principal"),
+     *              @OA\Property(property="date", type="string", format="date", example="2026-11-15")
+     *          )
+     *      ),
      *      @OA\Response(response=201, description="Created")
      * )
      */
@@ -80,7 +91,18 @@ class PostalController extends Controller
      *      tags={"1. Reception & Admission - Front Office"},
      *      summary="Store new dispatched postal",
      *      security={{"sanctum":{}}},
-     *      @OA\RequestBody(required=true, @OA\JsonContent(required={"to_title", "reference_no"}, type="object")),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"to_title", "reference_no"},
+     *              @OA\Property(property="to_title", type="string", example="Director of Public Instruction"),
+     *              @OA\Property(property="reference_no", type="string", example="YES/OUT/2026/102"),
+     *              @OA\Property(property="address", type="string", example="Vikas Bhavan, Thiruvananthapuram"),
+     *              @OA\Property(property="note", type="string", example="Student scholarship enrollment list dispatched"),
+     *              @OA\Property(property="from_title", type="string", example="Yaseen English School Maloora"),
+     *              @OA\Property(property="date", type="string", format="date", example="2026-11-15")
+     *          )
+     *      ),
      *      @OA\Response(response=201, description="Created")
      * )
      */
