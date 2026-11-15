@@ -8,7 +8,41 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FeeGroup extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name', 'description', 'created_by', 'updated_by', 'school_id', 'academic_id'];
+    protected $fillable = [
+        'name',
+        'description',
+        'school_id',
+        'branch_id',
+        'academic_id',
+        'academic_year_id',
+        'is_active',
+        'created_by',
+        'updated_by',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    public function feeTypes()
+    {
+        return $this->hasMany(FeeType::class, 'fee_group_id');
+    }
+
+    public function academicYear()
+    {
+        return $this->belongsTo(AcademicYear::class, 'academic_year_id');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }

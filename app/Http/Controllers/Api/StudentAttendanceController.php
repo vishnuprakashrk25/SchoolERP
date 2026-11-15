@@ -216,12 +216,7 @@ class StudentAttendanceController extends Controller
             });
         }
 
-        $data = $query->latest('date')->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ]);
+        return $this->respondPaginatedOrAll($query->latest('date'), $request);
     }
 
     /**
@@ -727,6 +722,7 @@ class StudentAttendanceController extends Controller
 
             $p = 0; $l = 0; $a = 0; $f = 0; $h = 0; $le = 0;
             $dailyAttendance = [];
+            $dailyNotes = [];
 
             for ($d = 1; $d <= $daysInMonth; $d++) {
                 $curDate = Carbon::createFromDate($year, $month, $d);
@@ -768,6 +764,7 @@ class StudentAttendanceController extends Controller
                 }
 
                 $dailyAttendance[$d] = $statusCode;
+                $dailyNotes[$d] = $attRecord?->note ?? '';
             }
 
             $globalCounts['P']  += $p;
@@ -802,6 +799,7 @@ class StudentAttendanceController extends Controller
                 'Le'              => $le,
                 'percentage'      => $percentage,
                 'days'            => $dailyAttendance,
+                'notes'           => $dailyNotes,
             ];
         }
 

@@ -24,6 +24,6 @@ public function run()
     Permission::firstOrCreate(['name' => 'manage_admission', 'guard_name' => 'web']);
     Permission::firstOrCreate(['name' => 'view_reports', 'guard_name' => 'web']);
 
-    $admin->givePermissionTo(Permission::all());
+    $admin->givePermissionTo(Permission::where('guard_name', 'web')->get());
 }
 }

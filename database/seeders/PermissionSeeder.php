@@ -39,6 +39,7 @@ class PermissionSeeder extends Seeder
             'manage_student_categories',
 
             // Academics
+            'manage_academic_years',
             'manage_classes',
             'manage_sections',
             'manage_subjects',
@@ -115,7 +116,7 @@ class PermissionSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
         }
 
-        $allPermissions = Permission::all();
+        $allPermissions = Permission::where('guard_name', 'web')->get();
 
         // 3. Super Admin & Admin get full access
         $superAdminRole->syncPermissions($allPermissions);

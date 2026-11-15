@@ -1,215 +1,298 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>{{ $isWelcome ?? false ? 'Welcome - Set Up Password' : 'Reset Password' }} - {{ $schoolName }}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ !empty($isWelcome) ? 'Welcome - Set Up Password' : 'Reset Password' }} - {{ $schoolName ?? 'YESINDIA Portal' }}</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #f3f4f8;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+      width: 100% !important;
+      background-color: #ffffff;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      color: #1e293b;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+      text-align: left;
     }
+
+    table {
+      border-collapse: collapse;
+      mso-table-lspace: 0pt;
+      mso-table-rspace: 0pt;
+      text-align: left;
+    }
+
+    img {
+      border: 0;
+      outline: none;
+      text-decoration: none;
+      -ms-interpolation-mode: bicubic;
+    }
+
     .wrapper {
       width: 100%;
-      background-color: #f3f4f8;
-      padding: 32px 16px;
-    }
-    .container {
-      max-width: 620px;
-      margin: 0 auto;
-    }
-    .card {
       background-color: #ffffff;
-      border-radius: 16px;
-      border: 1px solid #e2e8f0;
-      padding: 36px 32px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      padding: 24px 16px;
+      margin: 0;
     }
-    .header-logo {
-      text-align: center;
-      margin-bottom: 24px;
+
+    .email-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      text-align: left;
     }
-    .header-logo img {
-      height: 48px;
-      max-height: 48px;
-      width: auto;
-      object-fit: contain;
-      display: inline-block;
+
+    .header-img {
+      width: 100% !important;
+      max-width: 600px !important;
+      height: auto !important;
+      display: block;
+      margin: 0;
+      border: 0;
     }
-    .sub-header {
-      font-size: 13px;
-      font-weight: 600;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-top: 6px;
-      text-align: center;
+
+    .body-content {
+      padding: 28px 24px 24px 24px;
+      text-align: left;
     }
-    h2 {
-      font-size: 22px;
-      font-weight: 700;
-      color: #0f172a;
-      margin: 0 0 12px 0;
-    }
-    p {
-      font-size: 15px;
-      line-height: 1.6;
-      color: #475569;
-      margin: 0 0 16px 0;
-    }
-    .otp-box {
-      display: inline-block;
-      background-color: #f8fafc;
-      border: 1px solid #cbd5e1;
-      border-radius: 12px;
-      padding: 12px 28px;
-      margin: 8px 0 20px 0;
-      letter-spacing: 0.25em;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 30px;
-      font-weight: 800;
-      color: #0f172a;
-    }
-    .btn-purple {
-      display: inline-block;
-      background-color: #5e5ce6;
-      color: #ffffff !important;
-      font-weight: 600;
+
+    .greeting {
       font-size: 16px;
-      padding: 14px 34px;
-      border-radius: 11px;
-      text-decoration: none;
-      box-shadow: 0 2px 4px rgba(94, 92, 230, 0.2);
-      margin: 10px 0 22px 0;
-    }
-    .notice-row {
-      font-size: 14px;
-      color: #475569;
-      margin-bottom: 16px;
-    }
-    .security-box {
-      background-color: #fffbeb;
-      border: 1px solid #fde68a;
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-size: 13px;
-      color: #78350f;
       line-height: 1.5;
-      margin: 18px 0;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 0 0 16px 0;
+      text-align: left;
     }
-    .security-box strong {
-      color: #451a03;
+
+    .paragraph {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #334155;
+      margin: 0 0 16px 0;
+      text-align: left;
     }
-    .footer-links {
-      border-top: 1px solid #e2e8f0;
-      padding-top: 18px;
-      margin-top: 24px;
+
+    .otp-label {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #334155;
+      margin: 20px 0 10px 0;
+    }
+
+    .otp-code {
+      display: inline-block;
+      padding: 12px 24px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background-color: #f8fafc;
+      color: #0f172a;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+    }
+
+    .otp-wrap {
+      margin: 0 0 24px 0;
+    }
+
+    .notice {
+      padding: 14px 16px;
+      margin: 0 0 20px 0;
+      border-left: 3px solid #cbd5e1;
+      background-color: #f8fafc;
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .notice strong {
+      color: #0f172a;
+    }
+
+    .signoff {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #334155;
+      margin: 24px 0 28px 0;
+      text-align: left;
+    }
+
+    .signoff strong {
+      color: #0f172a;
+    }
+
+    .cta-container {
+      margin: 0 0 24px 0;
+      text-align: left;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background-color: #0C1A49;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 13px 28px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-align: center;
+      mso-padding-alt: 0;
+    }
+
+    .fallback-link {
+      margin: 0 0 24px 0;
+      color: #475569;
       font-size: 12px;
-      color: #64748b;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .fallback-link a {
+      color: #0C1A49;
+      text-decoration: underline;
+      overflow-wrap: anywhere;
       word-break: break-all;
     }
-    .footer-links a {
-      color: #4f46e5;
-      text-decoration: underline;
-      display: block;
-      margin-top: 6px;
-      font-family: ui-monospace, SFMono-Regular, monospace;
+
+    .footer {
+      padding: 20px 24px 32px 24px;
+      border-top: 1px solid #f1f5f9;
+      text-align: left;
       font-size: 11px;
-    }
-    .outer-footer {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 12px;
       color: #94a3b8;
-      line-height: 1.5;
+      line-height: 1.6;
+    }
+
+    @media only screen and (max-width: 600px) {
+      .wrapper {
+        padding: 0 !important;
+      }
+
+      .email-container {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+
+      .header-img {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+      }
+
+      .body-content {
+        padding: 20px 20px 20px 20px !important;
+      }
+
+      .footer {
+        padding: 18px 20px 16px 20px !important;
+      }
+
+      .btn-primary {
+        display: block !important;
+        width: auto !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        text-align: center !important;
+        padding: 14px 20px !important;
+        font-size: 14px !important;
+      }
     }
   </style>
 </head>
+
 <body>
-  <div class="wrapper">
-    <div class="container">
-      
-      <!-- Brand Header -->
-      <div class="header-logo">
-        <img src="{{ $logoUrl }}" alt="{{ $schoolName }}">
-        <div class="sub-header">{{ $schoolName }} Portal</div>
-      </div>
+  <table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td align="center" style="padding: 0;">
+        <table role="presentation" class="email-container" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding: 0;">
+              <!-- Header Banner Image -->
+              <img src="{{ $headerImageUrl ?? asset('images/email-header.jpg') }}" alt="{{ $schoolName ?? 'YES INDIA FOUNDATION - Yaseen English School Maloora Portal' }}" class="header-img">
 
-      <!-- Main Card -->
-      <div class="card">
-        <h2>Dear {{ $recipientName }},</h2>
+              <div class="body-content">
+                <p class="greeting">Dear {{ $recipientName ?? 'User' }},</p>
 
-        @if(!empty($isWelcome))
-          <p>
-            Welcome to the <strong>{{ $schoolName }} Portal</strong>! Your account has been successfully created.
-          </p>
-          <p>
-            To activate your account and set up your personal login password, please use the following 6-digit One-Time Password (OTP) or click the button below:
-          </p>
-        @else
-          <p>
-            We received a request to reset your password for your <strong>{{ $schoolName }} Portal</strong> account.
-          </p>
-          <p>
-            Please use the following 6-digit One-Time Password (OTP) to verify your request:
-          </p>
-        @endif
+                @if(!empty($isWelcome))
+                  <p class="paragraph">
+                    Welcome to the <strong>{{ $schoolName ?? 'YASEEN ENGLISH SCHOOL - MALOORA' }} ERP</strong>! Your account has been successfully created.
+                  </p>
+                  <p class="paragraph">
+                    To activate your account and set up your personal login password, please click the button below:
+                  </p>
+                @else
+                  <p class="paragraph">
+                    We received a request to reset your password for your
+                    <strong>{{ $schoolName ?? 'YASEEN ENGLISH SCHOOL - MALOORA' }} ERP</strong> account.
+                  </p>
+                @endif
 
-        <!-- OTP Box -->
-        <div style="text-align: left;">
-          <div class="otp-box">{{ $code }}</div>
-        </div>
+                @if(!empty($code))
+                  <div class="otp-wrap">
+                    <div class="otp-label">Your One-Time Password (OTP) verification code:</div>
+                    <div class="otp-code">{{ $code }}</div>
+                  </div>
+                @endif
 
-        <!-- Action CTA Button -->
-        <div>
-          <a class="btn-purple" href="{{ $resetUrl }}" target="_blank" rel="noopener noreferrer">
-            {{ !empty($isWelcome) ? 'Set Up Password' : 'Reset Password' }}
-          </a>
-        </div>
+                <div class="cta-container">
+                  <a href="{{ $resetUrl }}" class="btn-primary" target="_blank" rel="noopener noreferrer">
+                    {{ !empty($isWelcome) ? 'Set Up Password' : 'Reset Password' }}
+                  </a>
+                </div>
 
-        <!-- Expiration Notice -->
-        <div class="notice-row">
-          <span>⏱️ This verification code is valid for <strong>{{ $expireMinutes }} minutes</strong>.</span>
-        </div>
+                <p class="paragraph">
+                  This verification link is valid for <strong>{{ $expireMinutes ?? 60 }} minutes</strong>.
+                </p>
 
-        <!-- Security Advisory Card -->
-        <div class="security-box">
-          <strong>Security Notice:</strong>
-          For your security, do not share this OTP with anyone. School administration will never ask for your code.
-        </div>
+                <div class="notice">
+                  <strong>Security Notice:</strong>
+                  For your security, do not share this OTP or link with anyone. School administration will never ask for your code.
+                </div>
 
-        @if(empty($isWelcome))
-          <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;">
-            If you did not request a password reset, please ignore this email or notify the school IT helpdesk immediately.
-          </p>
-        @endif
+                @if(empty($isWelcome))
+                  <p class="paragraph">
+                    If you did not request a password reset, please ignore this email or notify the school IT helpdesk immediately.
+                  </p>
+                @endif
 
-        <p style="margin-bottom: 4px;">Warm regards,</p>
-        <p style="font-weight: 600; color: #0f172a; margin-top: 0;">
-          {{ $schoolName }} Portal Support
-        </p>
+                <div class="signoff">
+                  Warm regards,<br>
+                  <strong>{{ $schoolName ?? 'YASEEN ENGLISH SCHOOL - MALOORA' }}</strong>
+                </div>
 
-        <!-- Direct Link Fallback -->
-        <div class="footer-links">
-          <p style="margin-bottom: 4px; color: #64748b;">
-            If you're having trouble clicking the "{{ !empty($isWelcome) ? 'Set Up Password' : 'Reset Password' }}" button, copy and paste the URL below into your web browser:
-          </p>
-          <a href="{{ $resetUrl }}">{{ $resetUrl }}</a>
-        </div>
-      </div>
+                <div class="fallback-link">
+                  If you're having trouble clicking the "{{ !empty($isWelcome) ? 'Set Up Password' : 'Reset Password' }}" button, copy and paste the URL below into your web browser:
+                  <br>
+                  <a href="{{ $resetUrl }}">
+                    {{ $resetUrl }}
+                  </a>
+                </div>
+              </div>
 
-      <!-- Outer Footer -->
-      <div class="outer-footer">
-        <p>© {{ date('Y') }} {{ $schoolName }}. All rights reserved.</p>
-        <p>This is an automated administrative notification. Please do not reply directly to this email.</p>
-      </div>
-
-    </div>
-  </div>
+              <div class="footer">
+                <p style="margin: 0 0 6px 0;">
+                  © {{ date('Y') }} YES INDIA FOUNDATION. All rights reserved.
+                </p>
+                <p style="margin: 0;">
+                  This is an automated administrative notification. Please do not reply directly to this email.
+                </p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
+
 </html>

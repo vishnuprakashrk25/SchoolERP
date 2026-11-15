@@ -22,3 +22,5 @@ yarn-error.log
 !/public/uploads/homework/.gitkeep
 /public/uploads/homework_submissions/*
 !/public/uploads/homework_submissions/.gitkeep
+/public/uploads/student_photos/*
+!/public/uploads/student_photos/.gitkeep

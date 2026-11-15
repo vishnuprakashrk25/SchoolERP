@@ -38,4 +38,14 @@ class StudentAcademic extends Model
     {
         return $this->belongsTo(Section::class);
     }
+
+    public function setClassIdAttribute($value)
+    {
+        $this->attributes['class_id'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setSectionIdAttribute($value)
+    {
+        $this->attributes['section_id'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
 }

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Google\Client;
 use Google\Service\Calendar;
 use Google\Service\Calendar\Event as GoogleEvent;
+use Carbon\Carbon;
 
 class EventController extends Controller
 {
@@ -25,10 +26,12 @@ class EventController extends Controller
         $client->setClientId(config('services.google.client_id'));
         $client->setClientSecret(config('services.google.client_secret'));
 
+
+
         $client->setAccessToken([
             'access_token'  => $user->google_access_token,
             'refresh_token' => $user->google_refresh_token,
-            'expires_in'    => $user->google_token_expires_at ? $user->google_token_expires_at->diffInSeconds(now()) : 0,
+            'expires_in'    => $user->google_token_expires_at ? Carbon::parse($user->google_token_expires_at)->diffInSeconds(now()) : 0,
         ]);
 
         if ($client->isAccessTokenExpired()) {
@@ -129,7 +132,7 @@ class EventController extends Controller
             'description' => 'required|string',
             'role'        => 'required|string',
             'location'    => 'required|string',
-            'url'         => 'nullable|url',
+            'url'         => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -206,7 +209,22 @@ class EventController extends Controller
      *      summary="Update existing calendar event",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *      @OA\Response(response=200, description="Successful operation")
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="title", type="string", example="Annual Day"),
+     *              @OA\Property(property="description", type="string", example="Annual day celebration"),
+     *              @OA\Property(property="start_date", type="string", format="date-time", example="2026-12-01 09:00:00"),
+     *              @OA\Property(property="end_date", type="string", format="date-time", example="2026-12-01 17:00:00"),
+     *              @OA\Property(property="role", type="string", example="All"),
+     *              @OA\Property(property="location", type="string", example="School Auditorium"),
+     *              @OA\Property(property="url", type="string", example="https://example.com/event"),
+     *              @OA\Property(property="color", type="string", example="#FF5733")
+     *          )
+     *      ),
+     *      @OA\Response(response=200, description="Successful operation"),
+     *      @OA\Response(response=422, description="Validation error"),
+     *      @OA\Response(response=404, description="Event not found")
      * )
      */
     public function update(Request $request, $id)
@@ -221,7 +239,7 @@ class EventController extends Controller
             'description' => 'sometimes|string',
             'role'        => 'sometimes|string',
             'location'    => 'sometimes|string',
-            'url'         => 'sometimes|nullable|url',
+            'url'         => 'sometimes|nullable|string',
         ]);
 
         if ($validator->fails()) {

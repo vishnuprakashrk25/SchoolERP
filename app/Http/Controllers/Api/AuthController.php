@@ -99,7 +99,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'two_factor_required' => true,
-                'challenge_token' => encrypt($user->id),
+                'challenge_token' => encrypt(['user_id' => $user->id, 'expires_at' => now()->addMinutes(10)->timestamp]),
                 'message' => '2FA verification required'
             ]);
         }

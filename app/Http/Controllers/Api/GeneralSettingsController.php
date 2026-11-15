@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\GeneralSetting\UpdateGeneralSettingsRequest;
 use Illuminate\Http\Request;
 use App\Models\GeneralSetting;
 use Illuminate\Support\Facades\Storage;
@@ -31,7 +32,7 @@ class GeneralSettingsController extends Controller
      */
     public function get()
     {
-        $settings = GeneralSetting::first();
+        $settings = GeneralSetting::cached();
 
         if (!$settings) {
             $settings = GeneralSetting::create([
@@ -105,25 +106,8 @@ class GeneralSettingsController extends Controller
      *      @OA\Response(response=422, description="Validation error")
      * )
      */
-    public function update(Request $request)
+    public function update(UpdateGeneralSettingsRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'school_name' => 'required|string|max:255',
-            'site_title' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:255',
-            'state' => 'nullable|string|max:255',
-            'academic_year_id' => 'nullable|exists:academic_years,id',
-            'carry_forward_fees_due_days' => 'nullable|integer',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         $settings = GeneralSetting::first();
 
         if (!$settings) {

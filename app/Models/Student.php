@@ -24,6 +24,7 @@ class Student extends Model
         'section_id',
         'academic_year_id',
         'category_id',
+        'academic_category_id',
         'dob',
         'gender',
         'religion',
@@ -150,25 +151,27 @@ class Student extends Model
 
     public function getFullNameAttribute($value)
     {
-        if (!empty($value)) {
-            return $value;
-        }
-        return trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
+        return $value ?? $this->attributes['full_name'] ?? null;
     }
 
     public function getNameAttribute()
     {
-        return $this->full_name;
+        return $this->full_name ?? trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
     }
 
     public function setFullNameAttribute($value)
     {
-        $this->attributes['full_name'] = $value;
-        if (!empty($value) && (empty($this->attributes['first_name']) && empty($this->attributes['last_name']))) {
-            $parts = explode(' ', trim($value), 2);
-            $this->attributes['first_name'] = $parts[0] ?? '';
-            $this->attributes['last_name'] = $parts[1] ?? '';
-        }
+        $this->attributes['full_name'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setFirstNameAttribute($value)
+    {
+        $this->attributes['first_name'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setLastNameAttribute($value)
+    {
+        $this->attributes['last_name'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
     }
 
     public function setAdmissionDateAttribute($value)
@@ -194,6 +197,75 @@ class Student extends Model
     public function setDisableDateAttribute($value)
     {
         $this->attributes['disable_date'] = $this->formatDateValue($value);
+    }
+
+    public function setAdmissionNoAttribute($value)
+    {
+        if ($this->exists && ($value === null || (is_string($value) && trim($value) === ''))) {
+            // On update, never overwrite existing admission_no with null or empty string
+            return;
+        }
+        $this->attributes['admission_no'] = $value;
+    }
+
+    public function setClassIdAttribute($value)
+    {
+        $this->attributes['class_id'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setSectionIdAttribute($value)
+    {
+        $this->attributes['section_id'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setAcademicYearIdAttribute($value)
+    {
+        $this->attributes['academic_year_id'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setCategoryIdAttribute($value)
+    {
+        $this->attributes['category_id'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setStudentGroupIdAttribute($value)
+    {
+        $this->attributes['student_group_id'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setRouteIdAttribute($value)
+    {
+        $this->attributes['route_id'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setVehicleIdAttribute($value)
+    {
+        $this->attributes['vehicle_id'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setDormitoryIdAttribute($value)
+    {
+        $this->attributes['dormitory_id'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setRoomIdAttribute($value)
+    {
+        $this->attributes['room_id'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setEmailAttribute($value)
+    {
+        $this->attributes['email'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setStudentCodeAttribute($value)
+    {
+        $this->attributes['student_code'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setDisableReasonAttribute($value)
+    {
+        $this->attributes['disable_reason'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
     }
 
     private function formatDateValue($value)
@@ -226,6 +298,7 @@ class Student extends Model
         }
     }
 
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -236,12 +309,22 @@ class Student extends Model
         return $this->belongsTo(StudentCategory::class, 'category_id');
     }
 
+    public function academicCategory()
+    {
+        return $this->belongsTo(AcademicCategory::class, 'academic_category_id');
+    }
+
     public function parents()
     {
         return $this->hasOne(StudentParent::class);
     }
 
     public function class()
+    {
+        return $this->belongsTo(Classes::class, 'class_id');
+    }
+
+    public function classes()
     {
         return $this->belongsTo(Classes::class, 'class_id');
     }
@@ -311,6 +394,16 @@ class Student extends Model
         return $this->hasMany(StudentIncident::class, 'student_id');
     }
 
+    public function studentFees()
+    {
+        return $this->hasMany(StudentFee::class, 'student_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'student_id');
+    }
+
     public function behaviourRecords()
     {
         return $this->hasMany(StudentIncident::class, 'student_id');
@@ -343,15 +436,25 @@ class Student extends Model
 
     public function getRemarkPointAttribute()
     {
+        if (isset($this->attributes['remark_point_cache'])) {
+            return $this->attributes['remark_point_cache'];
+        }
+
         if ($this->relationLoaded('studentIncidents')) {
             $positive = (int) $this->studentIncidents->where('is_negative', false)->sum('point');
             $negative = (int) $this->studentIncidents->where('is_negative', true)->sum('point');
-            return $positive - $negative;
+            return $this->attributes['remark_point_cache'] = ($positive - $negative);
         }
 
-        $positive = (int) $this->studentIncidents()->where('is_negative', false)->sum('point');
-        $negative = (int) $this->studentIncidents()->where('is_negative', true)->sum('point');
-        return $positive - $negative;
+        if (!$this->exists) {
+            return 0;
+        }
+
+        $calc = $this->studentIncidents()
+            ->selectRaw("COALESCE(SUM(CASE WHEN is_negative = 1 THEN -point ELSE point END), 0) as net_points")
+            ->value('net_points');
+
+        return $this->attributes['remark_point_cache'] = (int)($calc ?? 0);
     }
 
     public function getRemarkPointsAttribute()
@@ -372,5 +475,116 @@ class Student extends Model
     public function getPhotoAttribute($value)
     {
         return $value;
+    }
+
+    public function setAcademicCategoryIdAttribute($value)
+    {
+        $this->attributes['academic_category_id'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    /**
+     * Retrieve siblings of this student based on shared parent contact or parent names.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function getSiblings()
+    {
+        if (!$this->relationLoaded('parents')) {
+            $this->load('parents');
+        }
+
+        $parent = $this->parents;
+        if (!$parent) {
+            return collect();
+        }
+
+        $rawPhones = array_filter([
+            $parent->father_phone,
+            $parent->mother_phone,
+            $parent->guardian_phone,
+        ], fn($v) => !empty($v) && trim((string)$v) !== '' && strlen(trim((string)$v)) >= 5);
+
+        $digitPhones = array_map(fn($p) => preg_replace('/\D+/', '', (string)$p), $rawPhones);
+        $phones = array_values(array_unique(array_filter(array_merge($rawPhones, $digitPhones), fn($p) => strlen($p) >= 5)));
+
+        $emails = array_values(array_unique(array_filter([
+            $parent->father_email,
+            $parent->mother_email,
+            $parent->guardian_email,
+        ], fn($v) => !empty($v) && trim((string)$v) !== '' && str_contains((string)$v, '@'))));
+
+        $fatherName = trim((string)($parent->father_name ?? ''));
+        $motherName = trim((string)($parent->mother_name ?? ''));
+
+        if (empty($phones) && empty($emails) && (empty($fatherName) || empty($motherName))) {
+            return collect();
+        }
+
+        return static::query()
+            ->where('students.id', '!=', $this->id)
+            ->whereHas('parents', function ($q) use ($phones, $emails, $fatherName, $motherName) {
+                $q->where(function ($subQ) use ($phones, $emails, $fatherName, $motherName) {
+                    $hasCondition = false;
+
+                    if (!empty($phones)) {
+                        $subQ->whereIn('father_phone', $phones)
+                             ->orWhereIn('mother_phone', $phones)
+                             ->orWhereIn('guardian_phone', $phones);
+                        $hasCondition = true;
+                    }
+
+                    if (!empty($emails)) {
+                        $method = $hasCondition ? 'orWhere' : 'where';
+                        $subQ->$method(function ($emailQ) use ($emails) {
+                            $emailQ->whereIn('father_email', $emails)
+                                   ->orWhereIn('mother_email', $emails)
+                                   ->orWhereIn('guardian_email', $emails);
+                        });
+                        $hasCondition = true;
+                    }
+
+                    if (!empty($fatherName) && !empty($motherName)) {
+                        $method = $hasCondition ? 'orWhere' : 'where';
+                        $subQ->$method(function ($nameQ) use ($fatherName, $motherName) {
+                            $nameQ->where('father_name', $fatherName)
+                                  ->where('mother_name', $motherName);
+                        });
+                    }
+                });
+            })
+            ->with([
+                'class:id,name',
+                'section:id,name',
+                'academicYear:id,name'
+            ])
+            ->select([
+                'students.id',
+                'students.admission_no',
+                'students.roll_no',
+                'students.first_name',
+                'students.last_name',
+                'students.full_name',
+                'students.gender',
+                'students.photo',
+                'students.dob',
+                'students.class_id',
+                'students.section_id',
+                'students.academic_year_id',
+                'students.is_disabled',
+                'students.status'
+            ])
+            ->get()
+            ->map(function ($sib) {
+                $sibArray = $sib->toArray();
+                $sibArray['class_name'] = $sib->class?->name;
+                $sibArray['section_name'] = $sib->section?->name;
+                $sibArray['academic_year_name'] = $sib->academicYear?->name;
+                return $sibArray;
+            });
+    }
+
+    public function getSiblingsAttribute()
+    {
+        return $this->getSiblings();
     }
 }

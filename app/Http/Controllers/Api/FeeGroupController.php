@@ -6,59 +6,59 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\FeeGroup;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class FeeGroupController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     /**
      * @OA\Get(
      *      path="/api/fee-groups",
      *      operationId="getFeeGroupsList",
      *      tags={"5. Finance & Fee Collection - FeeGroup"},
-     *      summary="Get list of FeeGroups",
-     *      description="Returns list of FeeGroups",
+     *      summary="Get list of Fee Groups",
+     *      description="Returns list of Fee Groups with optional filters",
      *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="academic_year_id", in="query", required=false, @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="branch_id", in="query", required=false, @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="is_active", in="query", required=false, @OA\Schema(type="boolean")),
      *      @OA\Response(
      *          response=200,
      *          description="Successful operation",
      *          @OA\JsonContent(
      *              @OA\Property(property="success", type="boolean", example=true),
-     *              @OA\Property(
-     *                  property="data",
-     *                  type="array",
-     *                  @OA\Items(
-     *                  @OA\Property(property="id", type="integer"),
-     *                  @OA\Property(property="name", type="string"),
-     *                  @OA\Property(property="description", type="string"),
-     *                  @OA\Property(property="school_id", type="integer"),
-     *                  @OA\Property(property="academic_id", type="integer"),
-     *                  @OA\Property(property="created_by", type="integer"),
-     *                  @OA\Property(property="updated_by", type="integer"),
-     *                  @OA\Property(property="created_at", type="string"),
-     *                  @OA\Property(property="updated_at", type="string"),
-     *                  @OA\Property(property="deleted_at", type="string")
-     *                  )
-     *              )
+     *              @OA\Property(property="data", type="array", @OA\Items(type="object"))
      *          )
-     *       ),
-     *      @OA\Response(response=401, description="Unauthenticated"),
-     *      @OA\Response(response=403, description="Forbidden")
-     *     )
+     *      ),
+     *      @OA\Response(response=401, description="Unauthenticated")
+     * )
      */
-    public function index()
+    public function index(Request $request)
     {
-        $data = FeeGroup::latest()->get();
+        $query = FeeGroup::with(['feeTypes', 'academicYear', 'branch']);
+
+        if ($request->filled('academic_year_id')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('academic_year_id', $request->academic_year_id)
+                  ->orWhere('academic_id', $request->academic_year_id);
+            });
+        }
+
+        if ($request->filled('branch_id')) {
+            $query->where('branch_id', $request->branch_id);
+        }
+
+        if ($request->has('is_active')) {
+            $query->where('is_active', filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN));
+        }
+
+        $data = $query->latest()->get();
+
         return response()->json([
             'success' => true,
             'data' => $data
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     /**
      * @OA\Post(
      *      path="/api/fee-groups",
@@ -72,20 +72,13 @@ class FeeGroupController extends Controller
      *          @OA\JsonContent(
      *              required={"name"},
      *              @OA\Property(property="name", type="string", example="Tuition Fees"),
-     *              @OA\Property(property="description", type="string", example="Monthly tuition fees"),
-     *              @OA\Property(property="school_id", type="integer", example=1),
-     *              @OA\Property(property="academic_id", type="integer", example=1)
+     *              @OA\Property(property="description", type="string", example="Academic tuition fees"),
+     *              @OA\Property(property="academic_year_id", type="integer", example=1),
+     *              @OA\Property(property="branch_id", type="integer", example=1),
+     *              @OA\Property(property="is_active", type="boolean", example=true)
      *          )
      *      ),
-     *      @OA\Response(
-     *          response=201,
-     *          description="Successful operation",
-     *          @OA\JsonContent(
-     *              @OA\Property(property="success", type="boolean", example=true),
-     *              @OA\Property(property="message", type="string", example="Success"),
-     *              @OA\Property(property="data", type="object")
-     *          )
-     *       ),
+     *      @OA\Response(response=201, description="Successful operation"),
      *      @OA\Response(response=422, description="Validation Error")
      * )
      */
@@ -94,8 +87,11 @@ class FeeGroupController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'school_id' => 'nullable|integer',
+            'academic_year_id' => 'nullable|integer',
             'academic_id' => 'nullable|integer',
+            'branch_id' => 'nullable|integer',
+            'school_id' => 'nullable|integer',
+            'is_active' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -105,72 +101,89 @@ class FeeGroupController extends Controller
             ], 422);
         }
 
-        $input = $request->all();
-        $input['created_by'] = $request->user()->id ?? null;
+        $payload = $request->all();
+        if (empty($payload['academic_year_id']) && !empty($payload['academic_id'])) {
+            $payload['academic_year_id'] = $payload['academic_id'];
+        } elseif (!empty($payload['academic_year_id']) && empty($payload['academic_id'])) {
+            $payload['academic_id'] = $payload['academic_year_id'];
+        }
+        $payload['created_by'] = Auth::id();
 
-        $item = FeeGroup::create($input);
-        
+        $feeGroup = FeeGroup::create($payload);
+
         return response()->json([
             'success' => true,
-            'message' => 'Fee Group created successfully',
-            'data' => $item
+            'message' => 'Fee group created successfully',
+            'data' => $feeGroup->load('feeTypes')
         ], 201);
     }
 
     /**
-     * Display the specified resource.
+     * @OA\Get(
+     *      path="/api/fee-groups/{id}",
+     *      operationId="getFeeGroupById",
+     *      tags={"5. Finance & Fee Collection - FeeGroup"},
+     *      summary="Get FeeGroup information",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", required=true, in="path", @OA\Schema(type="integer")),
+     *      @OA\Response(response=200, description="Successful operation"),
+     *      @OA\Response(response=404, description="Not Found")
+     * )
      */
     public function show($id)
     {
-        $item = FeeGroup::findOrFail($id);
+        $feeGroup = FeeGroup::with(['feeTypes', 'academicYear', 'branch'])->find($id);
+        if (!$feeGroup) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fee group not found'
+            ], 404);
+        }
+
         return response()->json([
             'success' => true,
-            'data' => $item
+            'data' => $feeGroup
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     /**
      * @OA\Put(
      *      path="/api/fee-groups/{id}",
      *      operationId="updateFeeGroup",
      *      tags={"5. Finance & Fee Collection - FeeGroup"},
-     *      summary="Update existing fee group",
-     *      description="Returns updated fee group data",
+     *      summary="Update existing FeeGroup",
      *      security={{"sanctum":{}}},
-     *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="id", required=true, in="path", @OA\Schema(type="integer")),
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(
-     *              @OA\Property(property="name", type="string"),
-     *              @OA\Property(property="description", type="string"),
-     *              @OA\Property(property="school_id", type="integer"),
-     *              @OA\Property(property="academic_id", type="integer")
+     *              @OA\Property(property="name", type="string", example="Tuition Fees"),
+     *              @OA\Property(property="description", type="string", example="Updated description"),
+     *              @OA\Property(property="academic_year_id", type="integer", example=1),
+     *              @OA\Property(property="is_active", type="boolean", example=true)
      *          )
      *      ),
-     *      @OA\Response(
-     *          response=200,
-     *          description="Successful operation",
-     *          @OA\JsonContent(
-     *              @OA\Property(property="success", type="boolean", example=true),
-     *              @OA\Property(property="message", type="string", example="Updated"),
-     *              @OA\Property(property="data", type="object")
-     *          )
-     *       ),
-     *      @OA\Response(response=404, description="Not Found")
+     *      @OA\Response(response=200, description="Successful operation"),
+     *      @OA\Response(response=404, description="Not Found"),
+     *      @OA\Response(response=422, description="Validation Error")
      * )
      */
     public function update(Request $request, $id)
     {
-        $item = FeeGroup::findOrFail($id);
-        
+        $feeGroup = FeeGroup::find($id);
+        if (!$feeGroup) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fee group not found'
+            ], 404);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
-            'description' => 'sometimes|nullable|string',
-            'school_id' => 'sometimes|nullable|integer',
-            'academic_id' => 'sometimes|nullable|integer',
+            'description' => 'nullable|string',
+            'academic_year_id' => 'nullable|integer',
+            'branch_id' => 'nullable|integer',
+            'is_active' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -180,28 +193,44 @@ class FeeGroupController extends Controller
             ], 422);
         }
 
-        $input = $request->all();
-        $input['updated_by'] = $request->user()->id ?? null;
+        $payload = $request->all();
+        $payload['updated_by'] = Auth::id();
+        $feeGroup->update($payload);
 
-        $item->update($input);
-        
         return response()->json([
             'success' => true,
-            'message' => 'Updated',
-            'data' => $item
+            'message' => 'Fee group updated successfully',
+            'data' => $feeGroup->fresh(['feeTypes'])
         ]);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * @OA\Delete(
+     *      path="/api/fee-groups/{id}",
+     *      operationId="deleteFeeGroup",
+     *      tags={"5. Finance & Fee Collection - FeeGroup"},
+     *      summary="Delete FeeGroup",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", required=true, in="path", @OA\Schema(type="integer")),
+     *      @OA\Response(response=200, description="Successful operation"),
+     *      @OA\Response(response=404, description="Not Found")
+     * )
      */
     public function destroy($id)
     {
-        $item = FeeGroup::findOrFail($id);
-        $item->delete();
+        $feeGroup = FeeGroup::find($id);
+        if (!$feeGroup) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fee group not found'
+            ], 404);
+        }
+
+        $feeGroup->delete();
+
         return response()->json([
             'success' => true,
-            'message' => 'Deleted'
+            'message' => 'Fee group deleted successfully'
         ]);
     }
 }

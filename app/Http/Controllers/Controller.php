@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 
 /**
@@ -62,4 +64,39 @@ use Illuminate\Routing\Controller as BaseController;
 class Controller extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
+
+    /**
+     * Return paginated results with meta when pagination params are passed,
+     * otherwise preserve legacy full collection response.
+     */
+    protected function respondPaginatedOrAll($query, Request $request, int $defaultPerPage = 25): JsonResponse
+    {
+        $hasPaginationParam = $request->filled('page')
+            || $request->filled('per_page')
+            || $request->filled('limit');
+
+        if ($hasPaginationParam) {
+            $rawLimit = $request->input('limit', $request->input('per_page', $defaultPerPage));
+            if ($rawLimit != -1 && strtolower((string) $rawLimit) !== 'all') {
+                $perPage = max(1, min((int) $rawLimit ?: $defaultPerPage, 200));
+                $paginated = $query->paginate($perPage);
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $paginated->items(),
+                    'meta' => [
+                        'current_page' => $paginated->currentPage(),
+                        'last_page' => $paginated->lastPage(),
+                        'per_page' => $paginated->perPage(),
+                        'total' => $paginated->total(),
+                    ],
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->get(),
+        ]);
+    }
 }

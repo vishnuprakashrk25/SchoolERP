@@ -140,6 +140,9 @@ INSERT INTO `sidebar_sub_menus` (`id`, `sidebar_menu_id`, `title`, `path`, `orde
 (53, 14, 'Staff List', NULL, 2, 1, NOW(), NOW()),
 
 -- General Settings Submenus (Menu ID 18)
-(54, 18, 'General Settings', NULL, 1, 1, NOW(), NOW());
+(54, 18, 'General Settings', NULL, 1, 1, NOW(), NOW()),
+(55, 18, 'Academic Year', NULL, 2, 1, NOW(), NOW()),
+(56, 18, 'Users & Access', NULL, 3, 1, NOW(), NOW()),
+(57, 18, 'Sidebar', NULL, 4, 1, NOW(), NOW());
 
 SET FOREIGN_KEY_CHECKS = 1;

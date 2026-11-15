@@ -21,9 +21,9 @@ class StudentCustomFieldsTest extends TestCase
     {
         parent::setUp();
 
-        DB::table('roles')->updateOrInsert(['name' => 'admin'], ['guard_name' => 'web']);
-        DB::table('roles')->updateOrInsert(['name' => 'student'], ['guard_name' => 'web']);
-        DB::table('roles')->updateOrInsert(['name' => 'parent'], ['guard_name' => 'web']);
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'student', 'guard_name' => 'web']);
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'parent', 'guard_name' => 'web']);
 
         $this->admin = User::create([
             'name' => 'Admin User',

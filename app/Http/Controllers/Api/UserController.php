@@ -58,13 +58,9 @@ class UserController extends Controller
      *      )
      *     )
      */
-    public function index()
+    public function index(Request $request)
     {
-        $data = User::with('roles')->latest()->get();
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ]);
+        return $this->respondPaginatedOrAll(User::with('roles')->latest(), $request);
     }
 
     /**

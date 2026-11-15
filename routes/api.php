@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\ClassSubjectController;
 use App\Http\Controllers\Api\TimetableController;
 use App\Http\Controllers\Api\StudentCategoryController;
+use App\Http\Controllers\Api\AcademicCategoryController;
 use App\Http\Controllers\Api\StudentParentController;
 use App\Http\Controllers\Api\StudentDocumentController;
 use App\Http\Controllers\Api\StudentAttendanceController;
@@ -83,26 +84,29 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 
-Route::post('/login', [AuthController::class, 'login']);
+// Public Authentication & Password management APIs (protected by rate limiting)
+Route::middleware('throttle:15,1')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
 
-// Password management APIs
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-Route::match(['get', 'post'], '/password/verify-token', [AuthController::class, 'verifyResetToken']);
-Route::match(['get', 'post'], '/verify-reset-token', [AuthController::class, 'verifyResetToken']);
-Route::match(['get', 'post'], '/password/verify', [AuthController::class, 'verifyPassword']);
-Route::match(['get', 'post'], '/verify-password', [AuthController::class, 'verifyPassword']);
-Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
-Route::get('/reset-password', function (\Illuminate\Http\Request $request) {
-    return response()->json([
-        'success' => true,
-        'message' => 'Reset token received. Please submit a POST request to /api/reset-password with your new password.',
-        'data' => [
-            'email' => $request->query('email'),
-            'token' => $request->query('token'),
-        ]
-    ]);
+    // Password management APIs
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::match(['get', 'post'], '/password/verify-token', [AuthController::class, 'verifyResetToken']);
+    Route::match(['get', 'post'], '/verify-reset-token', [AuthController::class, 'verifyResetToken']);
+    Route::match(['get', 'post'], '/password/verify', [AuthController::class, 'verifyPassword']);
+    Route::match(['get', 'post'], '/verify-password', [AuthController::class, 'verifyPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
+    Route::get('/reset-password', function (\Illuminate\Http\Request $request) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Reset token received. Please submit a POST request to /api/reset-password with your new password.',
+            'data' => [
+                'email' => $request->query('email'),
+                'token' => $request->query('token'),
+            ]
+        ]);
+    });
+    Route::post('/2fa/verify', [TwoFactorController::class, 'verify']);
 });
-Route::post('/2fa/verify', [TwoFactorController::class, 'verify']);
 Route::get('/google/callback', [GoogleCalendarController::class, 'handleGoogleCallback']);
 Route::get('/sidebar-menus', [SidebarMenuController::class, 'index']);
 
@@ -164,6 +168,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     //student
     Route::apiResource('student-categories', StudentCategoryController::class);
+    Route::apiResource('academic-categories', AcademicCategoryController::class);
+    Route::apiResource('student-academic-categories', AcademicCategoryController::class);
 
     // Add Additional Contact APIs (From Sibling & From Staff)
     Route::get('students/additional-contact/siblings', [StudentController::class, 'getSiblings']);
@@ -172,6 +178,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('students/additional-contact/staff/{id}', [StudentController::class, 'getStaffContactInfo']);
     Route::post('students/additional-contact', [StudentController::class, 'resolveAdditionalContact']);
     Route::get('students/siblings', [StudentController::class, 'getSiblings']);
+    Route::get('students/{id}/siblings', [StudentController::class, 'studentSiblings']);
     Route::get('students/{id}/sibling-info', [StudentController::class, 'getSiblingContactInfo']);
     Route::get('staff/{id}/contact-info', [StudentController::class, 'getStaffContactInfo']);
 
@@ -208,11 +215,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('exams', ExamController::class);
     Route::apiResource('exam-schedules', ExamScheduleController::class);
     Route::apiResource('exam-results', ExamResultController::class);
-    //fee
-    Route::apiResource('fee-types', FeeTypeController::class);
+    //fee & finance management
     Route::apiResource('fee-groups', FeeGroupController::class);
+    Route::apiResource('fee-types', FeeTypeController::class);
     Route::apiResource('fee-structures', FeeStructureController::class);
+
+    // Student Fees & Obligation Engine
+    Route::post('student-fees/assign', [StudentFeeController::class, 'assign']);
+    Route::get('student-fees/dues', [StudentFeeController::class, 'duesReport']);
+    Route::get('student-fees/student/{studentId}', [StudentFeeController::class, 'studentProfile']);
     Route::apiResource('student-fees', StudentFeeController::class);
+
+    // Fee Collection & Receipts
+    Route::post('payments/collect', [PaymentController::class, 'collect']);
+    Route::get('payments/{id}/receipt', [PaymentController::class, 'receipt']);
+    Route::post('payments/{id}/reverse', [PaymentController::class, 'reverse']);
     Route::apiResource('payments', PaymentController::class);
     //certificate
     Route::apiResource('certificate-templates', CertificateTemplateController::class);

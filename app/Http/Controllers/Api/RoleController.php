@@ -8,6 +8,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
@@ -79,12 +80,17 @@ class RoleController extends Controller
     }
 
     /**
-     * Dynamically count users assigned to a role without relying on morphedByMany.
+     * Dynamically count active (non-deleted) users assigned to a role without relying on morphedByMany.
      */
     protected function getRoleUsersCount($roleId): int
     {
         return DB::table('model_has_roles')
-            ->where('role_id', $roleId)
+            ->join('users', function ($join) {
+                $join->on('model_has_roles.model_id', '=', 'users.id')
+                    ->where('model_has_roles.model_type', '=', User::class);
+            })
+            ->where('model_has_roles.role_id', $roleId)
+            ->whereNull('users.deleted_at')
             ->count();
     }
 
@@ -155,9 +161,14 @@ class RoleController extends Controller
 
         $roleIds = $roles->pluck('id')->toArray();
         $userCounts = DB::table('model_has_roles')
-            ->whereIn('role_id', $roleIds)
-            ->select('role_id', DB::raw('count(*) as count'))
-            ->groupBy('role_id')
+            ->join('users', function ($join) {
+                $join->on('model_has_roles.model_id', '=', 'users.id')
+                    ->where('model_has_roles.model_type', '=', User::class);
+            })
+            ->whereIn('model_has_roles.role_id', $roleIds)
+            ->whereNull('users.deleted_at')
+            ->select('model_has_roles.role_id', DB::raw('count(*) as count'))
+            ->groupBy('model_has_roles.role_id')
             ->pluck('count', 'role_id');
 
         $roles->transform(function ($role) use ($userCounts) {
@@ -182,7 +193,7 @@ class RoleController extends Controller
      *      description="Returns role details including assigned permissions by role ID or name",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, description="Role ID or Name (e.g. 'teacher', 'parent', 'principal', '2')", @OA\Schema(type="string")),
-     *      @OA\Response(response=200, description="Successful operation"),
+     *      @OA\Response(response=200, description="Role retrieved successfully"),
      *      @OA\Response(response=404, description="Role not found")
      * )
      */
@@ -384,7 +395,25 @@ class RoleController extends Controller
      *      description="Returns currently assigned permissions and all available system permissions dynamically grouped by module for ANY role (e.g. 'teacher', 'parent', 'principal', 'admin', 'super-admin', or ID)",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, description="Role ID or Name (e.g. 'teacher', 'parent', 'principal', 'admin', '2')", @OA\Schema(type="string")),
-     *      @OA\Response(response=200, description="Successful operation"),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="total", type="integer", example=11),
+     *              @OA\Property(property="modules", type="object", description="Unique permissions grouped by functional module"),
+     *              @OA\Property(
+     *                  property="permissions",
+     *                  type="array",
+     *                  @OA\Items(
+     *                      @OA\Property(property="id", type="integer", example=21),
+     *                      @OA\Property(property="name", type="string", example="manage_academic_years"),
+     *                      @OA\Property(property="guard_name", type="string", example="web"),
+     *                      @OA\Property(property="module", type="string", example="Academic Years")
+     *                  )
+     *              )
+     *          )
+     *      ),
      *      @OA\Response(response=403, description="Unauthorized")
      * )
      */
@@ -395,7 +424,10 @@ class RoleController extends Controller
 
         $allPermissions = Permission::orderBy('name', 'asc')->get();
 
-        $permissionsList = $allPermissions->map(function ($perm) use ($assignedPerms) {
+        // Deduplicate permissions by name so each permission is unique (no duplicate web & sanctum entries)
+        $uniquePermissions = $allPermissions->unique('name')->values();
+
+        $permissionsList = $uniquePermissions->map(function ($perm) use ($assignedPerms) {
             return [
                 'id'          => $perm->id,
                 'name'        => $perm->name,
@@ -418,7 +450,7 @@ class RoleController extends Controller
                     'users_count'  => $this->getRoleUsersCount($role->id),
                 ],
                 'assigned_permissions' => $assignedPerms,
-                'total_permissions'    => $allPermissions->count(),
+                'total_permissions'    => $uniquePermissions->count(),
                 'modules'              => $groupedByModule,
                 'permissions'          => $permissionsList,
             ],
@@ -480,6 +512,7 @@ class RoleController extends Controller
 
             $user->syncPermissions($request->permissions);
             app()[PermissionRegistrar::class]->forgetCachedPermissions();
+            Cache::forget('permissions_ordered_list');
 
             return response()->json([
                 'success' => true,
@@ -494,6 +527,7 @@ class RoleController extends Controller
 
         $role->syncPermissions($request->permissions);
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
+        Cache::forget('permissions_ordered_list');
 
         return response()->json([
             'success' => true,
@@ -515,20 +549,43 @@ class RoleController extends Controller
      *      description="Returns all permissions from database dynamically grouped by module",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="search", in="query", required=false, @OA\Schema(type="string")),
-     *      @OA\Response(response=200, description="Successful operation")
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="total", type="integer", example=11),
+     *              @OA\Property(property="modules", type="object", description="Unique permissions grouped by functional module"),
+     *              @OA\Property(
+     *                  property="permissions",
+     *                  type="array",
+     *                  @OA\Items(
+     *                      @OA\Property(property="id", type="integer", example=21),
+     *                      @OA\Property(property="name", type="string", example="manage_academic_years"),
+     *                      @OA\Property(property="guard_name", type="string", example="web"),
+     *                      @OA\Property(property="module", type="string", example="Academic Years")
+     *                  )
+     *              )
+     *          )
+     *      )
      * )
      */
     public function getPermissions(Request $request)
     {
-        $query = Permission::query();
-
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $allPermissions = Permission::where('name', 'like', '%' . $request->search . '%')
+                ->orderBy('name', 'asc')
+                ->get();
+        } else {
+            $allPermissions = Cache::remember('permissions_ordered_list', 3600, function () {
+                return Permission::orderBy('name', 'asc')->get();
+            });
         }
 
-        $allPermissions = $query->orderBy('name', 'asc')->get();
+        // Deduplicate permissions by name so each permission is unique (no duplicate web & sanctum entries)
+        $uniquePermissions = $allPermissions->unique('name')->values();
 
-        $permissionsList = $allPermissions->map(function ($perm) {
+        $permissionsList = $uniquePermissions->map(function ($perm) {
             return [
                 'id'         => $perm->id,
                 'name'       => $perm->name,
@@ -541,7 +598,7 @@ class RoleController extends Controller
 
         return response()->json([
             'success'     => true,
-            'total'       => $allPermissions->count(),
+            'total'       => $uniquePermissions->count(),
             'modules'     => $modules,
             'permissions' => $permissionsList,
         ]);
@@ -587,6 +644,7 @@ class RoleController extends Controller
         ]);
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
+        Cache::forget('permissions_ordered_list');
 
         return response()->json([
             'success' => true,
@@ -622,6 +680,7 @@ class RoleController extends Controller
         $permission->delete();
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
+        Cache::forget('permissions_ordered_list');
 
         return response()->json([
             'success' => true,
@@ -638,7 +697,7 @@ class RoleController extends Controller
      *      description="Returns all roles, direct custom permissions, and inherited permissions for a user",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *      @OA\Response(response=200, description="Successful operation")
+     *      @OA\Response(response=200, description="User permissions retrieved successfully")
      * )
      */
     public function getUserPermissions($id)

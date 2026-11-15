@@ -51,7 +51,7 @@ class AcademicYearController extends Controller
 
     public function index()
     {
-        $years = AcademicYear::latest()->get();
+        $years = AcademicYear::cachedList();
 
         return response()->json([
             'success'=>true,

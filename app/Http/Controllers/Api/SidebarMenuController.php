@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SidebarMenu;
 use App\Models\SidebarSubMenu;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 
 class SidebarMenuController extends Controller
@@ -23,62 +24,118 @@ class SidebarMenuController extends Controller
      *          description="Successful operation",
      *          @OA\JsonContent(
      *              @OA\Property(property="success", type="boolean", example=true),
-     *              @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="array",
+     *                  @OA\Items(
+     *                      @OA\Property(property="title", type="string", example="Administration"),
+     *                      @OA\Property(
+     *                          property="menus",
+     *                          type="array",
+     *                          @OA\Items(
+     *                              @OA\Property(property="id", type="integer", example=1),
+     *                              @OA\Property(property="title", type="string", example="Admin Section"),
+     *                              @OA\Property(property="icon", type="string", example="/sidebar_icons/admin_section.svg"),
+     *                              @OA\Property(property="path", type="string", example="/admin-section"),
+     *                              @OA\Property(property="permission_id", type="integer", nullable=true, example=13),
+     *                              @OA\Property(property="permission", type="string", nullable=true, example="manage_admission_queries"),
+     *                              @OA\Property(property="is_active", type="boolean", example=true),
+     *                              @OA\Property(
+     *                                  property="sub_menus",
+     *                                  type="array",
+     *                                  @OA\Items(
+     *                                      @OA\Property(property="id", type="integer", example=1),
+     *                                      @OA\Property(property="title", type="string", example="Admission Query"),
+     *                                      @OA\Property(property="path", type="string", nullable=true, example="/admission-query"),
+     *                                      @OA\Property(property="permission_id", type="integer", nullable=true, example=13),
+     *                                      @OA\Property(property="permission", type="string", nullable=true, example="manage_admission_queries"),
+     *                                      @OA\Property(property="is_active", type="boolean", example=true)
+     *                                  )
+     *                              )
+     *                          )
+     *                      )
+     *                  )
+     *              )
      *          )
      *      )
      * )
      */
     public function index(Request $request)
     {
-        $query = SidebarMenu::ordered();
+        $onlyActive = $request->boolean('only_active');
+        $cacheKey = $onlyActive ? 'sidebar_menus_active' : 'sidebar_menus_all';
 
-        if ($request->boolean('only_active')) {
-            $query->active();
-        }
+        $result = Cache::remember($cacheKey, 3600, function () use ($onlyActive) {
+            $query = SidebarMenu::ordered();
 
-        $menus = $query->with([
-            'subMenus' => function ($q) use ($request) {
-                $q->ordered();
-                if ($request->boolean('only_active')) {
-                    $q->active();
-                }
+            if ($onlyActive) {
+                $query->active();
             }
-        ])->get();
 
-        // Group by section
-        $grouped = $menus->groupBy('section');
+            $menus = $query->with([
+                'subMenus' => function ($q) use ($onlyActive) {
+                    $q->ordered();
+                    if ($onlyActive) {
+                        $q->active();
+                    }
+                }
+            ])->get();
 
-        $result = [];
-        foreach ($grouped as $sectionTitle => $items) {
-            $sectionMenus = [];
-            foreach ($items as $item) {
-                $menuData = [
-                    'id' => $item->id,
-                    'title' => $item->title,
-                    'icon' => $item->icon,
-                    'path' => $item->path,
-                    'is_active' => (bool) $item->is_active,
+            // Group by section
+            $grouped = $menus->groupBy('section');
+
+            // Cache permissions map (name -> id and id -> name) for high-performance lookup
+            $permissionsMap = Cache::remember('permissions_name_id_map', 3600, function () {
+                return \Spatie\Permission\Models\Permission::pluck('id', 'name')->toArray();
+            });
+            $permissionsIdMap = Cache::remember('permissions_id_name_map', 3600, function () {
+                return \Spatie\Permission\Models\Permission::pluck('name', 'id')->toArray();
+            });
+
+            $result = [];
+            foreach ($grouped as $sectionTitle => $items) {
+                $sectionMenus = [];
+                foreach ($items as $item) {
+                    $permissionId = $item->permission_id ?? ($item->permission ? ($permissionsMap[$item->permission] ?? null) : null);
+                    $permissionName = $item->permission ?? ($permissionId ? ($permissionsIdMap[$permissionId] ?? null) : null);
+
+                    $menuData = [
+                        'id'            => $item->id,
+                        'title'         => $item->title,
+                        'icon'          => $item->icon,
+                        'path'          => $item->path,
+                        'permission_id' => $permissionId,
+                        'permission'    => $permissionName,
+                        'is_active'     => (bool) $item->is_active,
+                    ];
+
+                    if ($item->subMenus->isNotEmpty()) {
+                        $menuData['sub_menus'] = $item->subMenus->map(function ($sub) use ($permissionsMap, $permissionsIdMap) {
+                            $subPermissionId = $sub->permission_id ?? ($sub->permission ? ($permissionsMap[$sub->permission] ?? null) : null);
+                            $subPermissionName = $sub->permission ?? ($subPermissionId ? ($permissionsIdMap[$subPermissionId] ?? null) : null);
+
+                            return [
+                                'id'            => $sub->id,
+                                'title'         => $sub->title,
+                                'path'          => $sub->path,
+                                'permission_id' => $subPermissionId,
+                                'permission'    => $subPermissionName,
+                                'is_active'     => (bool) $sub->is_active,
+                            ];
+                        })->values()->all();
+                    }
+
+                    $sectionMenus[] = $menuData;
+                }
+
+                $result[] = [
+                    'title' => $sectionTitle,
+                    'menus' => $sectionMenus,
                 ];
-
-                if ($item->subMenus->isNotEmpty()) {
-                    $menuData['sub_menus'] = $item->subMenus->map(function ($sub) {
-                        return [
-                            'id' => $sub->id,
-                            'title' => $sub->title,
-                            'path' => $sub->path,
-                            'is_active' => (bool) $sub->is_active,
-                        ];
-                    })->values();
-                }
-
-                $sectionMenus[] = $menuData;
             }
 
-            $result[] = [
-                'title' => $sectionTitle,
-                'menus' => $sectionMenus,
-            ];
-        }
+            return $result;
+        });
 
         return response()->json([
             'success' => true,
@@ -98,7 +155,9 @@ class SidebarMenuController extends Controller
      */
     public function items(Request $request)
     {
-        $items = SidebarMenu::ordered()->with('subMenus')->get();
+        $items = Cache::remember('sidebar_menus_items', 3600, function () {
+            return SidebarMenu::ordered()->with('subMenus')->get();
+        });
 
         return response()->json([
             'success' => true,
@@ -121,6 +180,8 @@ class SidebarMenuController extends Controller
      *              @OA\Property(property="title", type="string", example="New Module"),
      *              @OA\Property(property="icon", type="string", example="/sidebar_icons/new.svg"),
      *              @OA\Property(property="path", type="string", example="/new-module"),
+     *              @OA\Property(property="permission_id", type="integer", example=21),
+     *              @OA\Property(property="permission", type="string", example="manage_general_settings"),
      *              @OA\Property(property="order", type="integer", example=1)
      *          )
      *      ),
@@ -130,12 +191,14 @@ class SidebarMenuController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'section' => 'required|string|max:100',
-            'title' => 'required|string|max:150',
-            'icon' => 'nullable|string|max:255',
-            'path' => 'nullable|string|max:255',
-            'order' => 'nullable|integer',
-            'is_active' => 'nullable|boolean',
+            'section'       => 'required|string|max:100',
+            'title'         => 'required|string|max:150',
+            'icon'          => 'nullable|string|max:255',
+            'path'          => 'nullable|string|max:255',
+            'permission_id' => 'nullable|integer',
+            'permission'    => 'nullable|string|max:100',
+            'order'         => 'nullable|integer',
+            'is_active'     => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -146,7 +209,19 @@ class SidebarMenuController extends Controller
             ], 422);
         }
 
-        $menu = SidebarMenu::create($request->all());
+        $data = $request->all();
+
+        // Auto-sync permission string & permission_id
+        if (!empty($data['permission_id']) && empty($data['permission'])) {
+            $perm = \Spatie\Permission\Models\Permission::find($data['permission_id']);
+            if ($perm) {
+                $data['permission'] = $perm->name;
+            }
+        } elseif (!empty($data['permission']) && empty($data['permission_id'])) {
+            $data['permission_id'] = \Spatie\Permission\Models\Permission::where('name', $data['permission'])->value('id');
+        }
+
+        $menu = SidebarMenu::create($data);
 
         return response()->json([
             'success' => true,
@@ -163,6 +238,19 @@ class SidebarMenuController extends Controller
      *      summary="Update a sidebar menu item",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="section", type="string", example="Administration"),
+     *              @OA\Property(property="title", type="string", example="New Module"),
+     *              @OA\Property(property="icon", type="string", example="/sidebar_icons/new.svg"),
+     *              @OA\Property(property="path", type="string", example="/new-module"),
+     *              @OA\Property(property="permission_id", type="integer", example=21),
+     *              @OA\Property(property="permission", type="string", example="manage_general_settings"),
+     *              @OA\Property(property="order", type="integer", example=1),
+     *              @OA\Property(property="is_active", type="boolean", example=true)
+     *          )
+     *      ),
      *      @OA\Response(response=200, description="Menu item updated successfully")
      * )
      */
@@ -171,12 +259,14 @@ class SidebarMenuController extends Controller
         $menu = SidebarMenu::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'section' => 'sometimes|required|string|max:100',
-            'title' => 'sometimes|required|string|max:150',
-            'icon' => 'sometimes|nullable|string|max:255',
-            'path' => 'sometimes|nullable|string|max:255',
-            'order' => 'sometimes|integer',
-            'is_active' => 'sometimes|boolean',
+            'section'       => 'sometimes|required|string|max:100',
+            'title'         => 'sometimes|required|string|max:150',
+            'icon'          => 'sometimes|nullable|string|max:255',
+            'path'          => 'sometimes|nullable|string|max:255',
+            'permission_id' => 'sometimes|nullable|integer',
+            'permission'    => 'sometimes|nullable|string|max:100',
+            'order'         => 'sometimes|integer',
+            'is_active'     => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -187,7 +277,19 @@ class SidebarMenuController extends Controller
             ], 422);
         }
 
-        $menu->update($request->all());
+        $data = $request->all();
+
+        // Auto-sync permission string & permission_id
+        if (!empty($data['permission_id']) && empty($data['permission'])) {
+            $perm = \Spatie\Permission\Models\Permission::find($data['permission_id']);
+            if ($perm) {
+                $data['permission'] = $perm->name;
+            }
+        } elseif (!empty($data['permission']) && empty($data['permission_id'])) {
+            $data['permission_id'] = \Spatie\Permission\Models\Permission::where('name', $data['permission'])->value('id');
+        }
+
+        $menu->update($data);
 
         return response()->json([
             'success' => true,

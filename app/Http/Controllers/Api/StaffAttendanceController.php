@@ -16,6 +16,8 @@ class StaffAttendanceController extends Controller
      *      tags={"2. Staff & HR - StaffAttendance"},
      *      summary="Get list of StaffAttendance",
      *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="page", in="query", required=false, @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="per_page", in="query", required=false, @OA\Schema(type="integer")),
      *      @OA\Response(
      *          response=200,
      *          description="Successful operation",
@@ -38,13 +40,9 @@ class StaffAttendanceController extends Controller
      *      )
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
-        $data = StaffAttendance::with(['staff'])->latest()->get();
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ]);
+        return $this->respondPaginatedOrAll(StaffAttendance::with(['staff'])->latest(), $request);
     }
 
     /**

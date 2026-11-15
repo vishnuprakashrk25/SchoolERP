@@ -50,4 +50,34 @@ class StudentParent extends Model
     {
         return $value;
     }
+
+    public function setFatherEmailAttribute($value)
+    {
+        $this->attributes['father_email'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setMotherEmailAttribute($value)
+    {
+        $this->attributes['mother_email'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setGuardianEmailAttribute($value)
+    {
+        $this->attributes['guardian_email'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setFatherPhoneAttribute($value)
+    {
+        $this->attributes['father_phone'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setMotherPhoneAttribute($value)
+    {
+        $this->attributes['mother_phone'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
+
+    public function setGuardianPhoneAttribute($value)
+    {
+        $this->attributes['guardian_phone'] = ($value === '' || (is_string($value) && trim($value) === '')) ? null : $value;
+    }
 }

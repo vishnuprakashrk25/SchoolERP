@@ -247,7 +247,18 @@ class TwoFactorController extends Controller
         ]);
 
         try {
-            $userId = decrypt($request->challenge_token);
+            $decrypted = decrypt($request->challenge_token);
+            if (is_array($decrypted)) {
+                if (isset($decrypted['expires_at']) && now()->timestamp > $decrypted['expires_at']) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'The 2FA challenge token has expired. Please login again.'
+                    ], 401);
+                }
+                $userId = $decrypted['user_id'] ?? null;
+            } else {
+                $userId = $decrypted;
+            }
             $user = User::findOrFail($userId);
         } catch (\Exception $e) {
             return response()->json([

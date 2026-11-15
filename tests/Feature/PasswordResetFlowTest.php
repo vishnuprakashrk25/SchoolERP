@@ -29,13 +29,9 @@ class PasswordResetFlowTest extends TestCase
     {
         parent::setUp();
 
-        // Ensure roles are seeded (we can manually seed or insert them to be safe)
-        DB::table('roles')->updateOrInsert(['name' => 'admin'], ['guard_name' => 'web']);
-        DB::table('roles')->updateOrInsert(['name' => 'teacher'], ['guard_name' => 'web']);
-        DB::table('roles')->updateOrInsert(['name' => 'Teacher'], ['guard_name' => 'web']);
-        DB::table('roles')->updateOrInsert(['name' => 'staff'], ['guard_name' => 'web']);
-        DB::table('roles')->updateOrInsert(['name' => 'parent'], ['guard_name' => 'web']);
-        DB::table('roles')->updateOrInsert(['name' => 'student'], ['guard_name' => 'web']);
+        foreach (['admin', 'teacher', 'Teacher', 'staff', 'parent', 'student'] as $roleName) {
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+        }
 
         $this->admin = User::create([
             'name' => 'Admin User',

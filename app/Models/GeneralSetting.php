@@ -5,10 +5,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class GeneralSetting extends Model
 {
     use SoftDeletes;
+
+    public const CACHE_KEY = 'app_general_settings';
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => Cache::forget(self::CACHE_KEY));
+        static::deleted(fn () => Cache::forget(self::CACHE_KEY));
+        static::restored(fn () => Cache::forget(self::CACHE_KEY));
+    }
+
+    /**
+     * Retrieve the cached global settings row.
+     */
+    public static function cached(): ?self
+    {
+        return Cache::remember(self::CACHE_KEY, 86400, fn () => static::first());
+    }
     protected $fillable = [
         'logo',
         'favicon',

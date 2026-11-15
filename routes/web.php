@@ -19,7 +19,7 @@ Route::get('/', function () {
 
 // Redirect /reset-password from backend URL directly to the frontend SPA
 Route::get('/reset-password', function (\Illuminate\Http\Request $request) {
-    $frontendUrl = env('FRONTEND_URL', 'https://yesmlr.yesindiaschools.com');
+    $frontendUrl = config('app.frontend_url') ?: env('FRONTEND_URL') ?: 'http://localhost:3000';
     $query = $request->getQueryString();
     $target = rtrim($frontendUrl, '/') . '/reset-password' . ($query ? '?' . $query : '');
     return redirect()->away($target);
@@ -69,6 +69,41 @@ Route::get('/storage-link', function () {
         'success' => false,
         'error' => 'Symlinks are disabled by your web host. Please use direct public upload.'
     ], 500);
+});
+
+// Clear Laravel optimize/route/config/view cache via URL on shared hosting
+Route::get('/clear-cache', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        if (class_exists(\App\Models\SidebarMenu::class) && method_exists(\App\Models\SidebarMenu::class, 'clearMenuCache')) {
+            \App\Models\SidebarMenu::clearMenuCache();
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Cache cleared successfully (routes, config, views, application & sidebar menu cache flushed).'
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
+
+// Generate Swagger API documentation via URL on shared hosting
+Route::get('/generate-docs', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('l5-swagger:generate');
+        return response()->json([
+            'success' => true,
+            'message' => 'L5-Swagger documentation regenerated successfully.'
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ], 500);
+    }
 });
 
 // Fallback route to serve /storage/... files dynamically if symlinks are disabled by host

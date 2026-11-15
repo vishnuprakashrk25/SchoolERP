@@ -175,7 +175,7 @@ class HomeworkController extends Controller
         // Auto resolve branch and academic year
         $classObj = Classes::find($request->class_id);
         $branchId = $classObj?->branch_id ?? auth()->user()?->branch_id;
-        $academicYearId = $classObj?->academic_year_id ?? (AcademicYear::where('is_current', true)->value('id') ?? GeneralSetting::first()?->academic_year_id);
+        $academicYearId = $classObj?->academic_year_id ?? (AcademicYear::cachedCurrentId() ?? GeneralSetting::cached()?->academic_year_id);
 
         $homework = Homework::create([
             'branch_id'        => $branchId,

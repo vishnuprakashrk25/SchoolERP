@@ -15,8 +15,8 @@ class StudentCategoryController extends Controller
      *      path="/api/student-categories",
      *      operationId="getStudentCategoriesList",
      *      tags={"4. Student Enrollment - StudentCategory"},
-     *      summary="Get list of Student Categories",
-     *      description="Returns list of Student Categories",
+     *      summary="Get list of Student Social/Demographic Categories",
+     *      description="Returns list of Student Social Categories (e.g. OBC, SC, ST, General, Other)",
      *      security={{"sanctum":{}}},
      *      @OA\Response(
      *          response=200,
@@ -27,12 +27,12 @@ class StudentCategoryController extends Controller
      *                  property="data",
      *                  type="array",
      *                  @OA\Items(
-     *                  @OA\Property(property="id", type="integer"),
-     *                  @OA\Property(property="name", type="string"),
-     *                  @OA\Property(property="description", type="string"),
+     *                  @OA\Property(property="id", type="integer", example=3),
+     *                  @OA\Property(property="name", type="string", example="OBC"),
+     *                  @OA\Property(property="description", type="string", example="Other Backward Class"),
      *                  @OA\Property(property="created_at", type="string"),
      *                  @OA\Property(property="updated_at", type="string"),
-     *                  @OA\Property(property="deleted_at", type="string")
+     *                  @OA\Property(property="deleted_at", type="string", nullable=true)
      *                  )
      *              )
      *          )
@@ -49,7 +49,7 @@ class StudentCategoryController extends Controller
      */
     public function index()
     {
-        $data = StudentCategory::latest()->get();
+        $data = StudentCategory::orderBy('id', 'asc')->get();
         return response()->json([
             'success' => true,
             'data' => $data
@@ -61,15 +61,15 @@ class StudentCategoryController extends Controller
      *      path="/api/student-categories",
      *      operationId="storeStudentCategory",
      *      tags={"4. Student Enrollment - StudentCategory"},
-     *      summary="Store new student category",
-     *      description="Returns saved student category data",
+     *      summary="Store new student social category",
+     *      description="Returns saved student category data (e.g. OBC, General, SC, ST, Other)",
      *      security={{"sanctum":{}}},
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(
      *              required={"name"},
-     *              @OA\Property(property="name", type="string", example="VIP"),
-     *              @OA\Property(property="description", type="string", example="Very Important Person")
+     *              @OA\Property(property="name", type="string", example="OBC"),
+     *              @OA\Property(property="description", type="string", example="Other Backward Class")
      *          )
      *      ),
      *      @OA\Response(

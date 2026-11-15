@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ExamResult\SaveExamResultRequest;
 use App\Models\ExamResult;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class ExamResultController extends Controller
 {
@@ -21,16 +21,14 @@ class ExamResultController extends Controller
      *      tags={"6. Examinations & Assessment - ExamResult"},
      *      summary="Get list of ExamResult",
      *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="page", in="query", required=false, @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="per_page", in="query", required=false, @OA\Schema(type="integer")),
      *      @OA\Response(response=200,description="Successful operation")
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
-        $data = ExamResult::latest()->get();
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ]);
+        return $this->respondPaginatedOrAll(ExamResult::latest(), $request);
     }
 
     /**
@@ -53,21 +51,8 @@ class ExamResultController extends Controller
      *      @OA\Response(response=201,description="Successful operation")
      * )
      */
-    public function store(Request $request)
+    public function store(SaveExamResultRequest $request)
     {
-                $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'student_id' => 'required|integer',
-            'exam_id' => 'required|integer',
-            'subject_id' => 'required|integer',
-            'marks' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
         $item = ExamResult::create($request->all());
         return response()->json([
             'success' => true,
@@ -116,23 +101,9 @@ class ExamResultController extends Controller
      *      @OA\Response(response=200,description="Successful operation")
      * )
      */
-    public function update(Request $request, $id)
+    public function update(SaveExamResultRequest $request, $id)
     {
         $item = ExamResult::findOrFail($id);
-        
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'student_id' => 'required|integer',
-            'exam_id' => 'required|integer',
-            'subject_id' => 'required|integer',
-            'marks' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
         $item->update($request->all());
         return response()->json([
             'success' => true,

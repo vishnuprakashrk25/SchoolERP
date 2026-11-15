@@ -54,13 +54,9 @@ class StudentParentController extends Controller
      *      )
      *     )
      */
-        public function index()
+    public function index(Request $request)
     {
-        $data = StudentParent::latest()->get();
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ]);
+        return $this->respondPaginatedOrAll(StudentParent::latest(), $request);
     }
 
     /**

@@ -31,7 +31,16 @@ class ClassController extends Controller
      *                  @OA\Property(property="name", type="string"),
      *                  @OA\Property(property="branch_id", type="integer"),
      *                  @OA\Property(property="academic_year_id", type="integer"),
-     *                  @OA\Property(property="category_id", type="integer", nullable=true),
+     *                  @OA\Property(property="academic_category_id", type="integer", nullable=true, example=6),
+     *                  @OA\Property(property="category_id", type="integer", nullable=true, example=6),
+     *                  @OA\Property(
+     *                      property="academic_category",
+     *                      type="object",
+     *                      nullable=true,
+     *                      @OA\Property(property="id", type="integer"),
+     *                      @OA\Property(property="name", type="string"),
+     *                      @OA\Property(property="description", type="string")
+     *                  ),
      *                  @OA\Property(
      *                      property="category",
      *                      type="object",
@@ -59,7 +68,7 @@ class ClassController extends Controller
 
     public function index()
     {
-        $classes = Classes::with(['academicYear', 'category:id,name', 'sections'])->get();
+        $classes = Classes::with(['academicYear', 'academicCategory:id,name,description', 'category:id,name', 'sections'])->get();
 
         return response()->json([
             'success'=>true,
@@ -81,7 +90,8 @@ class ClassController extends Controller
      *              @OA\Property(property="name", type="string", example="Class 3"),
      *              @OA\Property(property="academic_year_id", type="integer", example=1),
      *              @OA\Property(property="branch_id", type="integer", nullable=true, example=1),
-     *              @OA\Property(property="category_id", type="integer", nullable=true, example=1, description="Student category ID (e.g. Rainbow - 3, Planet, etc.)")
+     *              @OA\Property(property="academic_category_id", type="integer", nullable=true, example=6, description="Academic category ID (e.g. Rainbow - 3, Planet, Galaxy HS, etc.)"),
+     *              @OA\Property(property="category_id", type="integer", nullable=true, example=6, description="Alias for academic_category_id")
      *          )
      *      ),
      *      @OA\Response(
@@ -97,6 +107,7 @@ class ClassController extends Controller
      *                  @OA\Property(property="name", type="string"),
      *                  @OA\Property(property="branch_id", type="integer"),
      *                  @OA\Property(property="academic_year_id", type="integer"),
+     *                  @OA\Property(property="academic_category_id", type="integer", nullable=true),
      *                  @OA\Property(property="category_id", type="integer", nullable=true),
      *                  @OA\Property(property="created_at", type="string"),
      *                  @OA\Property(property="updated_at", type="string"),
@@ -118,25 +129,36 @@ class ClassController extends Controller
      *      )
      * )
      */
-
     public function store(Request $request)
     {
-
-        $validator = Validator::make($request->all(),[
-            'name'=>'required',
-            'academic_year_id'=>'required',
-            'branch_id'=>'nullable|exists:branches,id',
-            'category_id'=>'nullable|exists:student_categories,id',
-            'sections'=>'nullable|array',
-        ]);
-
-        if($validator->fails()){
-            return response()->json([
-                'errors'=>$validator->errors()
-            ],422);
+        $input = $request->all();
+        foreach (['branch_id', 'category_id', 'academic_category_id'] as $k) {
+            if (array_key_exists($k, $input) && ($input[$k] === '' || (is_string($input[$k]) && trim($input[$k]) === ''))) {
+                $input[$k] = null;
+            }
+        }
+        if (isset($input['category_id']) && !isset($input['academic_category_id'])) {
+            $input['academic_category_id'] = $input['category_id'];
+        } elseif (isset($input['academic_category_id']) && !isset($input['category_id'])) {
+            $input['category_id'] = $input['academic_category_id'];
         }
 
-        $data = $request->all();
+        $validator = Validator::make($input, [
+            'name' => 'required',
+            'academic_year_id' => 'required',
+            'branch_id' => 'nullable|exists:branches,id',
+            'academic_category_id' => 'nullable|exists:academic_categories,id',
+            'category_id' => 'nullable|exists:academic_categories,id',
+            'sections' => 'nullable|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $data = $input;
         if (!$request->filled('branch_id')) {
             $data['branch_id'] = ($request->user() && $request->user()->branch_id) ? $request->user()->branch_id : null;
         }
@@ -290,33 +312,61 @@ class ClassController extends Controller
     {
         $class = Classes::findOrFail($id);
 
-        $validator = Validator::make($request->all(),[
-            'name'=>'required',
-            'academic_year_id'=>'required',
-            'branch_id'=>'nullable|exists:branches,id',
-            'category_id'=>'nullable|exists:student_categories,id',
-            'sections'=>'nullable|array',
-        ]);
-
-        if($validator->fails()){
-            return response()->json([
-                'errors'=>$validator->errors()
-            ],422);
+        $input = $request->all();
+        foreach (['branch_id', 'category_id', 'academic_category_id'] as $k) {
+            if (array_key_exists($k, $input) && ($input[$k] === '' || (is_string($input[$k]) && trim($input[$k]) === ''))) {
+                $input[$k] = null;
+            }
+        }
+        if (isset($input['category_id']) && !isset($input['academic_category_id'])) {
+            $input['academic_category_id'] = $input['category_id'];
+        } elseif (isset($input['academic_category_id']) && !isset($input['category_id'])) {
+            $input['category_id'] = $input['academic_category_id'];
         }
 
-        $class->update($request->all());
+        $validator = Validator::make($input, [
+            'name' => 'required',
+            'academic_year_id' => 'required',
+            'branch_id' => 'nullable|exists:branches,id',
+            'academic_category_id' => 'nullable|exists:academic_categories,id',
+            'category_id' => 'nullable|exists:academic_categories,id',
+            'sections' => 'nullable|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $class->update($input);
 
         if ($request->has('sections') && is_array($request->sections)) {
-            $class->sections()->delete();
-            foreach ($request->sections as $sectionName) {
-                Section::create([
-                    'class_id' => $class->id,
-                    'name' => $sectionName
-                ]);
+            $existingSections = $class->sections()->get()->keyBy('name');
+            $incomingNames = array_unique(array_filter(array_map('trim', $request->sections)));
+
+            // Add new sections that do not exist yet
+            foreach ($incomingNames as $secName) {
+                if (!$existingSections->has($secName)) {
+                    Section::create([
+                        'class_id' => $class->id,
+                        'name' => $secName
+                    ]);
+                }
+            }
+
+            // Only delete omitted sections if no active students are attached
+            foreach ($existingSections as $secName => $section) {
+                if (!in_array($secName, $incomingNames)) {
+                    $hasStudents = \App\Models\Student::where('section_id', $section->id)->exists();
+                    if (!$hasStudents) {
+                        $section->delete();
+                    }
+                }
             }
         }
 
-        $class->load(['academicYear', 'category:id,name', 'sections']);
+        $class->load(['academicYear', 'academicCategory:id,name,description', 'category:id,name', 'sections']);
 
         return response()->json([
             'success'=>true,
