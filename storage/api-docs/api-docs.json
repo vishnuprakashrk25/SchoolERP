@@ -827,24 +827,59 @@
                                 ],
                                 "properties": {
                                     "name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "Mohammed Rafi"
                                     },
                                     "phone": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "+91 9876543210"
                                     },
                                     "email": {
                                         "type": "string",
-                                        "format": "email"
+                                        "format": "email",
+                                        "example": "rafi@example.com"
                                     },
-                                    "message": {
-                                        "type": "string"
-                                    },
-                                    "follow_up_date": {
+                                    "address": {
                                         "type": "string",
-                                        "format": "date"
+                                        "example": "123 Maloora Road, Malappuram"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Interested in admission for Class 5"
+                                    },
+                                    "date": {
+                                        "description": "Date From",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-16"
+                                    },
+                                    "next_follow_up_date": {
+                                        "description": "Next Follow Up Date",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-23"
+                                    },
+                                    "assigned": {
+                                        "type": "string",
+                                        "example": "Admin Staff"
+                                    },
+                                    "reference": {
+                                        "type": "string",
+                                        "example": "School Website"
                                     },
                                     "source": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "Direct Walk-in"
+                                    },
+                                    "class_id": {
+                                        "description": "Class ID",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "no_of_child": {
+                                        "description": "Number of child",
+                                        "type": "integer",
+                                        "example": 1
                                     },
                                     "status": {
                                         "type": "string",
@@ -937,18 +972,47 @@
                                         "format": "email",
                                         "example": "rafi@example.com"
                                     },
-                                    "message": {
+                                    "address": {
                                         "type": "string",
-                                        "example": "Interested in Class 5 admission"
+                                        "example": "123 Maloora Road, Malappuram"
                                     },
-                                    "follow_up_date": {
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Interested in admission for Class 5"
+                                    },
+                                    "date": {
+                                        "description": "Date From",
                                         "type": "string",
                                         "format": "date",
-                                        "example": "2026-11-20"
+                                        "example": "2026-11-16"
+                                    },
+                                    "next_follow_up_date": {
+                                        "description": "Next Follow Up Date",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-23"
+                                    },
+                                    "assigned": {
+                                        "type": "string",
+                                        "example": "Admin Staff"
+                                    },
+                                    "reference": {
+                                        "type": "string",
+                                        "example": "School Website"
                                     },
                                     "source": {
                                         "type": "string",
-                                        "example": "Online Portal"
+                                        "example": "Direct Walk-in"
+                                    },
+                                    "class_id": {
+                                        "description": "Class ID",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "no_of_child": {
+                                        "description": "Number of child",
+                                        "type": "integer",
+                                        "example": 1
                                     },
                                     "status": {
                                         "type": "string",

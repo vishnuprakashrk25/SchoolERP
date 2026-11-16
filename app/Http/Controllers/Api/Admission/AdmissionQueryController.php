@@ -29,7 +29,7 @@ class AdmissionQueryController extends Controller
      */
     public function index()
     {
-        $queries = AdmissionQuery::latest()->get();
+        $queries = AdmissionQuery::with('class')->latest()->get();
 
         return response()->json([
             'success' => true,
@@ -48,12 +48,18 @@ class AdmissionQueryController extends Controller
      *          required=true,
      *          @OA\JsonContent(
      *              required={"name", "phone"},
-     *              @OA\Property(property="name", type="string"),
-     *              @OA\Property(property="phone", type="string"),
-     *              @OA\Property(property="email", type="string", format="email"),
-     *              @OA\Property(property="message", type="string"),
-     *              @OA\Property(property="follow_up_date", type="string", format="date"),
-     *              @OA\Property(property="source", type="string"),
+     *              @OA\Property(property="name", type="string", example="Mohammed Rafi"),
+     *              @OA\Property(property="phone", type="string", example="+91 9876543210"),
+     *              @OA\Property(property="email", type="string", format="email", example="rafi@example.com"),
+     *              @OA\Property(property="address", type="string", example="123 Maloora Road, Malappuram"),
+     *              @OA\Property(property="description", type="string", example="Interested in admission for Class 5"),
+     *              @OA\Property(property="date", type="string", format="date", example="2026-11-16", description="Date From"),
+     *              @OA\Property(property="next_follow_up_date", type="string", format="date", example="2026-11-23", description="Next Follow Up Date"),
+     *              @OA\Property(property="assigned", type="string", example="Admin Staff"),
+     *              @OA\Property(property="reference", type="string", example="School Website"),
+     *              @OA\Property(property="source", type="string", example="Direct Walk-in"),
+     *              @OA\Property(property="class_id", type="integer", example=1, description="Class ID"),
+     *              @OA\Property(property="no_of_child", type="integer", example=1, description="Number of child"),
      *              @OA\Property(property="status", type="string", example="pending")
      *          )
      *      ),
@@ -67,19 +73,57 @@ class AdmissionQueryController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email',
+            'address' => 'nullable|string',
+            'description' => 'nullable|string',
+            'message' => 'nullable|string',
+            'date' => 'nullable|date',
+            'date_from' => 'nullable|date',
+            'next_follow_up_date' => 'nullable|date',
             'follow_up_date' => 'nullable|date',
+            'assigned' => 'nullable|string|max:255',
+            'reference' => 'nullable|string|max:255',
+            'source' => 'nullable|string|max:255',
+            'class_id' => 'nullable|integer',
+            'no_of_child' => 'nullable|integer',
+            'number_of_child' => 'nullable|integer',
+            'status' => 'nullable|string|max:50',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        $query = AdmissionQuery::create($request->all());
+        $data = $request->all();
+        // Support field aliases from UI
+        if (!empty($data['date_from']) && empty($data['date'])) {
+            $data['date'] = $data['date_from'];
+        }
+        if (empty($data['date'])) {
+            $data['date'] = now()->toDateString();
+        }
+        if (!empty($data['description']) && empty($data['message'])) {
+            $data['message'] = $data['description'];
+        } elseif (!empty($data['message']) && empty($data['description'])) {
+            $data['description'] = $data['message'];
+        }
+        if (!empty($data['next_follow_up_date']) && empty($data['follow_up_date'])) {
+            $data['follow_up_date'] = $data['next_follow_up_date'];
+        } elseif (!empty($data['follow_up_date']) && empty($data['next_follow_up_date'])) {
+            $data['next_follow_up_date'] = $data['follow_up_date'];
+        }
+        if (isset($data['number_of_child']) && !isset($data['no_of_child'])) {
+            $data['no_of_child'] = $data['number_of_child'];
+        }
+        if (isset($data['class']) && !isset($data['class_id']) && is_numeric($data['class'])) {
+            $data['class_id'] = $data['class'];
+        }
+
+        $query = AdmissionQuery::create($data);
 
         return response()->json([
             'success' => true,
             'message' => 'Admission inquiry created successfully',
-            'data' => $query
+            'data' => $query->load('class')
         ], 201);
     }
 
@@ -97,7 +141,7 @@ class AdmissionQueryController extends Controller
      */
     public function show(string $id)
     {
-        $query = AdmissionQuery::findOrFail($id);
+        $query = AdmissionQuery::with('class')->findOrFail($id);
 
         return response()->json([
             'success' => true,
@@ -119,9 +163,15 @@ class AdmissionQueryController extends Controller
      *              @OA\Property(property="name", type="string", example="Mohammed Rafi"),
      *              @OA\Property(property="phone", type="string", example="+91 9876543210"),
      *              @OA\Property(property="email", type="string", format="email", example="rafi@example.com"),
-     *              @OA\Property(property="message", type="string", example="Interested in Class 5 admission"),
-     *              @OA\Property(property="follow_up_date", type="string", format="date", example="2026-11-20"),
-     *              @OA\Property(property="source", type="string", example="Online Portal"),
+     *              @OA\Property(property="address", type="string", example="123 Maloora Road, Malappuram"),
+     *              @OA\Property(property="description", type="string", example="Interested in admission for Class 5"),
+     *              @OA\Property(property="date", type="string", format="date", example="2026-11-16", description="Date From"),
+     *              @OA\Property(property="next_follow_up_date", type="string", format="date", example="2026-11-23", description="Next Follow Up Date"),
+     *              @OA\Property(property="assigned", type="string", example="Admin Staff"),
+     *              @OA\Property(property="reference", type="string", example="School Website"),
+     *              @OA\Property(property="source", type="string", example="Direct Walk-in"),
+     *              @OA\Property(property="class_id", type="integer", example=1, description="Class ID"),
+     *              @OA\Property(property="no_of_child", type="integer", example=1, description="Number of child"),
      *              @OA\Property(property="status", type="string", example="contacted")
      *          )
      *      ),
@@ -136,20 +186,54 @@ class AdmissionQueryController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255',
             'phone' => 'sometimes|string|max:20',
-            'email' => 'sometimes|email',
+            'email' => 'nullable|email',
+            'address' => 'nullable|string',
+            'description' => 'nullable|string',
+            'message' => 'nullable|string',
+            'date' => 'nullable|date',
+            'date_from' => 'nullable|date',
+            'next_follow_up_date' => 'nullable|date',
             'follow_up_date' => 'nullable|date',
+            'assigned' => 'nullable|string|max:255',
+            'reference' => 'nullable|string|max:255',
+            'source' => 'nullable|string|max:255',
+            'class_id' => 'nullable|integer',
+            'no_of_child' => 'nullable|integer',
+            'number_of_child' => 'nullable|integer',
+            'status' => 'nullable|string|max:50',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        $query->update($request->all());
+        $data = $request->all();
+        if (!empty($data['date_from']) && empty($data['date'])) {
+            $data['date'] = $data['date_from'];
+        }
+        if (!empty($data['description']) && empty($data['message'])) {
+            $data['message'] = $data['description'];
+        } elseif (!empty($data['message']) && empty($data['description'])) {
+            $data['description'] = $data['message'];
+        }
+        if (!empty($data['next_follow_up_date']) && empty($data['follow_up_date'])) {
+            $data['follow_up_date'] = $data['next_follow_up_date'];
+        } elseif (!empty($data['follow_up_date']) && empty($data['next_follow_up_date'])) {
+            $data['next_follow_up_date'] = $data['follow_up_date'];
+        }
+        if (isset($data['number_of_child']) && !isset($data['no_of_child'])) {
+            $data['no_of_child'] = $data['number_of_child'];
+        }
+        if (isset($data['class']) && !isset($data['class_id']) && is_numeric($data['class'])) {
+            $data['class_id'] = $data['class'];
+        }
+
+        $query->update($data);
 
         return response()->json([
             'success' => true,
             'message' => 'Admission inquiry updated successfully',
-            'data' => $query
+            'data' => $query->load('class')
         ]);
     }
 
