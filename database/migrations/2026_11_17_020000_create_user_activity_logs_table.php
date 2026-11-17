@@ -41,3 +41,4 @@ return new class extends Migration
         Schema::dropIfExists('user_activity_logs');
     }
 };
+

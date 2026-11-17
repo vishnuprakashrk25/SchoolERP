@@ -204,3 +204,4 @@ class UserActivityController extends Controller
         ]);
     }
 }
+
