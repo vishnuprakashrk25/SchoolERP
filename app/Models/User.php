@@ -62,6 +62,51 @@ class User extends Authenticatable
         return $this->hasMany(Event::class);
     }
 
+    public function staff()
+    {
+        return $this->hasOne(Staff::class, 'user_id');
+    }
+
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'user_id');
+    }
+
+    public function getPhotoAttribute($value)
+    {
+        $photo = $value;
+        if (empty($photo)) {
+            if ($this->relationLoaded('staff') && !empty($this->staff?->photo)) {
+                $photo = $this->staff->photo;
+            } elseif ($this->relationLoaded('student') && !empty($this->student?->photo)) {
+                $photo = $this->student->photo;
+            } else {
+                $photo = $this->staff?->photo ?? $this->student?->photo ?? null;
+            }
+        }
+        if (!$photo) {
+            return null;
+        }
+        if (str_starts_with($photo, 'http://') || str_starts_with($photo, 'https://') || str_starts_with($photo, 'data:')) {
+            return $photo;
+        }
+        return url($photo);
+    }
+
+    public function getPhoneAttribute($value)
+    {
+        if (!empty($value)) {
+            return $value;
+        }
+        if ($this->relationLoaded('staff') && !empty($this->staff?->phone)) {
+            return $this->staff->phone;
+        }
+        if ($this->relationLoaded('student') && !empty($this->student?->phone)) {
+            return $this->student->phone;
+        }
+        return $this->staff?->phone ?? $this->student?->phone ?? null;
+    }
+
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new \App\Notifications\ResetPasswordNotification($token));

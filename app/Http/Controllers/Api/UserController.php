@@ -162,6 +162,10 @@ class UserController extends Controller
             $item->assignRole($request->role);
         }
 
+        // Sync profile record (Staff/Teacher or Student) with phone and photo
+        $assignedRoles = $item->getRoleNames()->toArray();
+        $this->syncProfileRecord($item, $assignedRoles, $input['phone'] ?? null, $input['photo'] ?? null);
+
         return response()->json([
             'success' => true,
             'data' => $item->load('roles')
@@ -330,11 +334,71 @@ class UserController extends Controller
             $item->syncRoles([$request->role]);
         }
 
+        // Sync profile record (Staff/Teacher or Student) with phone and photo
+        $assignedRoles = $item->getRoleNames()->toArray();
+        $this->syncProfileRecord($item, $assignedRoles, $input['phone'] ?? $item->phone, $input['photo'] ?? $item->photo);
+
         return response()->json([
             'success' => true,
             'message' => 'Updated',
             'data' => $item->load('roles')
         ]);
+    }
+
+    /**
+     * Automatically synchronize phone and photo to linked Staff or Student profiles.
+     */
+    private function syncProfileRecord(User $user, array $roles, ?string $phone = null, ?string $photo = null)
+    {
+        $normalizedRoles = array_map('strtolower', $roles);
+
+        // 1. Staff / Teacher role synchronization
+        $isTeacherOrStaff = in_array('teacher', $normalizedRoles) || in_array('staff', $normalizedRoles);
+        if ($isTeacherOrStaff) {
+            $staff = \App\Models\Staff::where('user_id', $user->id)
+                ->orWhere('email', $user->email)
+                ->first();
+
+            $staffData = [
+                'user_id'   => $user->id,
+                'email'     => $user->email,
+                'full_name' => $user->full_name ?? $user->name,
+                'role'      => in_array('teacher', $normalizedRoles) ? 'Teacher' : 'Staff',
+            ];
+            if (!empty($phone)) {
+                $staffData['phone'] = $phone;
+            }
+            if (!empty($photo)) {
+                $staffData['photo'] = $photo;
+            }
+
+            if ($staff) {
+                $staff->update($staffData);
+            } else {
+                \App\Models\Staff::create($staffData);
+            }
+        }
+
+        // 2. Student role synchronization
+        if (in_array('student', $normalizedRoles)) {
+            $student = \App\Models\Student::where('user_id', $user->id)
+                ->orWhere('email', $user->email)
+                ->first();
+
+            if ($student) {
+                $studentData = [
+                    'user_id' => $user->id,
+                ];
+                if (!empty($phone)) {
+                    $studentData['phone'] = $phone;
+                    $studentData['mobile_no'] = $phone;
+                }
+                if (!empty($photo)) {
+                    $studentData['photo'] = $photo;
+                }
+                $student->update($studentData);
+            }
+        }
     }
 
     /**
