@@ -117,6 +117,11 @@ class AuthController extends Controller
                 ->orWhere('guardian_email', $user->email);
         })->count();
 
+        // Log login activity
+        try {
+            \App\Services\ActivityLoggerService::logLogin($user, $request);
+        } catch (\Throwable $e) {}
+
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
@@ -156,7 +161,13 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        if ($user) {
+            try {
+                \App\Services\ActivityLoggerService::logLogout($user, $request);
+            } catch (\Throwable $e) {}
+            $user->currentAccessToken()->delete();
+        }
 
         return response()->json([
             'success' => true,

@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\AcademicYearController;
 use App\Http\Controllers\Api\ClassController;
 use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserActivityController;
 use App\Http\Controllers\Api\SectionController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\ClassSubjectController;
@@ -134,6 +135,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('branches', BranchController::class);
     Route::apiResource('academic-years', AcademicYearController::class);
     Route::apiResource('users', UserController::class);
+
+    // User Activity & Audit Logs
+    Route::get('user-activities/login-history', [UserActivityController::class, 'loginHistory']);
+    Route::get('user-activities/summary', [UserActivityController::class, 'summary']);
+    Route::get('user-activities', [UserActivityController::class, 'index']);
+    Route::get('user-activities/{id}', [UserActivityController::class, 'show']);
     // Roles & Permissions Management (Super Admin) - 100% Dynamic
     Route::get('roles/{id}/permissions', [RoleController::class, 'getRolePermissions']);
     Route::post('roles/{id}/permissions', [RoleController::class, 'syncRolePermissions']);
