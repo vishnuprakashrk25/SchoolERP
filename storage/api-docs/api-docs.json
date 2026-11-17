@@ -23980,8 +23980,19 @@
                                                     "name": {
                                                         "type": "string"
                                                     },
+                                                    "full_name": {
+                                                        "type": "string"
+                                                    },
                                                     "email": {
                                                         "type": "string"
+                                                    },
+                                                    "phone": {
+                                                        "type": "string",
+                                                        "example": "+91 9876543210"
+                                                    },
+                                                    "photo": {
+                                                        "type": "string",
+                                                        "example": "http://localhost:8000/uploads/user_photos/example.jpg"
                                                     },
                                                     "password": {
                                                         "type": "string"
@@ -24028,8 +24039,8 @@
                 "tags": [
                     "1. Core System - User"
                 ],
-                "summary": "Store new user with role(s)",
-                "description": "Returns saved user data with assigned roles",
+                "summary": "Store new user with role(s), phone, and photo",
+                "description": "Returns saved user data with assigned roles, phone, and photo",
                 "operationId": "storeUser",
                 "requestBody": {
                     "required": true,
@@ -24046,9 +24057,22 @@
                                         "type": "string",
                                         "example": "Sarah Connor"
                                     },
+                                    "full_name": {
+                                        "type": "string",
+                                        "example": "Sarah Connor"
+                                    },
                                     "email": {
                                         "type": "string",
                                         "example": "sarah@school.com"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+91 9876543210"
+                                    },
+                                    "photo": {
+                                        "description": "Photo file, URL, or relative path",
+                                        "type": "string",
+                                        "example": "/uploads/user_photos/photo.jpg"
                                     },
                                     "password": {
                                         "type": "string",
@@ -24101,6 +24125,82 @@
             }
         },
         "/api/users/{id}": {
+            "get": {
+                "tags": [
+                    "1. Core System - User"
+                ],
+                "summary": "Get User details by ID",
+                "description": "Returns user details with assigned roles",
+                "operationId": "getUserById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "branch_id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "full_name": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "phone": {
+                                                    "type": "string",
+                                                    "example": "+91 9876543210"
+                                                },
+                                                "photo": {
+                                                    "type": "string",
+                                                    "example": "http://localhost:8000/uploads/user_photos/example.jpg"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
             "put": {
                 "tags": [
                     "1. Core System - User"
@@ -24136,6 +24236,15 @@
                                     "email": {
                                         "type": "string",
                                         "example": "sarah@school.com"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+91 9876543210"
+                                    },
+                                    "photo": {
+                                        "description": "Photo file, URL, or relative path",
+                                        "type": "string",
+                                        "example": "/uploads/user_photos/photo.jpg"
                                     },
                                     "password": {
                                         "type": "string",

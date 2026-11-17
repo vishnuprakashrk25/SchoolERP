@@ -37,7 +37,10 @@ class UserController extends Controller
      *                  @OA\Property(property="id", type="integer"),
      *                  @OA\Property(property="branch_id", type="integer"),
      *                  @OA\Property(property="name", type="string"),
+     *                  @OA\Property(property="full_name", type="string"),
      *                  @OA\Property(property="email", type="string"),
+     *                  @OA\Property(property="phone", type="string", example="+91 9876543210"),
+     *                  @OA\Property(property="photo", type="string", example="http://localhost:8000/uploads/user_photos/example.jpg"),
      *                  @OA\Property(property="password", type="string"),
      *                  @OA\Property(property="is_active", type="boolean"),
      *                  @OA\Property(property="remember_token", type="string"),
@@ -71,15 +74,18 @@ class UserController extends Controller
      *      path="/api/users",
      *      operationId="storeUser",
      *      tags={"1. Core System - User"},
-     *      summary="Store new user with role(s)",
-     *      description="Returns saved user data with assigned roles",
+     *      summary="Store new user with role(s), phone, and photo",
+     *      description="Returns saved user data with assigned roles, phone, and photo",
      *      security={{"sanctum":{}}},
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(
      *              required={"name","email","password"},
      *              @OA\Property(property="name", type="string", example="Sarah Connor"),
+     *              @OA\Property(property="full_name", type="string", example="Sarah Connor"),
      *              @OA\Property(property="email", type="string", example="sarah@school.com"),
+     *              @OA\Property(property="phone", type="string", example="+91 9876543210"),
+     *              @OA\Property(property="photo", type="string", example="/uploads/user_photos/photo.jpg", description="Photo file, URL, or relative path"),
      *              @OA\Property(property="password", type="string", example="password123"),
      *              @OA\Property(
      *                  property="roles",
@@ -106,6 +112,8 @@ class UserController extends Controller
             'name' => 'nullable|string',
             'full_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
+            'phone' => 'nullable|string|max:30',
+            'photo' => 'nullable',
             'password' => 'required|string|min:6',
             'roles' => 'nullable'
         ]);
@@ -122,6 +130,14 @@ class UserController extends Controller
         $input['name'] = $fullName;
         $input['full_name'] = $fullName;
         $input['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
+
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/user_photos'), $filename);
+            $input['photo'] = '/uploads/user_photos/' . $filename;
+        }
+
         $item = User::create($input);
 
         if ($request->has('roles')) {
@@ -154,6 +170,42 @@ class UserController extends Controller
 
     /**
      * Display the specified resource.
+     *
+     * @OA\Get(
+     *      path="/api/users/{id}",
+     *      operationId="getUserById",
+     *      tags={"1. Core System - User"},
+     *      summary="Get User details by ID",
+     *      description="Returns user details with assigned roles",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="User id",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(type="integer")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(
+     *                  property="data",
+     *                  type="object",
+     *                  @OA\Property(property="id", type="integer"),
+     *                  @OA\Property(property="branch_id", type="integer"),
+     *                  @OA\Property(property="name", type="string"),
+     *                  @OA\Property(property="full_name", type="string"),
+     *                  @OA\Property(property="email", type="string"),
+     *                  @OA\Property(property="phone", type="string", example="+91 9876543210"),
+     *                  @OA\Property(property="photo", type="string", example="http://localhost:8000/uploads/user_photos/example.jpg"),
+     *                  @OA\Property(property="is_active", type="boolean")
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(response=404, description="User not found")
+     * )
      */
     public function show($id)
     {
@@ -188,6 +240,8 @@ class UserController extends Controller
      *              @OA\Property(property="name", type="string", example="Sarah Connor"),
      *              @OA\Property(property="full_name", type="string", example="Sarah Connor"),
      *              @OA\Property(property="email", type="string", example="sarah@school.com"),
+     *              @OA\Property(property="phone", type="string", example="+91 9876543210"),
+     *              @OA\Property(property="photo", type="string", example="/uploads/user_photos/photo.jpg", description="Photo file, URL, or relative path"),
      *              @OA\Property(property="password", type="string", example="newpassword"),
      *              @OA\Property(
      *                  property="roles",
@@ -219,6 +273,8 @@ class UserController extends Controller
             'name' => 'nullable|string',
             'full_name' => 'nullable|string',
             'email' => 'sometimes|required|email|unique:users,email,' . $id,
+            'phone' => 'nullable|string|max:30',
+            'photo' => 'nullable',
             'password' => 'nullable|string|min:6',
             'roles' => 'nullable'
         ]);
@@ -235,6 +291,13 @@ class UserController extends Controller
             $fullName = $input['full_name'] ?? $input['name'];
             $input['name'] = $fullName;
             $input['full_name'] = $fullName;
+        }
+
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(public_path('uploads/user_photos'), $filename);
+            $input['photo'] = '/uploads/user_photos/' . $filename;
         }
 
         if (!empty($input['password'])) {
