@@ -3726,8 +3726,7 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "name",
-                                    "academic_year_id"
+                                    "name"
                                 ],
                                 "properties": {
                                     "name": {
@@ -3736,7 +3735,8 @@
                                     },
                                     "academic_year_id": {
                                         "type": "integer",
-                                        "example": 1
+                                        "example": 1,
+                                        "nullable": true
                                     },
                                     "branch_id": {
                                         "type": "integer",
@@ -3943,8 +3943,7 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "name",
-                                    "academic_year_id"
+                                    "name"
                                 ],
                                 "properties": {
                                     "name": {
@@ -3953,11 +3952,12 @@
                                     },
                                     "academic_year_id": {
                                         "type": "integer",
-                                        "example": "1"
+                                        "example": 1,
+                                        "nullable": true
                                     },
                                     "branch_id": {
                                         "type": "integer",
-                                        "example": "1",
+                                        "example": 1,
                                         "nullable": true
                                     },
                                     "category_id": {

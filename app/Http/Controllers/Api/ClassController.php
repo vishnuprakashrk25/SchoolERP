@@ -86,9 +86,9 @@ class ClassController extends Controller
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(
-     *              required={"name","academic_year_id"},
+     *              required={"name"},
      *              @OA\Property(property="name", type="string", example="Class 3"),
-     *              @OA\Property(property="academic_year_id", type="integer", example=1),
+     *              @OA\Property(property="academic_year_id", type="integer", nullable=true, example=1),
      *              @OA\Property(property="branch_id", type="integer", nullable=true, example=1),
      *              @OA\Property(property="academic_category_id", type="integer", nullable=true, example=6, description="Academic category ID (e.g. Rainbow - 3, Planet, Galaxy HS, etc.)"),
      *              @OA\Property(property="category_id", type="integer", nullable=true, example=6, description="Alias for academic_category_id")
@@ -132,7 +132,7 @@ class ClassController extends Controller
     public function store(Request $request)
     {
         $input = $request->all();
-        foreach (['branch_id', 'category_id', 'academic_category_id'] as $k) {
+        foreach (['branch_id', 'academic_year_id', 'category_id', 'academic_category_id'] as $k) {
             if (array_key_exists($k, $input) && ($input[$k] === '' || (is_string($input[$k]) && trim($input[$k]) === ''))) {
                 $input[$k] = null;
             }
@@ -145,7 +145,7 @@ class ClassController extends Controller
 
         $validator = Validator::make($input, [
             'name' => 'required',
-            'academic_year_id' => 'required',
+            'academic_year_id' => 'nullable|exists:academic_years,id',
             'branch_id' => 'nullable|exists:branches,id',
             'academic_category_id' => 'nullable|exists:academic_categories,id',
             'category_id' => 'nullable|exists:academic_categories,id',
@@ -262,10 +262,10 @@ class ClassController extends Controller
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(
-     *              required={"name","academic_year_id"},
+     *              required={"name"},
      *              @OA\Property(property="name", type="string", example="name"),
-     *              @OA\Property(property="academic_year_id", type="integer", example="1"),
-     *              @OA\Property(property="branch_id", type="integer", nullable=true, example="1"),
+     *              @OA\Property(property="academic_year_id", type="integer", nullable=true, example=1),
+     *              @OA\Property(property="branch_id", type="integer", nullable=true, example=1),
      *              @OA\Property(property="category_id", type="integer", nullable=true, example=1, description="Student category ID")
      *          )
      *      ),
@@ -313,7 +313,7 @@ class ClassController extends Controller
         $class = Classes::findOrFail($id);
 
         $input = $request->all();
-        foreach (['branch_id', 'category_id', 'academic_category_id'] as $k) {
+        foreach (['branch_id', 'academic_year_id', 'category_id', 'academic_category_id'] as $k) {
             if (array_key_exists($k, $input) && ($input[$k] === '' || (is_string($input[$k]) && trim($input[$k]) === ''))) {
                 $input[$k] = null;
             }
@@ -326,7 +326,7 @@ class ClassController extends Controller
 
         $validator = Validator::make($input, [
             'name' => 'required',
-            'academic_year_id' => 'required',
+            'academic_year_id' => 'nullable|exists:academic_years,id',
             'branch_id' => 'nullable|exists:branches,id',
             'academic_category_id' => 'nullable|exists:academic_categories,id',
             'category_id' => 'nullable|exists:academic_categories,id',
