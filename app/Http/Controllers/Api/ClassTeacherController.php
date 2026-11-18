@@ -100,6 +100,178 @@ class ClassTeacherController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *      path="/api/class-teachers/{id}",
+     *      operationId="getClassTeacherById",
+     *      tags={"3. Academic Infrastructure - Class Teacher"},
+     *      summary="Get a specific class teacher assignment",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Class Teacher assignment ID",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(type="integer")
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Assignment not found",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=false),
+     *              @OA\Property(property="message", type="string", example="Teacher assignment not found")
+     *          )
+     *      )
+     * )
+     */
+    public function show($id)
+    {
+        $assignment = ClassTeacher::with(['class', 'section', 'teacher.user'])->find($id);
+
+        if (!$assignment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Teacher assignment not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $assignment
+        ]);
+    }
+
+    /**
+     * @OA\Put(
+     *      path="/api/class-teachers/{id}",
+     *      operationId="updateClassTeacher",
+     *      tags={"3. Academic Infrastructure - Class Teacher"},
+     *      summary="Update/Edit a class teacher assignment",
+     *      description="Update an existing teacher assignment, or reassign teachers for a class and section",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(
+     *          name="id",
+     *          description="Class Teacher assignment ID",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(type="integer")
+     *      ),
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="class_id", type="integer", example=1),
+     *              @OA\Property(property="section_id", type="integer", nullable=true, example=1),
+     *              @OA\Property(property="teacher_id", type="integer", example=2, description="Single teacher ID to reassign this record to"),
+     *              @OA\Property(property="teacher_ids", type="array", @OA\Items(type="integer"), description="Optional array of teacher IDs to sync all teachers for this class and section")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Assignment updated successfully",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Class teacher assignment updated successfully"),
+     *              @OA\Property(property="data", type="object")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Assignment not found",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=false),
+     *              @OA\Property(property="message", type="string", example="Teacher assignment not found")
+     *          )
+     *      ),
+     *      @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    public function update(Request $request, $id)
+    {
+        $assignment = ClassTeacher::find($id);
+
+        if (!$assignment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Teacher assignment not found'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'class_id' => 'sometimes|required|exists:classes,id',
+            'section_id' => 'nullable|exists:sections,id',
+            'teacher_id' => 'sometimes|required|exists:staff,id',
+            'teacher_ids' => 'sometimes|array',
+            'teacher_ids.*' => 'exists:staff,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $classId = $request->input('class_id', $assignment->class_id);
+        $sectionId = $request->has('section_id') ? $request->input('section_id') : $assignment->section_id;
+
+        // If teacher_ids array is provided, sync all teachers for this class and section
+        if ($request->has('teacher_ids') && is_array($request->input('teacher_ids'))) {
+            $teacherIds = $request->input('teacher_ids');
+
+            DB::transaction(function () use ($classId, $sectionId, $teacherIds) {
+                ClassTeacher::where('class_id', $classId)
+                    ->where('section_id', $sectionId)
+                    ->whereNotIn('teacher_id', $teacherIds)
+                    ->delete();
+
+                foreach ($teacherIds as $tId) {
+                    ClassTeacher::firstOrCreate([
+                        'class_id' => $classId,
+                        'section_id' => $sectionId,
+                        'teacher_id' => $tId,
+                    ]);
+                }
+            });
+
+            $updated = ClassTeacher::with(['class', 'section', 'teacher.user'])
+                ->where('class_id', $classId)
+                ->where('section_id', $sectionId)
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Class teachers updated successfully',
+                'data' => $updated
+            ]);
+        }
+
+        // Single assignment update
+        $data = [
+            'class_id' => $classId,
+            'section_id' => $sectionId,
+        ];
+        if ($request->has('teacher_id')) {
+            $data['teacher_id'] = $request->input('teacher_id');
+        }
+
+        $assignment->update($data);
+        $assignment->load(['class', 'section', 'teacher.user']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Teacher assignment updated successfully',
+            'data' => $assignment
+        ]);
+    }
+
+    /**
      * @OA\Delete(
      *      path="/api/class-teachers/{id}",
      *      operationId="removeTeacherAssignment",
