@@ -3744,13 +3744,7 @@
                                         "nullable": true
                                     },
                                     "academic_category_id": {
-                                        "description": "Academic category ID (e.g. Rainbow - 3, Planet, Galaxy HS, etc.)",
-                                        "type": "integer",
-                                        "example": 6,
-                                        "nullable": true
-                                    },
-                                    "category_id": {
-                                        "description": "Alias for academic_category_id",
+                                        "description": "Academic category ID (e.g. Rainbow - 3, Planet, Galaxy HS, etc.) - alias: category_id",
                                         "type": "integer",
                                         "example": 6,
                                         "nullable": true
@@ -4751,7 +4745,44 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Assignment removed"
+                        "description": "Assignment removed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Teacher assignment removed successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Assignment not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Teacher assignment not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

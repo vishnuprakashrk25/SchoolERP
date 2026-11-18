@@ -107,13 +107,45 @@ class ClassTeacherController extends Controller
      *      summary="Remove a teacher assignment from a class",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *      @OA\Response(response=200, description="Assignment removed")
+     *      @OA\Response(
+     *          response=200,
+     *          description="Assignment removed",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Teacher assignment removed successfully")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Assignment not found",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=false),
+     *              @OA\Property(property="message", type="string", example="Teacher assignment not found")
+     *          )
+     *      )
      * )
      */
     public function destroy($id)
     {
-        $assignment = ClassTeacher::findOrFail($id);
-        $assignment->delete();
+        $assignment = ClassTeacher::find($id);
+
+        if (!$assignment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Teacher assignment not found'
+            ], 404);
+        }
+
+        try {
+            $assignment->delete();
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Fallback if soft delete column 'deleted_at' doesn't exist on live table
+            if (str_contains(strtolower($e->getMessage()), 'deleted_at')) {
+                $assignment->forceDelete();
+            } else {
+                throw $e;
+            }
+        }
 
         return response()->json([
             'success' => true,

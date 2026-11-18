@@ -90,8 +90,7 @@ class ClassController extends Controller
      *              @OA\Property(property="name", type="string", example="Class 3"),
      *              @OA\Property(property="academic_year_id", type="integer", nullable=true, example=1),
      *              @OA\Property(property="branch_id", type="integer", nullable=true, example=1),
-     *              @OA\Property(property="academic_category_id", type="integer", nullable=true, example=6, description="Academic category ID (e.g. Rainbow - 3, Planet, Galaxy HS, etc.)"),
-     *              @OA\Property(property="category_id", type="integer", nullable=true, example=6, description="Alias for academic_category_id")
+     *              @OA\Property(property="academic_category_id", type="integer", nullable=true, example=6, description="Academic category ID (e.g. Rainbow - 3, Planet, Galaxy HS, etc.) - alias: category_id")
      *          )
      *      ),
      *      @OA\Response(

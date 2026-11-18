@@ -52,6 +52,23 @@ class Handler extends ExceptionHandler
                 return $this->unauthenticated($request, $e);
             }
 
+            if ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+                $modelName = class_basename($e->getModel());
+                return response()->json([
+                    'success' => false,
+                    'message' => "{$modelName} not found.",
+                    'error'   => "{$modelName} not found."
+                ], 404);
+            }
+
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage() ?: 'Endpoint or resource not found.',
+                    'error'   => $e->getMessage() ?: 'Endpoint or resource not found.'
+                ], 404);
+            }
+
             if ($e instanceof \Illuminate\Database\QueryException) {
                 $errorCode = $e->errorInfo[1] ?? null;
                 $friendlyMessage = 'A database validation error occurred.';
