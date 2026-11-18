@@ -85,9 +85,17 @@ class UserActivityController extends Controller
         $perPage = (int) $request->input('per_page', 25);
         $logs = $query->paginate($perPage);
 
+        $items = collect($logs->items())->map(function ($log) {
+            $arr = $log->toArray();
+            $arr['time'] = $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : null;
+            $arr['time_formatted'] = $log->created_at ? $log->created_at->format('d M Y, h:i A') : null;
+            $arr['time_ago'] = $log->created_at ? $log->created_at->diffForHumans() : null;
+            return $arr;
+        });
+
         return response()->json([
             'success' => true,
-            'data'    => $logs->items(),
+            'data'    => $items,
             'meta'    => [
                 'current_page' => $logs->currentPage(),
                 'last_page'    => $logs->lastPage(),
@@ -150,9 +158,17 @@ class UserActivityController extends Controller
         $perPage = (int) $request->input('per_page', 25);
         $logs = $query->paginate($perPage);
 
+        $items = collect($logs->items())->map(function ($log) {
+            $arr = $log->toArray();
+            $arr['time'] = $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : null;
+            $arr['time_formatted'] = $log->created_at ? $log->created_at->format('d M Y, h:i A') : null;
+            $arr['time_ago'] = $log->created_at ? $log->created_at->diffForHumans() : null;
+            return $arr;
+        });
+
         return response()->json([
             'success' => true,
-            'data'    => $logs->items(),
+            'data'    => $items,
             'meta'    => [
                 'current_page' => $logs->currentPage(),
                 'last_page'    => $logs->lastPage(),
@@ -188,9 +204,26 @@ class UserActivityController extends Controller
             ->get();
 
         $recentLogins = UserActivityLog::where('activity_type', 'login')
+            ->with('user:id,name,email,photo')
             ->latest('id')
             ->limit(10)
-            ->get();
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'id'                   => $log->id,
+                    'user_id'              => $log->user_id,
+                    'user_name'            => $log->user_name ?? $log->user?->name,
+                    'user_email'           => $log->user_email ?? $log->user?->email,
+                    'role'                 => $log->role,
+                    'photo'                => $log->user?->photo,
+                    'ip_address'           => $log->ip_address,
+                    'user_agent'           => $log->user_agent,
+                    'login_time'           => $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : null,
+                    'login_time_formatted' => $log->created_at ? $log->created_at->format('d M Y, h:i A') : null,
+                    'time_ago'             => $log->created_at ? $log->created_at->diffForHumans() : null,
+                    'created_at'           => $log->created_at,
+                ];
+            });
 
         return response()->json([
             'success' => true,
