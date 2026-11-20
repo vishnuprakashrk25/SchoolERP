@@ -635,7 +635,7 @@ class DashboardController extends Controller
      * @OA\Get(
      *      path="/api/teacher/widgets",
      *      operationId="getTeacherDashboardWidgets",
-     *      tags={"Dashboard"},
+     *      tags={"Dashboard", "3. Academic Infrastructure - Teacher"},
      *      summary="Get dashboard widgets for teacher",
      *      description="Returns the 4 dashboard widget cards for teachers: Your Students, Your Classes, Subjects, and Next Periods",
      *      security={{"sanctum":{}}},

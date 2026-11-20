@@ -5258,7 +5258,8 @@
         "/api/teacher/widgets": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Dashboard",
+                    "3. Academic Infrastructure - Teacher"
                 ],
                 "summary": "Get dashboard widgets for teacher",
                 "description": "Returns the 4 dashboard widget cards for teachers: Your Students, Your Classes, Subjects, and Next Periods",
@@ -25314,6 +25315,10 @@
         {
             "name": "Dashboard",
             "description": "Dashboard"
+        },
+        {
+            "name": "3. Academic Infrastructure - Teacher",
+            "description": "3. Academic Infrastructure - Teacher"
         },
         {
             "name": "7. E-Learning & Content - DownloadContent",
