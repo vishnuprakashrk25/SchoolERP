@@ -16,8 +16,10 @@ class ClassController extends Controller
      *      operationId="getClassesList",
      *      tags={"3. Academic Infrastructure - Class"},
      *      summary="Get list of Classes",
-     *      description="Returns list of Classes",
+     *      description="Returns list of Classes. Teachers automatically see only their assigned classes and sections.",
      *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="teacher_id", in="query", required=false, description="Filter classes by teacher ID", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="my_classes", in="query", required=false, description="Filter classes assigned to currently logged-in teacher", @OA\Schema(type="boolean")),
      *      @OA\Response(
      *          response=200,
      *          description="Successful operation",
@@ -66,13 +68,56 @@ class ClassController extends Controller
      *     )
      */
 
-    public function index()
+    public function index(Request $request)
     {
-        $classes = Classes::with(['academicYear', 'academicCategory:id,name,description', 'category:id,name', 'sections'])->get();
+        $user = $request->user() ?? auth('sanctum')->user();
+        $teacherId = null;
+
+        if ($request->filled('teacher_id')) {
+            $teacherId = $request->teacher_id;
+        } elseif ($user) {
+            $isTeacher = $user->hasRole('teacher') || $user->hasRole('Teacher') || ($user->staff && strcasecmp($user->staff->role, 'teacher') === 0);
+            $isAdmin = $user->hasAnyRole(['super-admin', 'admin', 'Super Admin', 'Admin', 'principal', 'Principal']);
+
+            if (($isTeacher && !$isAdmin) || $request->boolean('my_classes') || $request->boolean('only_my')) {
+                $teacherId = $user->staff?->id ?? \App\Models\Staff::where('user_id', $user->id)->value('id');
+            }
+        }
+
+        $query = Classes::with([
+            'academicYear',
+            'academicCategory:id,name,description',
+            'category:id,name',
+            'sections' => function ($secQ) use ($teacherId) {
+                if ($teacherId) {
+                    $secQ->where(function ($q) use ($teacherId) {
+                        $q->whereHas('classTeachers', function ($ct) use ($teacherId) {
+                            $ct->where('teacher_id', $teacherId);
+                        })->orWhereHas('classSubjects', function ($cs) use ($teacherId) {
+                            $cs->where('teacher_id', $teacherId);
+                        })->orWhereHas('class.classSubjects', function ($cs) use ($teacherId) {
+                            $cs->where('teacher_id', $teacherId)->whereNull('section_id');
+                        });
+                    });
+                }
+            }
+        ]);
+
+        if ($teacherId) {
+            $query->where(function ($q) use ($teacherId) {
+                $q->whereHas('classTeachers', function ($ct) use ($teacherId) {
+                    $ct->where('teacher_id', $teacherId);
+                })->orWhereHas('classSubjects', function ($cs) use ($teacherId) {
+                    $cs->where('teacher_id', $teacherId);
+                });
+            });
+        }
+
+        $classes = $query->get();
 
         return response()->json([
-            'success'=>true,
-            'data'=>$classes
+            'success' => true,
+            'data' => $classes
         ]);
     }
     /**

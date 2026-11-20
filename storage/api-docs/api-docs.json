@@ -3615,8 +3615,28 @@
                     "3. Academic Infrastructure - Class"
                 ],
                 "summary": "Get list of Classes",
-                "description": "Returns list of Classes",
+                "description": "Returns list of Classes. Teachers automatically see only their assigned classes and sections.",
                 "operationId": "getClassesList",
+                "parameters": [
+                    {
+                        "name": "teacher_id",
+                        "in": "query",
+                        "description": "Filter classes by teacher ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "my_classes",
+                        "in": "query",
+                        "description": "Filter classes assigned to currently logged-in teacher",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -4243,8 +4263,50 @@
                     "3. Academic Infrastructure - ClassSubject"
                 ],
                 "summary": "Get list of ClassSubjects",
-                "description": "Returns list of ClassSubjects",
+                "description": "Returns list of ClassSubjects. Can be filtered by class_id, section_id, teacher_id, academic_year_id. Teachers automatically see only their assigned subjects.",
                 "operationId": "getClassSubjectsList",
+                "parameters": [
+                    {
+                        "name": "class_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "section_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "subject_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "teacher_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "academic_year_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -4259,29 +4321,6 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer"
-                                                    },
-                                                    "class_id": {
-                                                        "type": "integer"
-                                                    },
-                                                    "subject_id": {
-                                                        "type": "string"
-                                                    },
-                                                    "teacher_id": {
-                                                        "type": "string"
-                                                    },
-                                                    "created_at": {
-                                                        "type": "string"
-                                                    },
-                                                    "updated_at": {
-                                                        "type": "string"
-                                                    },
-                                                    "deleted_at": {
-                                                        "type": "string"
-                                                    }
-                                                },
                                                 "type": "object"
                                             }
                                         }
@@ -4309,7 +4348,7 @@
                     "3. Academic Infrastructure - ClassSubject"
                 ],
                 "summary": "Store new class subject",
-                "description": "Returns saved class subject data",
+                "description": "Assign a teacher to a subject for a class and optional section",
                 "operationId": "storeClassSubject",
                 "requestBody": {
                     "required": true,
@@ -4324,15 +4363,28 @@
                                 "properties": {
                                     "class_id": {
                                         "type": "integer",
-                                        "example": "1"
+                                        "example": 1
+                                    },
+                                    "section_id": {
+                                        "description": "Optional section ID (leave null for all sections of class)",
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
                                     },
                                     "subject_id": {
                                         "type": "integer",
-                                        "example": "1"
+                                        "example": 1
                                     },
                                     "teacher_id": {
+                                        "description": "Staff/Teacher ID",
                                         "type": "integer",
-                                        "example": "1"
+                                        "example": 1
+                                    },
+                                    "academic_year_id": {
+                                        "description": "Optional academic year ID",
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -4353,32 +4405,9 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Success"
+                                            "example": "Class subject created successfully"
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "class_id": {
-                                                    "type": "integer"
-                                                },
-                                                "subject_id": {
-                                                    "type": "string"
-                                                },
-                                                "teacher_id": {
-                                                    "type": "string"
-                                                },
-                                                "created_at": {
-                                                    "type": "string"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string"
-                                                },
-                                                "deleted_at": {
-                                                    "type": "string"
-                                                }
-                                            },
                                             "type": "object"
                                         }
                                     },
@@ -4387,14 +4416,8 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [
@@ -4416,7 +4439,6 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ClassSubject id",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -4434,34 +4456,7 @@
                                             "type": "boolean",
                                             "example": true
                                         },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Success"
-                                        },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "class_id": {
-                                                    "type": "integer"
-                                                },
-                                                "subject_id": {
-                                                    "type": "string"
-                                                },
-                                                "teacher_id": {
-                                                    "type": "string"
-                                                },
-                                                "created_at": {
-                                                    "type": "string"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string"
-                                                },
-                                                "deleted_at": {
-                                                    "type": "string"
-                                                }
-                                            },
                                             "type": "object"
                                         }
                                     },
@@ -4470,14 +4465,8 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
+                    "404": {
+                        "description": "Resource Not Found"
                     }
                 },
                 "security": [
@@ -4497,7 +4486,6 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ClassSubject id",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -4509,23 +4497,28 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "class_id",
-                                    "subject_id",
-                                    "teacher_id"
-                                ],
                                 "properties": {
                                     "class_id": {
                                         "type": "integer",
-                                        "example": "1"
+                                        "example": 1
+                                    },
+                                    "section_id": {
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
                                     },
                                     "subject_id": {
                                         "type": "integer",
-                                        "example": "1"
+                                        "example": 1
                                     },
                                     "teacher_id": {
                                         "type": "integer",
-                                        "example": "1"
+                                        "example": 1
+                                    },
+                                    "academic_year_id": {
+                                        "type": "integer",
+                                        "example": 1,
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -4546,32 +4539,9 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Success"
+                                            "example": "Class subject updated successfully"
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "class_id": {
-                                                    "type": "integer"
-                                                },
-                                                "subject_id": {
-                                                    "type": "string"
-                                                },
-                                                "teacher_id": {
-                                                    "type": "string"
-                                                },
-                                                "created_at": {
-                                                    "type": "string"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string"
-                                                },
-                                                "deleted_at": {
-                                                    "type": "string"
-                                                }
-                                            },
                                             "type": "object"
                                         }
                                     },
@@ -4580,17 +4550,11 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
                     "404": {
                         "description": "Resource Not Found"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [
@@ -4610,7 +4574,6 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ClassSubject id",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -4618,14 +4581,25 @@
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "Successful operation"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Class subject removed successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "description": "Resource Not Found"
@@ -13384,8 +13358,37 @@
                     "3. Academic Infrastructure - Section"
                 ],
                 "summary": "Get list of Sections",
-                "description": "Returns list of Sections",
+                "description": "Returns list of Sections. Teachers automatically see only their assigned sections.",
                 "operationId": "getSectionsList",
+                "parameters": [
+                    {
+                        "name": "class_id",
+                        "in": "query",
+                        "description": "Filter sections by class ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "teacher_id",
+                        "in": "query",
+                        "description": "Filter sections by teacher ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "my_sections",
+                        "in": "query",
+                        "description": "Filter sections assigned to currently logged-in teacher",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",

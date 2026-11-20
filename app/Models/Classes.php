@@ -60,4 +60,9 @@ class Classes extends Model
     {
         return $this->hasMany(ClassTeacher::class, 'class_id');
     }
+
+    public function classSubjects()
+    {
+        return $this->hasMany(ClassSubject::class, 'class_id');
+    }
 }
