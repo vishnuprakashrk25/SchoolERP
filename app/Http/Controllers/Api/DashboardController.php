@@ -16,6 +16,11 @@ use App\Models\StudentFee;
 use App\Models\StudentAttendance;
 use App\Models\StaffAttendance;
 use App\Models\Classes;
+use App\Models\ClassTeacher;
+use App\Models\ClassSubject;
+use App\Models\Section;
+use App\Models\Subject;
+use App\Models\Timetable;
 use App\Models\HomeworkSubmission;
 use App\Models\Complaint;
 use App\Models\PhoneCallLog;
@@ -622,6 +627,257 @@ class DashboardController extends Controller
                 'roles'             => $roles,
                 'current_month_year' => $now->format('F Y'),
                 'current_year'      => $currentYear,
+            ]
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/api/teacher/widgets",
+     *      operationId="getTeacherDashboardWidgets",
+     *      tags={"Dashboard"},
+     *      summary="Get dashboard widgets for teacher",
+     *      description="Returns the 4 dashboard widget cards for teachers: Your Students, Your Classes, Subjects, and Next Periods",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="teacher_id", in="query", required=false, description="Optional teacher ID (defaults to currently authenticated teacher)", @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="teacher", type="object"),
+     *                  @OA\Property(property="widgets", type="object",
+     *                      @OA\Property(property="your_students", type="object"),
+     *                      @OA\Property(property="your_classes", type="object"),
+     *                      @OA\Property(property="subjects", type="object"),
+     *                      @OA\Property(property="next_periods", type="object")
+     *                  )
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(response=401, description="Unauthenticated")
+     * )
+     */
+    public function teacherWidgets(Request $request)
+    {
+        $user = $request->user() ?? auth('sanctum')->user();
+        $teacher = null;
+        $teacherId = null;
+
+        if ($request->filled('teacher_id')) {
+            $teacherId = $request->input('teacher_id');
+            $teacher = Teacher::with('user')->find($teacherId);
+        } elseif ($user) {
+            $teacher = Teacher::with('user')->where('user_id', $user->id)->first()
+                ?? Staff::with('user')->where('user_id', $user->id)->first();
+            $teacherId = $teacher?->id;
+        }
+
+        // If still null (e.g. admin preview without param), grab the first available teacher
+        if (!$teacherId) {
+            $teacher = Teacher::with('user')->first();
+            $teacherId = $teacher?->id;
+        }
+
+        $now = Carbon::now();
+        $todayDay = $now->format('l');
+        $todayShortDay = $now->format('D');
+
+        // Common Unassigned Students count for card footers
+        $unassignedStudentsCount = Student::where(function ($q) {
+            $q->whereNull('class_id')->orWhereNull('section_id');
+        })->count();
+        $footerText = "• {$unassignedStudentsCount} unassigned student" . ($unassignedStudentsCount !== 1 ? 's' : '') . " ({$unassignedStudentsCount})";
+        $commonFooter = [
+            'text' => $footerText,
+            'count' => $unassignedStudentsCount,
+            'action_url' => '/admin/students?filter=unassigned',
+            'action_label' => 'View All'
+        ];
+
+        // ----------------------------------------------------
+        // 1. YOUR CLASSES
+        // ----------------------------------------------------
+        $classIds = collect();
+        $sectionIds = collect();
+
+        if ($teacherId) {
+            $ctList = ClassTeacher::where('teacher_id', $teacherId)->get();
+            $csList = ClassSubject::where('teacher_id', $teacherId)->get();
+
+            $classIds = $ctList->pluck('class_id')->concat($csList->pluck('class_id'))->filter()->unique();
+            $sectionIds = $ctList->pluck('section_id')->concat($csList->pluck('section_id'))->filter()->unique();
+        }
+
+        $classes = Classes::whereIn('id', $classIds)->get(['id', 'name']);
+        $classesPills = $classes->pluck('name')->toArray();
+        $classesDisplay = !empty($classesPills) ? implode(' / ', $classesPills) : 'No classes assigned';
+
+        $classesWidget = [
+            'title' => 'Your Classes',
+            'total_count' => $classes->count(),
+            'display' => $classesDisplay,
+            'pills' => $classesPills,
+            'classes' => $classes,
+            'footer' => array_merge($commonFooter, [
+                'action_url' => '/admin/classes',
+                'action_label' => 'View All'
+            ])
+        ];
+
+        // ----------------------------------------------------
+        // 2. YOUR STUDENTS
+        // ----------------------------------------------------
+        $studentsQuery = Student::query();
+        if ($classIds->isNotEmpty() || $sectionIds->isNotEmpty()) {
+            $studentsQuery->where(function ($q) use ($classIds, $sectionIds) {
+                if ($classIds->isNotEmpty()) {
+                    $q->whereIn('class_id', $classIds);
+                }
+                if ($sectionIds->isNotEmpty()) {
+                    $q->orWhereIn('section_id', $sectionIds);
+                }
+            });
+        } elseif ($teacherId) {
+            $studentsQuery->whereRaw('1 = 0');
+        }
+
+        $totalStudents = (clone $studentsQuery)->count();
+
+        // Breakdown by class (e.g. "Class 10: 25")
+        $classBreakdown = (clone $studentsQuery)
+            ->whereNotNull('class_id')
+            ->select('class_id', DB::raw('count(*) as count'))
+            ->groupBy('class_id')
+            ->with('class:id,name')
+            ->get()
+            ->map(function ($row) {
+                $name = $row->class?->name ?? "Class {$row->class_id}";
+                return [
+                    'class_id' => $row->class_id,
+                    'class_name' => $name,
+                    'count' => $row->count,
+                    'pill' => "{$name}: {$row->count}"
+                ];
+            });
+
+        $topBadge = $classBreakdown->isNotEmpty() ? $classBreakdown->first()['pill'] : ($totalStudents > 0 ? "Total: {$totalStudents}" : 'No students');
+
+        $studentsWidget = [
+            'title' => 'Your Students',
+            'total_count' => $totalStudents,
+            'badge' => $topBadge,
+            'breakdown' => $classBreakdown,
+            'footer' => array_merge($commonFooter, [
+                'action_url' => '/admin/students',
+                'action_label' => 'View All'
+            ])
+        ];
+
+        // ----------------------------------------------------
+        // 3. SUBJECTS
+        // ----------------------------------------------------
+        $subjectIds = $teacherId ? ClassSubject::where('teacher_id', $teacherId)->pluck('subject_id')->unique()->filter() : collect();
+        $subjects = Subject::whereIn('id', $subjectIds)->get(['id', 'name', 'code', 'type']);
+
+        $subjectsPills = $subjects->map(function ($sub) {
+            return !empty($sub->code) ? $sub->code : strtoupper(substr($sub->name, 0, 4));
+        })->toArray();
+        $subjectsDisplay = !empty($subjectsPills) ? implode(' / ', $subjectsPills) : 'No subjects assigned';
+
+        $subjectsWidget = [
+            'title' => 'Subjects',
+            'total_count' => $subjects->count(),
+            'display' => $subjectsDisplay,
+            'pills' => $subjectsPills,
+            'subjects' => $subjects,
+            'footer' => array_merge($commonFooter, [
+                'action_url' => '/admin/subjects',
+                'action_label' => 'View All'
+            ])
+        ];
+
+        // ----------------------------------------------------
+        // 4. NEXT PERIODS (Today's Timetable)
+        // ----------------------------------------------------
+        $timetables = collect();
+        if ($teacherId) {
+            $timetables = Timetable::where('teacher_id', $teacherId)
+                ->where(function ($q) use ($todayDay, $todayShortDay) {
+                    $q->where('day', $todayDay)
+                      ->orWhere('day', strtolower($todayDay))
+                      ->orWhere('day', $todayShortDay)
+                      ->orWhere('day', strtolower($todayShortDay));
+                })
+                ->with(['class:id,name', 'section:id,name', 'subject:id,name,code'])
+                ->orderBy('start_time')
+                ->get();
+
+            // If empty for today, fallback to any scheduled periods for this teacher
+            if ($timetables->isEmpty()) {
+                $timetables = Timetable::where('teacher_id', $teacherId)
+                    ->with(['class:id,name', 'section:id,name', 'subject:id,name,code'])
+                    ->orderBy('start_time')
+                    ->take(4)
+                    ->get();
+            }
+        }
+
+        $periodsList = $timetables->map(function ($tt) {
+            $className = $tt->class?->name ?? "Class {$tt->class_id}";
+            $classShort = preg_replace('/[^0-9]/', '', $className) ?: $className;
+            $sectionName = $tt->section?->name ?? 'A';
+            $subCode = $tt->subject?->code ?? strtoupper(substr($tt->subject?->name ?? 'SUB', 0, 4));
+            
+            try {
+                $timeFormatted = Carbon::parse($tt->start_time)->format('g:i A');
+            } catch (\Exception $e) {
+                $timeFormatted = $tt->start_time;
+            }
+
+            return [
+                'id' => $tt->id,
+                'display' => "{$classShort} - {$sectionName} | {$subCode} at {$timeFormatted}",
+                'class_id' => $tt->class_id,
+                'class_name' => $className,
+                'section_id' => $tt->section_id,
+                'section_name' => $sectionName,
+                'subject_id' => $tt->subject_id,
+                'subject_name' => $tt->subject?->name,
+                'subject_code' => $subCode,
+                'start_time' => $timeFormatted,
+                'end_time' => $tt->end_time,
+                'day' => $tt->day,
+            ];
+        });
+
+        $nextPeriodsWidget = [
+            'title' => 'Next Periods',
+            'total_count' => $periodsList->count(),
+            'periods' => $periodsList,
+            'pills' => $periodsList->pluck('display')->toArray(),
+            'footer' => array_merge($commonFooter, [
+                'action_url' => '/admin/timetables',
+                'action_label' => 'View All'
+            ])
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'teacher' => $teacher ? [
+                    'id' => $teacher->id,
+                    'name' => $teacher->full_name ?? $teacher->name ?? $teacher->user?->name,
+                    'email' => $teacher->email ?? $teacher->user?->email,
+                    'photo' => $teacher->photo ?? $teacher->user?->photo,
+                ] : null,
+                'widgets' => [
+                    'your_students' => $studentsWidget,
+                    'your_classes'  => $classesWidget,
+                    'subjects'      => $subjectsWidget,
+                    'next_periods'  => $nextPeriodsWidget,
+                ]
             ]
         ]);
     }

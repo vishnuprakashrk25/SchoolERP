@@ -264,6 +264,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // dashboard
     Route::get('dashboard', [App\Http\Controllers\Api\DashboardController::class, 'index']);
+    Route::get('dashboard/teacher-widgets', [App\Http\Controllers\Api\DashboardController::class, 'teacherWidgets']);
+    Route::get('teacher/widgets', [App\Http\Controllers\Api\DashboardController::class, 'teacherWidgets']);
     Route::apiResource('todos', TodoController::class);
     Route::apiResource('events', EventController::class);
 
