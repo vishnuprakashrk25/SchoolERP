@@ -34,6 +34,7 @@ class User extends Authenticatable
     protected $appends = [
         'full_name',
         'staff_id',
+        'staff_role',
         'teacher_id',
         'student_id',
         'parent_id',
@@ -83,6 +84,18 @@ class User extends Authenticatable
                 return $this->staff?->id;
             }
             return $this->staff()->value('id');
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    public function getStaffRoleAttribute()
+    {
+        try {
+            if ($this->relationLoaded('staff')) {
+                return $this->staff?->role;
+            }
+            return $this->staff()->value('role');
         } catch (\Throwable $e) {
             return null;
         }

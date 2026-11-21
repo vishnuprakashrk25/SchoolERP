@@ -2054,6 +2054,12 @@
                                                     "example": 12,
                                                     "nullable": true
                                                 },
+                                                "staff_role": {
+                                                    "description": "Staff role/position (Driver, Principal, Accountant, Teacher, etc.) if staff member",
+                                                    "type": "string",
+                                                    "example": "Driver",
+                                                    "nullable": true
+                                                },
                                                 "teacher_id": {
                                                     "description": "Associated Teacher ID if user is a teacher",
                                                     "type": "integer",
@@ -2138,6 +2144,12 @@
                                                     "description": "Associated Staff ID if user is staff/teacher",
                                                     "type": "integer",
                                                     "example": 12,
+                                                    "nullable": true
+                                                },
+                                                "staff_role": {
+                                                    "description": "Staff role/position (Driver, Principal, Accountant, Teacher, etc.) if staff member",
+                                                    "type": "string",
+                                                    "example": "Driver",
                                                     "nullable": true
                                                 },
                                                 "teacher_id": {
@@ -2226,6 +2238,12 @@
                                                     "description": "Associated Staff ID if user is staff/teacher",
                                                     "type": "integer",
                                                     "example": 12,
+                                                    "nullable": true
+                                                },
+                                                "staff_role": {
+                                                    "description": "Staff role/position (Driver, Principal, Accountant, Teacher, etc.) if staff member",
+                                                    "type": "string",
+                                                    "example": "Driver",
                                                     "nullable": true
                                                 },
                                                 "teacher_id": {
