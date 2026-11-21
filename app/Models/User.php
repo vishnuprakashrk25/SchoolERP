@@ -81,6 +81,11 @@ class User extends Authenticatable
     public function getStaffIdAttribute()
     {
         try {
+            $roles = $this->relationLoaded('roles') 
+                ? $this->roles->pluck('name')->map('strtolower')->toArray() 
+                : $this->getRoleNames()->map('strtolower')->toArray();
+
+            // Only return staff_id for staff/teacher/driver/etc. or if staff record explicitly exists
             if ($this->relationLoaded('staff') && $this->staff) {
                 return $this->staff->id;
             }
@@ -88,6 +93,12 @@ class User extends Authenticatable
             if ($id) {
                 return $id;
             }
+
+            // If super-admin or admin without staff role, do not guess by email/phone
+            if (in_array('super-admin', $roles) || in_array('admin', $roles)) {
+                return null;
+            }
+
             if (!empty($this->email)) {
                 $id = Staff::where('email', $this->email)->value('id');
                 if ($id) return $id;
@@ -105,28 +116,23 @@ class User extends Authenticatable
     public function getTeacherIdAttribute()
     {
         try {
-            $staff = $this->relationLoaded('staff') ? $this->staff : $this->staff()->first();
-            if (!$staff && !empty($this->email)) {
-                $staff = Staff::where('email', $this->email)->first();
-            }
-            if (!$staff && !empty($this->attributes['phone'] ?? null)) {
-                $staff = Staff::where('phone', $this->attributes['phone'])->first();
-            }
-
-            if ($staff) {
-                $isTeacherRole = strcasecmp($staff->role ?? '', 'teacher') === 0;
-                if ($isTeacherRole) {
-                    return $staff->id;
-                }
-            }
-
-            // Safe role check without throwing RoleDoesNotExist
             $roles = $this->relationLoaded('roles') 
                 ? $this->roles->pluck('name')->map('strtolower')->toArray() 
                 : $this->getRoleNames()->map('strtolower')->toArray();
 
-            if (in_array('teacher', $roles)) {
-                return $staff ? $staff->id : null;
+            $staff = $this->relationLoaded('staff') ? $this->staff : $this->staff()->first();
+            if (!$staff && !in_array('super-admin', $roles) && !in_array('admin', $roles)) {
+                if (!empty($this->email)) {
+                    $staff = Staff::where('email', $this->email)->first();
+                }
+                if (!$staff && !empty($this->attributes['phone'] ?? null)) {
+                    $staff = Staff::where('phone', $this->attributes['phone'])->first();
+                }
+            }
+
+            $isTeacher = in_array('teacher', $roles) || ($staff && strcasecmp($staff->role ?? '', 'teacher') === 0);
+            if ($isTeacher) {
+                return $staff?->id;
             }
         } catch (\Throwable $e) {
             return null;
@@ -137,6 +143,14 @@ class User extends Authenticatable
     public function getStudentIdAttribute()
     {
         try {
+            $roles = $this->relationLoaded('roles') 
+                ? $this->roles->pluck('name')->map('strtolower')->toArray() 
+                : $this->getRoleNames()->map('strtolower')->toArray();
+
+            if (!in_array('student', $roles) && (in_array('super-admin', $roles) || in_array('admin', $roles))) {
+                return null;
+            }
+
             if ($this->relationLoaded('student') && $this->student) {
                 return $this->student->id;
             }
@@ -144,13 +158,16 @@ class User extends Authenticatable
             if ($id) {
                 return $id;
             }
-            if (!empty($this->email)) {
-                $id = Student::where('email', $this->email)->value('id');
-                if ($id) return $id;
-            }
-            if (!empty($this->attributes['phone'] ?? null)) {
-                $id = Student::where('phone', $this->attributes['phone'])->value('id');
-                if ($id) return $id;
+
+            if (in_array('student', $roles)) {
+                if (!empty($this->email)) {
+                    $id = Student::where('email', $this->email)->value('id');
+                    if ($id) return $id;
+                }
+                if (!empty($this->attributes['phone'] ?? null)) {
+                    $id = Student::where('phone', $this->attributes['phone'])->value('id');
+                    if ($id) return $id;
+                }
             }
         } catch (\Throwable $e) {
             return null;
@@ -161,6 +178,23 @@ class User extends Authenticatable
     public function getParentIdAttribute()
     {
         try {
+            $roles = $this->relationLoaded('roles') 
+                ? $this->roles->pluck('name')->map('strtolower')->toArray() 
+                : $this->getRoleNames()->map('strtolower')->toArray();
+
+            // Strict check: Only return parent_id if the user actually has the parent role
+            // or is NOT an admin/super-admin/staff/teacher
+            $isExplicitParent = in_array('parent', $roles);
+            $hasOtherStaffRoles = in_array('super-admin', $roles) 
+                || in_array('admin', $roles) 
+                || in_array('teacher', $roles) 
+                || in_array('staff', $roles) 
+                || in_array('student', $roles);
+
+            if (!$isExplicitParent && $hasOtherStaffRoles) {
+                return null;
+            }
+
             $email = $this->email;
             $phone = $this->attributes['phone'] ?? null;
 
@@ -188,17 +222,18 @@ class User extends Authenticatable
     public function getProfileIdAttribute()
     {
         try {
-            if ($this->teacher_id) {
-                return $this->teacher_id;
+            $type = $this->profile_type;
+            if ($type === 'teacher') {
+                return $this->teacher_id ?? $this->id;
             }
-            if ($this->staff_id) {
-                return $this->staff_id;
+            if ($type === 'student') {
+                return $this->student_id ?? $this->id;
             }
-            if ($this->student_id) {
-                return $this->student_id;
+            if ($type === 'parent') {
+                return $this->parent_id ?? $this->id;
             }
-            if ($this->parent_id) {
-                return $this->parent_id;
+            if ($type === 'staff') {
+                return $this->staff_id ?? $this->id;
             }
             return $this->id;
         } catch (\Throwable $e) {
@@ -209,19 +244,29 @@ class User extends Authenticatable
     public function getProfileTypeAttribute()
     {
         try {
-            if ($this->teacher_id) {
+            $roles = $this->relationLoaded('roles') 
+                ? $this->roles->pluck('name')->map('strtolower')->toArray() 
+                : $this->getRoleNames()->map('strtolower')->toArray();
+
+            if (in_array('super-admin', $roles)) {
+                return 'super-admin';
+            }
+            if (in_array('admin', $roles)) {
+                return 'admin';
+            }
+            if (in_array('teacher', $roles)) {
                 return 'teacher';
+            }
+            if (in_array('student', $roles)) {
+                return 'student';
+            }
+            if (in_array('parent', $roles)) {
+                return 'parent';
             }
             if ($this->staff_id) {
                 return 'staff';
             }
-            if ($this->student_id) {
-                return 'student';
-            }
-            if ($this->parent_id) {
-                return 'parent';
-            }
-            return 'user';
+            return !empty($roles) ? $roles[0] : 'user';
         } catch (\Throwable $e) {
             return 'user';
         }

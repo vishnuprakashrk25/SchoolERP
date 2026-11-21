@@ -122,16 +122,13 @@ class AuthController extends Controller
 
         $token = $user->createToken('erp_token')->plainTextToken;
 
-        $isParent = \App\Models\StudentParent::where('father_email', $user->email)
-            ->orWhere('mother_email', $user->email)
-            ->orWhere('guardian_email', $user->email)
-            ->exists() || $user->hasRole('parent');
+        $isParent = $user->hasRole('parent') || ($user->parent_id !== null);
 
-        $childrenCount = \App\Models\Student::whereHas('parents', function ($q) use ($user) {
+        $childrenCount = $isParent ? \App\Models\Student::whereHas('parents', function ($q) use ($user) {
             $q->where('father_email', $user->email)
                 ->orWhere('mother_email', $user->email)
                 ->orWhere('guardian_email', $user->email);
-        })->count();
+        })->count() : 0;
 
         // Log login activity
         try {
@@ -151,10 +148,6 @@ class AuthController extends Controller
                 'parent_id' => $user->parent_id,
                 'profile_id' => $user->profile_id,
                 'profile_type' => $user->profile_type,
-                'staff_id' => $user->staff_id,
-                'teacher_id' => $user->teacher_id,
-                'student_id' => $user->student_id,
-                'parent_id' => $user->parent_id,
                 'roles' => $user->getRoleNames(),
                 'permissions' => $user->getAllPermissions()->pluck('name'),
                 'is_parent' => $isParent,
@@ -286,16 +279,13 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        $isParent = \App\Models\StudentParent::where('father_email', $user->email)
-            ->orWhere('mother_email', $user->email)
-            ->orWhere('guardian_email', $user->email)
-            ->exists() || $user->hasRole('parent');
+        $isParent = $user->hasRole('parent') || ($user->parent_id !== null);
 
-        $childrenCount = \App\Models\Student::whereHas('parents', function ($q) use ($user) {
+        $childrenCount = $isParent ? \App\Models\Student::whereHas('parents', function ($q) use ($user) {
             $q->where('father_email', $user->email)
                 ->orWhere('mother_email', $user->email)
                 ->orWhere('guardian_email', $user->email);
-        })->count();
+        })->count() : 0;
 
         return response()->json([
             'success' => true,
@@ -307,10 +297,6 @@ class AuthController extends Controller
                 'parent_id' => $user->parent_id,
                 'profile_id' => $user->profile_id,
                 'profile_type' => $user->profile_type,
-                'staff_id' => $user->staff_id,
-                'teacher_id' => $user->teacher_id,
-                'student_id' => $user->student_id,
-                'parent_id' => $user->parent_id,
                 'roles' => $user->getRoleNames(),
                 'permissions' => $user->getAllPermissions()->pluck('name'),
                 'is_parent' => $isParent,
