@@ -32,7 +32,11 @@ class User extends Authenticatable
     ];
 
     protected $appends = [
-        'full_name'
+        'full_name',
+        'staff_id',
+        'teacher_id',
+        'student_id',
+        'parent_id',
     ];
 
     public function getFullNameAttribute($value)
@@ -70,6 +74,68 @@ class User extends Authenticatable
     public function student()
     {
         return $this->hasOne(Student::class, 'user_id');
+    }
+
+    public function getStaffIdAttribute()
+    {
+        try {
+            if ($this->relationLoaded('staff')) {
+                return $this->staff?->id;
+            }
+            return $this->staff()->value('id');
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    public function getTeacherIdAttribute()
+    {
+        try {
+            $staff = $this->relationLoaded('staff') ? $this->staff : $this->staff()->first();
+            if ($staff && (strcasecmp($staff->role, 'teacher') === 0 || $this->hasRole('teacher') || $this->hasRole('Teacher'))) {
+                return $staff->id;
+            }
+        } catch (\Throwable $e) {
+            return null;
+        }
+        return null;
+    }
+
+    public function getStudentIdAttribute()
+    {
+        try {
+            if ($this->relationLoaded('student')) {
+                return $this->student?->id;
+            }
+            return $this->student()->value('id');
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    public function getParentIdAttribute()
+    {
+        try {
+            $email = $this->email;
+            $phone = $this->phone;
+            if (empty($email) && empty($phone)) {
+                return null;
+            }
+            return \App\Models\StudentParent::where(function ($q) use ($email, $phone) {
+                if (!empty($email)) {
+                    $q->where('father_email', $email)
+                      ->orWhere('mother_email', $email)
+                      ->orWhere('guardian_email', $email);
+                }
+                if (!empty($phone)) {
+                    $q->orWhere('father_phone', $phone)
+                      ->orWhere('mother_phone', $phone)
+                      ->orWhere('guardian_phone', $phone);
+                }
+            })->value('id');
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     public function getPhotoAttribute($value)

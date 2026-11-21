@@ -2047,7 +2047,72 @@
                 "operationId": "logoutUser",
                 "responses": {
                     "200": {
-                        "description": "Successful operation"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "type": "object"
+                                                },
+                                                "staff_id": {
+                                                    "description": "Associated Staff ID if user is staff/teacher",
+                                                    "type": "integer",
+                                                    "example": 12,
+                                                    "nullable": true
+                                                },
+                                                "teacher_id": {
+                                                    "description": "Associated Teacher ID if user is a teacher",
+                                                    "type": "integer",
+                                                    "example": 12,
+                                                    "nullable": true
+                                                },
+                                                "student_id": {
+                                                    "description": "Associated Student ID if user is a student",
+                                                    "type": "integer",
+                                                    "example": 42,
+                                                    "nullable": true
+                                                },
+                                                "parent_id": {
+                                                    "description": "Associated Parent ID if user is a parent",
+                                                    "type": "integer",
+                                                    "example": 7,
+                                                    "nullable": true
+                                                },
+                                                "roles": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "permissions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "is_parent": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "children_count": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "description": "Unauthenticated"
@@ -2070,7 +2135,72 @@
                 "operationId": "getAuthUser",
                 "responses": {
                     "200": {
-                        "description": "Successful operation"
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "type": "object"
+                                                },
+                                                "staff_id": {
+                                                    "description": "Associated Staff ID if user is staff/teacher",
+                                                    "type": "integer",
+                                                    "example": 12,
+                                                    "nullable": true
+                                                },
+                                                "teacher_id": {
+                                                    "description": "Associated Teacher ID if user is a teacher",
+                                                    "type": "integer",
+                                                    "example": 12,
+                                                    "nullable": true
+                                                },
+                                                "student_id": {
+                                                    "description": "Associated Student ID if user is a student",
+                                                    "type": "integer",
+                                                    "example": 42,
+                                                    "nullable": true
+                                                },
+                                                "parent_id": {
+                                                    "description": "Associated Parent ID if user is a parent",
+                                                    "type": "integer",
+                                                    "example": 7,
+                                                    "nullable": true
+                                                },
+                                                "roles": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "permissions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "is_parent": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "children_count": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "description": "Unauthenticated"

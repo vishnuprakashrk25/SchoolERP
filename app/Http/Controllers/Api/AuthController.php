@@ -128,6 +128,10 @@ class AuthController extends Controller
             'data' => [
                 'token' => $token,
                 'user' => $user,
+                'staff_id' => $user->staff_id,
+                'teacher_id' => $user->teacher_id,
+                'student_id' => $user->student_id,
+                'parent_id' => $user->parent_id,
                 'roles' => $user->getRoleNames(),
                 'permissions' => $user->getAllPermissions()->pluck('name'),
                 'is_parent' => $isParent,
@@ -151,7 +155,21 @@ class AuthController extends Controller
      *      security={{"sanctum":{}}},
      *      @OA\Response(
      *          response=200,
-     *          description="Successful operation"
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="user", type="object"),
+     *                  @OA\Property(property="staff_id", type="integer", nullable=true, example=12, description="Associated Staff ID if user is staff/teacher"),
+     *                  @OA\Property(property="teacher_id", type="integer", nullable=true, example=12, description="Associated Teacher ID if user is a teacher"),
+     *                  @OA\Property(property="student_id", type="integer", nullable=true, example=42, description="Associated Student ID if user is a student"),
+     *                  @OA\Property(property="parent_id", type="integer", nullable=true, example=7, description="Associated Parent ID if user is a parent"),
+     *                  @OA\Property(property="roles", type="array", @OA\Items(type="string")),
+     *                  @OA\Property(property="permissions", type="array", @OA\Items(type="string")),
+     *                  @OA\Property(property="is_parent", type="boolean", example=false),
+     *                  @OA\Property(property="children_count", type="integer", example=0)
+     *              )
+     *          )
      *       ),
      *      @OA\Response(
      *          response=401,
@@ -190,7 +208,21 @@ class AuthController extends Controller
      *      security={{"sanctum":{}}},
      *      @OA\Response(
      *          response=200,
-     *          description="Successful operation"
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="user", type="object"),
+     *                  @OA\Property(property="staff_id", type="integer", nullable=true, example=12, description="Associated Staff ID if user is staff/teacher"),
+     *                  @OA\Property(property="teacher_id", type="integer", nullable=true, example=12, description="Associated Teacher ID if user is a teacher"),
+     *                  @OA\Property(property="student_id", type="integer", nullable=true, example=42, description="Associated Student ID if user is a student"),
+     *                  @OA\Property(property="parent_id", type="integer", nullable=true, example=7, description="Associated Parent ID if user is a parent"),
+     *                  @OA\Property(property="roles", type="array", @OA\Items(type="string")),
+     *                  @OA\Property(property="permissions", type="array", @OA\Items(type="string")),
+     *                  @OA\Property(property="is_parent", type="boolean", example=false),
+     *                  @OA\Property(property="children_count", type="integer", example=0)
+     *              )
+     *          )
      *       ),
      *      @OA\Response(
      *          response=401,
@@ -217,6 +249,10 @@ class AuthController extends Controller
             'success' => true,
             'data' => [
                 'user' => $user,
+                'staff_id' => $user->staff_id,
+                'teacher_id' => $user->teacher_id,
+                'student_id' => $user->student_id,
+                'parent_id' => $user->parent_id,
                 'roles' => $user->getRoleNames(),
                 'permissions' => $user->getAllPermissions()->pluck('name'),
                 'is_parent' => $isParent,
