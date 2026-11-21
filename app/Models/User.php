@@ -34,10 +34,11 @@ class User extends Authenticatable
     protected $appends = [
         'full_name',
         'staff_id',
-        'staff_role',
         'teacher_id',
         'student_id',
         'parent_id',
+        'profile_id',
+        'profile_type',
     ];
 
     public function getFullNameAttribute($value)
@@ -77,80 +78,6 @@ class User extends Authenticatable
         return $this->hasOne(Student::class, 'user_id');
     }
 
-    public function getStaffIdAttribute()
-    {
-        try {
-            if ($this->relationLoaded('staff')) {
-                return $this->staff?->id;
-            }
-            return $this->staff()->value('id');
-        } catch (\Throwable $e) {
-            return null;
-        }
-    }
-
-    public function getStaffRoleAttribute()
-    {
-        try {
-            if ($this->relationLoaded('staff')) {
-                return $this->staff?->role;
-            }
-            return $this->staff()->value('role');
-        } catch (\Throwable $e) {
-            return null;
-        }
-    }
-
-    public function getTeacherIdAttribute()
-    {
-        try {
-            $staff = $this->relationLoaded('staff') ? $this->staff : $this->staff()->first();
-            if ($staff && (strcasecmp($staff->role, 'teacher') === 0 || $this->hasRole('teacher') || $this->hasRole('Teacher'))) {
-                return $staff->id;
-            }
-        } catch (\Throwable $e) {
-            return null;
-        }
-        return null;
-    }
-
-    public function getStudentIdAttribute()
-    {
-        try {
-            if ($this->relationLoaded('student')) {
-                return $this->student?->id;
-            }
-            return $this->student()->value('id');
-        } catch (\Throwable $e) {
-            return null;
-        }
-    }
-
-    public function getParentIdAttribute()
-    {
-        try {
-            $email = $this->email;
-            $phone = $this->phone;
-            if (empty($email) && empty($phone)) {
-                return null;
-            }
-            return \App\Models\StudentParent::where(function ($q) use ($email, $phone) {
-                if (!empty($email)) {
-                    $q->where('father_email', $email)
-                      ->orWhere('mother_email', $email)
-                      ->orWhere('guardian_email', $email);
-                }
-                if (!empty($phone)) {
-                    $q->orWhere('father_phone', $phone)
-                      ->orWhere('mother_phone', $phone)
-                      ->orWhere('guardian_phone', $phone);
-                }
-            })->value('id');
-        } catch (\Throwable $e) {
-            return null;
-        }
-    }
-
     public function getPhotoAttribute($value)
     {
         $photo = $value;
@@ -184,6 +111,146 @@ class User extends Authenticatable
             return $this->student->phone;
         }
         return $this->staff?->phone ?? $this->student?->phone ?? null;
+    }
+
+    public function getStaffIdAttribute()
+    {
+        if ($this->relationLoaded('staff') && $this->staff) {
+            return $this->staff->id;
+        }
+        $id = $this->staff()->value('id');
+        if ($id) {
+            return $id;
+        }
+        if (!empty($this->email)) {
+            $staff = \App\Models\Staff::where('email', $this->email)->first();
+            if ($staff) {
+                if (empty($staff->user_id)) {
+                    $staff->update(['user_id' => $this->id]);
+                }
+                return $staff->id;
+            }
+        }
+        if (!empty($this->attributes['phone'] ?? null)) {
+            $staff = \App\Models\Staff::where('phone', $this->attributes['phone'])->first();
+            if ($staff) {
+                if (empty($staff->user_id)) {
+                    $staff->update(['user_id' => $this->id]);
+                }
+                return $staff->id;
+            }
+        }
+        return null;
+    }
+
+    public function getTeacherIdAttribute()
+    {
+        $staff = $this->relationLoaded('staff') ? $this->staff : $this->staff()->first();
+        if (!$staff && !empty($this->email)) {
+            $staff = \App\Models\Staff::where('email', $this->email)->first();
+        }
+        if (!$staff && !empty($this->attributes['phone'] ?? null)) {
+            $staff = \App\Models\Staff::where('phone', $this->attributes['phone'])->first();
+        }
+
+        if ($staff) {
+            $isTeacherRole = strcasecmp($staff->role ?? '', 'teacher') === 0 
+                || $this->hasRole('teacher') 
+                || $this->hasRole('Teacher');
+            if ($isTeacherRole) {
+                return $staff->id;
+            }
+        } elseif ($this->hasRole('teacher') || $this->hasRole('Teacher')) {
+            return null;
+        }
+        return null;
+    }
+
+    public function getStudentIdAttribute()
+    {
+        if ($this->relationLoaded('student') && $this->student) {
+            return $this->student->id;
+        }
+        $id = $this->student()->value('id');
+        if ($id) {
+            return $id;
+        }
+        if (!empty($this->email)) {
+            $student = \App\Models\Student::where('email', $this->email)->first();
+            if ($student) {
+                if (empty($student->user_id)) {
+                    $student->update(['user_id' => $this->id]);
+                }
+                return $student->id;
+            }
+        }
+        if (!empty($this->attributes['phone'] ?? null)) {
+            $student = \App\Models\Student::where('phone', $this->attributes['phone'])->first();
+            if ($student) {
+                if (empty($student->user_id)) {
+                    $student->update(['user_id' => $this->id]);
+                }
+                return $student->id;
+            }
+        }
+        return null;
+    }
+
+    public function getParentIdAttribute()
+    {
+        $email = $this->email;
+        $phone = $this->attributes['phone'] ?? null;
+
+        if (empty($email) && empty($phone)) {
+            return null;
+        }
+
+        return \App\Models\StudentParent::where(function ($q) use ($email, $phone) {
+            if (!empty($email)) {
+                $q->where('father_email', $email)
+                  ->orWhere('mother_email', $email)
+                  ->orWhere('guardian_email', $email);
+            }
+            if (!empty($phone)) {
+                $q->orWhere('father_phone', $phone)
+                  ->orWhere('mother_phone', $phone)
+                  ->orWhere('guardian_phone', $phone);
+            }
+        })->value('id');
+    }
+
+    public function getProfileIdAttribute()
+    {
+        if ($this->teacher_id) {
+            return $this->teacher_id;
+        }
+        if ($this->staff_id) {
+            return $this->staff_id;
+        }
+        if ($this->student_id) {
+            return $this->student_id;
+        }
+        if ($this->parent_id) {
+            return $this->parent_id;
+        }
+        return $this->id;
+    }
+
+    public function getProfileTypeAttribute()
+    {
+        if ($this->teacher_id) {
+            return 'teacher';
+        }
+        if ($this->staff_id) {
+            return 'staff';
+        }
+        if ($this->student_id) {
+            return 'student';
+        }
+        if ($this->parent_id) {
+            return 'parent';
+        }
+        return 'user';
     }
 
     public function sendPasswordResetNotification($token)

@@ -2026,86 +2026,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Login successful"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "token": {
-                                                    "type": "string",
-                                                    "example": "1|abcdef123456..."
-                                                },
-                                                "user": {
-                                                    "type": "object"
-                                                },
-                                                "staff_id": {
-                                                    "description": "Associated Staff ID if user is staff/teacher",
-                                                    "type": "integer",
-                                                    "example": 12,
-                                                    "nullable": true
-                                                },
-                                                "staff_role": {
-                                                    "description": "Staff role/position (Driver, Principal, Accountant, Teacher, etc.) if staff member",
-                                                    "type": "string",
-                                                    "example": "Driver",
-                                                    "nullable": true
-                                                },
-                                                "teacher_id": {
-                                                    "description": "Associated Teacher ID if user is a teacher",
-                                                    "type": "integer",
-                                                    "example": 12,
-                                                    "nullable": true
-                                                },
-                                                "student_id": {
-                                                    "description": "Associated Student ID if user is a student",
-                                                    "type": "integer",
-                                                    "example": 42,
-                                                    "nullable": true
-                                                },
-                                                "parent_id": {
-                                                    "description": "Associated Parent ID if user is a parent",
-                                                    "type": "integer",
-                                                    "example": 7,
-                                                    "nullable": true
-                                                },
-                                                "roles": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    }
-                                                },
-                                                "permissions": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    }
-                                                },
-                                                "is_parent": {
-                                                    "type": "boolean",
-                                                    "example": false
-                                                },
-                                                "children_count": {
-                                                    "type": "integer",
-                                                    "example": 0
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Successful operation"
                     },
                     "401": {
                         "description": "Unauthenticated"
@@ -2138,42 +2059,97 @@
                                         "data": {
                                             "properties": {
                                                 "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Sarah Connor"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "sarah@school.com"
+                                                        },
+                                                        "phone": {
+                                                            "type": "string",
+                                                            "example": "9876543210"
+                                                        },
+                                                        "photo": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        },
+                                                        "staff_id": {
+                                                            "description": "Staff ID if user is staff/teacher",
+                                                            "type": "integer",
+                                                            "example": 5,
+                                                            "nullable": true
+                                                        },
+                                                        "teacher_id": {
+                                                            "description": "Teacher ID if user is a teacher",
+                                                            "type": "integer",
+                                                            "example": 5,
+                                                            "nullable": true
+                                                        },
+                                                        "student_id": {
+                                                            "description": "Student ID if user is a student",
+                                                            "type": "integer",
+                                                            "example": null,
+                                                            "nullable": true
+                                                        },
+                                                        "parent_id": {
+                                                            "description": "Parent ID if user is a parent",
+                                                            "type": "integer",
+                                                            "example": null,
+                                                            "nullable": true
+                                                        },
+                                                        "profile_id": {
+                                                            "description": "Active profile ID based on role",
+                                                            "type": "integer",
+                                                            "example": 5
+                                                        },
+                                                        "profile_type": {
+                                                            "description": "Profile type: teacher, staff, student, parent, or user",
+                                                            "type": "string",
+                                                            "example": "teacher"
+                                                        }
+                                                    },
                                                     "type": "object"
                                                 },
                                                 "staff_id": {
-                                                    "description": "Associated Staff ID if user is staff/teacher",
                                                     "type": "integer",
-                                                    "example": 12,
-                                                    "nullable": true
-                                                },
-                                                "staff_role": {
-                                                    "description": "Staff role/position (Driver, Principal, Accountant, Teacher, etc.) if staff member",
-                                                    "type": "string",
-                                                    "example": "Driver",
+                                                    "example": 5,
                                                     "nullable": true
                                                 },
                                                 "teacher_id": {
-                                                    "description": "Associated Teacher ID if user is a teacher",
                                                     "type": "integer",
-                                                    "example": 12,
+                                                    "example": 5,
                                                     "nullable": true
                                                 },
                                                 "student_id": {
-                                                    "description": "Associated Student ID if user is a student",
                                                     "type": "integer",
-                                                    "example": 42,
+                                                    "example": null,
                                                     "nullable": true
                                                 },
                                                 "parent_id": {
-                                                    "description": "Associated Parent ID if user is a parent",
                                                     "type": "integer",
-                                                    "example": 7,
+                                                    "example": null,
                                                     "nullable": true
+                                                },
+                                                "profile_id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "profile_type": {
+                                                    "type": "string",
+                                                    "example": "teacher"
                                                 },
                                                 "roles": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "example": "teacher"
                                                     }
                                                 },
                                                 "permissions": {
@@ -2232,42 +2208,97 @@
                                         "data": {
                                             "properties": {
                                                 "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Sarah Connor"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "sarah@school.com"
+                                                        },
+                                                        "phone": {
+                                                            "type": "string",
+                                                            "example": "9876543210"
+                                                        },
+                                                        "photo": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        },
+                                                        "staff_id": {
+                                                            "description": "Staff ID if user is staff/teacher",
+                                                            "type": "integer",
+                                                            "example": 5,
+                                                            "nullable": true
+                                                        },
+                                                        "teacher_id": {
+                                                            "description": "Teacher ID if user is a teacher",
+                                                            "type": "integer",
+                                                            "example": 5,
+                                                            "nullable": true
+                                                        },
+                                                        "student_id": {
+                                                            "description": "Student ID if user is a student",
+                                                            "type": "integer",
+                                                            "example": null,
+                                                            "nullable": true
+                                                        },
+                                                        "parent_id": {
+                                                            "description": "Parent ID if user is a parent",
+                                                            "type": "integer",
+                                                            "example": null,
+                                                            "nullable": true
+                                                        },
+                                                        "profile_id": {
+                                                            "description": "Active profile ID based on role",
+                                                            "type": "integer",
+                                                            "example": 5
+                                                        },
+                                                        "profile_type": {
+                                                            "description": "Profile type: teacher, staff, student, parent, or user",
+                                                            "type": "string",
+                                                            "example": "teacher"
+                                                        }
+                                                    },
                                                     "type": "object"
                                                 },
                                                 "staff_id": {
-                                                    "description": "Associated Staff ID if user is staff/teacher",
                                                     "type": "integer",
-                                                    "example": 12,
-                                                    "nullable": true
-                                                },
-                                                "staff_role": {
-                                                    "description": "Staff role/position (Driver, Principal, Accountant, Teacher, etc.) if staff member",
-                                                    "type": "string",
-                                                    "example": "Driver",
+                                                    "example": 5,
                                                     "nullable": true
                                                 },
                                                 "teacher_id": {
-                                                    "description": "Associated Teacher ID if user is a teacher",
                                                     "type": "integer",
-                                                    "example": 12,
+                                                    "example": 5,
                                                     "nullable": true
                                                 },
                                                 "student_id": {
-                                                    "description": "Associated Student ID if user is a student",
                                                     "type": "integer",
-                                                    "example": 42,
+                                                    "example": null,
                                                     "nullable": true
                                                 },
                                                 "parent_id": {
-                                                    "description": "Associated Parent ID if user is a parent",
                                                     "type": "integer",
-                                                    "example": 7,
+                                                    "example": null,
                                                     "nullable": true
+                                                },
+                                                "profile_id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "profile_type": {
+                                                    "type": "string",
+                                                    "example": "teacher"
                                                 },
                                                 "roles": {
                                                     "type": "array",
                                                     "items": {
-                                                        "type": "string"
+                                                        "type": "string",
+                                                        "example": "teacher"
                                                     }
                                                 },
                                                 "permissions": {
