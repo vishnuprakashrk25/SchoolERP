@@ -42,6 +42,22 @@ class AuthController extends Controller
      *      @OA\Response(
      *          response=200,
      *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Login successful"),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="token", type="string", example="1|abcdef123456..."),
+     *                  @OA\Property(property="user", type="object"),
+     *                  @OA\Property(property="staff_id", type="integer", nullable=true, example=12, description="Associated Staff ID if user is staff/teacher"),
+     *                  @OA\Property(property="teacher_id", type="integer", nullable=true, example=12, description="Associated Teacher ID if user is a teacher"),
+     *                  @OA\Property(property="student_id", type="integer", nullable=true, example=42, description="Associated Student ID if user is a student"),
+     *                  @OA\Property(property="parent_id", type="integer", nullable=true, example=7, description="Associated Parent ID if user is a parent"),
+     *                  @OA\Property(property="roles", type="array", @OA\Items(type="string")),
+     *                  @OA\Property(property="permissions", type="array", @OA\Items(type="string")),
+     *                  @OA\Property(property="is_parent", type="boolean", example=false),
+     *                  @OA\Property(property="children_count", type="integer", example=0)
+     *              )
+     *          )
      *       ),
      *      @OA\Response(
      *          response=401,
