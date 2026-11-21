@@ -42,6 +42,22 @@ class AuthController extends Controller
      *      @OA\Response(
      *          response=200,
      *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Login successful"),
+     *              @OA\Property(property="data", type="object",
+     *                  @OA\Property(property="token", type="string", example="1|abcdef123456..."),
+     *                  @OA\Property(property="user", type="object"),
+     *                  @OA\Property(property="staff_id", type="integer", nullable=true, example=12, description="Associated Staff ID if user is staff/teacher"),
+     *                  @OA\Property(property="teacher_id", type="integer", nullable=true, example=12, description="Associated Teacher ID if user is a teacher"),
+     *                  @OA\Property(property="student_id", type="integer", nullable=true, example=42, description="Associated Student ID if user is a student"),
+     *                  @OA\Property(property="parent_id", type="integer", nullable=true, example=7, description="Associated Parent ID if user is a parent"),
+     *                  @OA\Property(property="roles", type="array", @OA\Items(type="string")),
+     *                  @OA\Property(property="permissions", type="array", @OA\Items(type="string")),
+     *                  @OA\Property(property="is_parent", type="boolean", example=false),
+     *                  @OA\Property(property="children_count", type="integer", example=0)
+     *              )
+     *          )
      *       ),
      *      @OA\Response(
      *          response=401,
@@ -120,7 +136,8 @@ class AuthController extends Controller
         // Log login activity
         try {
             \App\Services\ActivityLoggerService::logLogin($user, $request);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         return response()->json([
             'success' => true,
@@ -134,6 +151,10 @@ class AuthController extends Controller
                 'parent_id' => $user->parent_id,
                 'profile_id' => $user->profile_id,
                 'profile_type' => $user->profile_type,
+                'staff_id' => $user->staff_id,
+                'teacher_id' => $user->teacher_id,
+                'student_id' => $user->student_id,
+                'parent_id' => $user->parent_id,
                 'roles' => $user->getRoleNames(),
                 'permissions' => $user->getAllPermissions()->pluck('name'),
                 'is_parent' => $isParent,
@@ -199,7 +220,8 @@ class AuthController extends Controller
         if ($user) {
             try {
                 \App\Services\ActivityLoggerService::logLogout($user, $request);
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
             $user->currentAccessToken()->delete();
         }
 
@@ -285,6 +307,10 @@ class AuthController extends Controller
                 'parent_id' => $user->parent_id,
                 'profile_id' => $user->profile_id,
                 'profile_type' => $user->profile_type,
+                'staff_id' => $user->staff_id,
+                'teacher_id' => $user->teacher_id,
+                'student_id' => $user->student_id,
+                'parent_id' => $user->parent_id,
                 'roles' => $user->getRoleNames(),
                 'permissions' => $user->getAllPermissions()->pluck('name'),
                 'is_parent' => $isParent,
@@ -344,7 +370,7 @@ class AuthController extends Controller
         DB::table('password_reset_tokens')->updateOrInsert(
             ['email' => $user->email],
             [
-                'token'      => Hash::make($code),
+                'token' => Hash::make($code),
                 'created_at' => Carbon::now(),
             ]
         );
@@ -392,7 +418,7 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'token' => 'required_without:code|string',
-            'code'  => 'required_without:token|string',
+            'code' => 'required_without:token|string',
         ]);
 
         $email = $request->email;
@@ -470,7 +496,7 @@ class AuthController extends Controller
 
         if (!$user) {
             $request->validate([
-                'email'    => 'required|email',
+                'email' => 'required|email',
                 'password' => 'required|string',
             ]);
 
@@ -532,10 +558,10 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'email'                 => 'required|email|exists:users,email',
-            'password'              => 'required|min:8|confirmed',
-            'token'                 => 'required_without:code|string',
-            'code'                  => 'required_without:token|string',
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|min:8|confirmed',
+            'token' => 'required_without:code|string',
+            'code' => 'required_without:token|string',
         ], [
             'email.exists' => 'We cannot find a user with that email address.',
         ]);
@@ -582,7 +608,7 @@ class AuthController extends Controller
 
         // Update password
         $user->forceFill([
-            'password'       => Hash::make($request->password),
+            'password' => Hash::make($request->password),
             'remember_token' => Str::random(60),
         ])->save();
 
