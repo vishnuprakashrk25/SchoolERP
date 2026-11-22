@@ -425,4 +425,182 @@ class SidebarMenuController extends Controller
             'data' => $subMenu,
         ]);
     }
+
+    /**
+     * @OA\Post(
+     *      path="/api/sidebar-sub-menus",
+     *      operationId="storeSidebarSubMenuItem",
+     *      tags={"Navigation - Sidebar Menus"},
+     *      summary="Create a new sidebar sub-menu item",
+     *      security={{"sanctum":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"sidebar_menu_id", "title"},
+     *              @OA\Property(property="sidebar_menu_id", type="integer", example=1, description="Parent sidebar menu ID"),
+     *              @OA\Property(property="title", type="string", example="Admission Query"),
+     *              @OA\Property(property="path", type="string", example="/admission-query"),
+     *              @OA\Property(property="permission_id", type="integer", example=13),
+     *              @OA\Property(property="permission", type="string", example="manage_admission_queries"),
+     *              @OA\Property(property="order", type="integer", example=1),
+     *              @OA\Property(property="is_active", type="boolean", example=true)
+     *          )
+     *      ),
+     *      @OA\Response(response=201, description="Submenu created successfully"),
+     *      @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    public function storeSubMenu(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'sidebar_menu_id' => 'required|exists:sidebar_menus,id',
+            'title'           => 'required|string|max:150',
+            'path'            => 'nullable|string|max:255',
+            'permission_id'   => 'nullable|integer',
+            'permission'      => 'nullable|string|max:100',
+            'order'           => 'nullable|integer',
+            'is_active'       => 'nullable|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $request->all();
+
+        // Auto-sync permission string & permission_id
+        if (!empty($data['permission_id']) && empty($data['permission'])) {
+            $perm = \Spatie\Permission\Models\Permission::find($data['permission_id']);
+            if ($perm) {
+                $data['permission'] = $perm->name;
+            }
+        } elseif (!empty($data['permission']) && empty($data['permission_id'])) {
+            $data['permission_id'] = \Spatie\Permission\Models\Permission::where('name', $data['permission'])->value('id');
+        }
+
+        $subMenu = SidebarSubMenu::create($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sidebar sub-menu created successfully',
+            'data' => $subMenu->load('menu'),
+        ], 201);
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/api/sidebar-sub-menus/{id}",
+     *      operationId="getSidebarSubMenuItem",
+     *      tags={"Navigation - Sidebar Menus"},
+     *      summary="Get details of a specific sidebar sub-menu item",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", in="path", required=true, description="Submenu ID", @OA\Schema(type="integer")),
+     *      @OA\Response(response=200, description="Successful operation"),
+     *      @OA\Response(response=404, description="Submenu not found")
+     * )
+     */
+    public function showSubMenu($id)
+    {
+        $subMenu = SidebarSubMenu::with('menu')->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $subMenu,
+        ]);
+    }
+
+    /**
+     * @OA\Put(
+     *      path="/api/sidebar-sub-menus/{id}",
+     *      operationId="updateSidebarSubMenuItem",
+     *      tags={"Navigation - Sidebar Menus"},
+     *      summary="Update a sidebar sub-menu item",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", in="path", required=true, description="Submenu ID", @OA\Schema(type="integer")),
+     *      @OA\RequestBody(
+     *          required=false,
+     *          @OA\JsonContent(
+     *              @OA\Property(property="sidebar_menu_id", type="integer", example=1, description="Parent sidebar menu ID"),
+     *              @OA\Property(property="title", type="string", example="Admission Query"),
+     *              @OA\Property(property="path", type="string", example="/admission-query"),
+     *              @OA\Property(property="permission_id", type="integer", example=13),
+     *              @OA\Property(property="permission", type="string", example="manage_admission_queries"),
+     *              @OA\Property(property="order", type="integer", example=1),
+     *              @OA\Property(property="is_active", type="boolean", example=true)
+     *          )
+     *      ),
+     *      @OA\Response(response=200, description="Submenu updated successfully"),
+     *      @OA\Response(response=404, description="Submenu not found"),
+     *      @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    public function updateSubMenu(Request $request, $id)
+    {
+        $subMenu = SidebarSubMenu::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'sidebar_menu_id' => 'sometimes|required|exists:sidebar_menus,id',
+            'title'           => 'sometimes|required|string|max:150',
+            'path'            => 'sometimes|nullable|string|max:255',
+            'permission_id'   => 'sometimes|nullable|integer',
+            'permission'      => 'sometimes|nullable|string|max:100',
+            'order'           => 'sometimes|integer',
+            'is_active'       => 'sometimes|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $request->all();
+
+        // Auto-sync permission string & permission_id
+        if (!empty($data['permission_id']) && empty($data['permission'])) {
+            $perm = \Spatie\Permission\Models\Permission::find($data['permission_id']);
+            if ($perm) {
+                $data['permission'] = $perm->name;
+            }
+        } elseif (!empty($data['permission']) && empty($data['permission_id'])) {
+            $data['permission_id'] = \Spatie\Permission\Models\Permission::where('name', $data['permission'])->value('id');
+        }
+
+        $subMenu->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sidebar sub-menu updated successfully',
+            'data' => $subMenu->fresh()->load('menu'),
+        ]);
+    }
+
+    /**
+     * @OA\Delete(
+     *      path="/api/sidebar-sub-menus/{id}",
+     *      operationId="deleteSidebarSubMenuItem",
+     *      tags={"Navigation - Sidebar Menus"},
+     *      summary="Delete a sidebar sub-menu item",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", in="path", required=true, description="Submenu ID", @OA\Schema(type="integer")),
+     *      @OA\Response(response=200, description="Submenu deleted successfully"),
+     *      @OA\Response(response=404, description="Submenu not found")
+     * )
+     */
+    public function destroySubMenu($id)
+    {
+        $subMenu = SidebarSubMenu::findOrFail($id);
+        $subMenu->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sidebar sub-menu deleted successfully',
+        ]);
+    }
 }

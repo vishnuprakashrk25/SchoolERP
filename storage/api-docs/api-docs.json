@@ -14972,6 +14972,212 @@
                 ]
             }
         },
+        "/api/sidebar-sub-menus": {
+            "post": {
+                "tags": [
+                    "Navigation - Sidebar Menus"
+                ],
+                "summary": "Create a new sidebar sub-menu item",
+                "operationId": "storeSidebarSubMenuItem",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "sidebar_menu_id",
+                                    "title"
+                                ],
+                                "properties": {
+                                    "sidebar_menu_id": {
+                                        "description": "Parent sidebar menu ID",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Admission Query"
+                                    },
+                                    "path": {
+                                        "type": "string",
+                                        "example": "/admission-query"
+                                    },
+                                    "permission_id": {
+                                        "type": "integer",
+                                        "example": 13
+                                    },
+                                    "permission": {
+                                        "type": "string",
+                                        "example": "manage_admission_queries"
+                                    },
+                                    "order": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Submenu created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/sidebar-sub-menus/{id}": {
+            "get": {
+                "tags": [
+                    "Navigation - Sidebar Menus"
+                ],
+                "summary": "Get details of a specific sidebar sub-menu item",
+                "operationId": "getSidebarSubMenuItem",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Submenu ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Submenu not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Navigation - Sidebar Menus"
+                ],
+                "summary": "Update a sidebar sub-menu item",
+                "operationId": "updateSidebarSubMenuItem",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Submenu ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "sidebar_menu_id": {
+                                        "description": "Parent sidebar menu ID",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Admission Query"
+                                    },
+                                    "path": {
+                                        "type": "string",
+                                        "example": "/admission-query"
+                                    },
+                                    "permission_id": {
+                                        "type": "integer",
+                                        "example": 13
+                                    },
+                                    "permission": {
+                                        "type": "string",
+                                        "example": "manage_admission_queries"
+                                    },
+                                    "order": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Submenu updated successfully"
+                    },
+                    "404": {
+                        "description": "Submenu not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Navigation - Sidebar Menus"
+                ],
+                "summary": "Delete a sidebar sub-menu item",
+                "operationId": "deleteSidebarSubMenuItem",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Submenu ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Submenu deleted successfully"
+                    },
+                    "404": {
+                        "description": "Submenu not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/staff-attendances": {
             "get": {
                 "tags": [

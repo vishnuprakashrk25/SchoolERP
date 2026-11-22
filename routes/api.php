@@ -305,12 +305,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Sidebar Menus Management
     Route::get('sidebar-menus/items', [SidebarMenuController::class, 'items']);
+    Route::get('sidebar-sub-menus/{id}', [SidebarMenuController::class, 'showSubMenu']);
     Route::middleware('role:super-admin|admin')->group(function () {
         Route::post('sidebar-menus', [SidebarMenuController::class, 'store']);
         Route::put('sidebar-menus/{id}', [SidebarMenuController::class, 'update']);
         Route::patch('sidebar-menus/{id}/sub-menu-status', [SidebarMenuController::class, 'toggleSubMenuStatus']);
-        Route::patch('sidebar-sub-menus/{id}/status', [SidebarMenuController::class, 'updateSubMenuStatus']);
         Route::delete('sidebar-menus/{id}', [SidebarMenuController::class, 'destroy']);
+
+        // Sub-menus Management
+        Route::post('sidebar-sub-menus', [SidebarMenuController::class, 'storeSubMenu']);
+        Route::put('sidebar-sub-menus/{id}', [SidebarMenuController::class, 'updateSubMenu']);
+        Route::patch('sidebar-sub-menus/{id}/status', [SidebarMenuController::class, 'updateSubMenuStatus']);
+        Route::delete('sidebar-sub-menus/{id}', [SidebarMenuController::class, 'destroySubMenu']);
     });
 
     // Super Admin Management
