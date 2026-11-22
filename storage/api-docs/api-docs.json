@@ -10308,8 +10308,26 @@
                     {
                         "name": "q",
                         "in": "query",
-                        "description": "Search keyword",
-                        "required": true,
+                        "description": "Search keyword (matches student code, admission no, names, email, phone, etc.)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "student_code",
+                        "in": "query",
+                        "description": "Search or filter specifically by student_code (e.g. YESMLR647)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "studentcode",
+                        "in": "query",
+                        "description": "Alias for student_code",
+                        "required": false,
                         "schema": {
                             "type": "string"
                         }
@@ -17704,6 +17722,24 @@
                         "required": false,
                         "schema": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "student_code",
+                        "in": "query",
+                        "description": "Filter by student_code (e.g. YESMLR647)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "studentcode",
+                        "in": "query",
+                        "description": "Alias for student_code",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
                         }
                     },
                     {

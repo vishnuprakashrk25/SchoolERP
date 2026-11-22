@@ -33,6 +33,8 @@ class StudentController extends Controller
      *      @OA\Parameter(name="academic_year_id", in="query", required=false, description="Filter by academic_year_id", @OA\Schema(type="integer")),
      *      @OA\Parameter(name="class_id", in="query", required=false, description="Filter by class_id", @OA\Schema(type="integer")),
      *      @OA\Parameter(name="section_id", in="query", required=false, description="Filter by section_id", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="student_code", in="query", required=false, description="Filter by student_code (e.g. YESMLR647)", @OA\Schema(type="string")),
+     *      @OA\Parameter(name="studentcode", in="query", required=false, description="Alias for student_code", @OA\Schema(type="string")),
      *      @OA\Parameter(name="search", in="query", required=false, description="Search by name, roll_no, student_code, admission_no, email, phone, etc.", @OA\Schema(type="string")),
      *      @OA\Parameter(name="category_id", in="query", required=false, description="Filter by student social category_id (e.g. OBC, General, etc.)", @OA\Schema(type="integer")),
      *      @OA\Parameter(name="academic_category_id", in="query", required=false, description="Filter by student academic category_id (e.g. Rainbow - 3, Planet, etc.)", @OA\Schema(type="integer")),
@@ -200,6 +202,14 @@ class StudentController extends Controller
 
         if ($request->filled('status')) {
             $query->where('students.status', $request->boolean('status'));
+        }
+
+        if ($request->filled('student_code')) {
+            $studentCode = trim($request->input('student_code'));
+            $query->where('students.student_code', 'like', "%{$studentCode}%");
+        } elseif ($request->filled('studentcode')) {
+            $studentCode = trim($request->input('studentcode'));
+            $query->where('students.student_code', 'like', "%{$studentCode}%");
         }
 
         // Search Filter

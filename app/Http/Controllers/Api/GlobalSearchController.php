@@ -24,8 +24,22 @@ class GlobalSearchController extends Controller
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(
      *          name="q",
-     *          description="Search keyword",
-     *          required=true,
+     *          description="Search keyword (matches student code, admission no, names, email, phone, etc.)",
+     *          required=false,
+     *          in="query",
+     *          @OA\Schema(type="string")
+     *      ),
+     *      @OA\Parameter(
+     *          name="student_code",
+     *          description="Search or filter specifically by student_code (e.g. YESMLR647)",
+     *          required=false,
+     *          in="query",
+     *          @OA\Schema(type="string")
+     *      ),
+     *      @OA\Parameter(
+     *          name="studentcode",
+     *          description="Alias for student_code",
+     *          required=false,
      *          in="query",
      *          @OA\Schema(type="string")
      *      ),
@@ -47,7 +61,13 @@ class GlobalSearchController extends Controller
      */
     public function search(Request $request)
     {
-        $keyword = $request->query('q');
+        $studentCodeInput = $request->query('student_code') ?? $request->query('studentcode');
+        $keyword = $request->query('q') 
+            ?? $request->query('query') 
+            ?? $request->query('search') 
+            ?? $request->query('keyword') 
+            ?? $studentCodeInput;
+
         $typesInput = $request->query('types');
 
         if (is_string($typesInput)) {
@@ -55,7 +75,7 @@ class GlobalSearchController extends Controller
         }
         $types = $typesInput ? array_map('trim', $typesInput) : [];
 
-        if (!$keyword) {
+        if (!$keyword && !$studentCodeInput) {
             return response()->json([
                 'success' => true,
                 'data' => []
@@ -67,31 +87,54 @@ class GlobalSearchController extends Controller
 
         // 1. STUDENTS
         if (empty($types) || in_array('Student', $types)) {
-            $students = Student::with(['class', 'section'])
-                ->where(function($query) use ($term) {
+            $studentsQuery = Student::with(['class', 'section']);
+
+            if ($studentCodeInput && !$request->has('q') && !$request->has('query') && !$request->has('search') && !$request->has('keyword')) {
+                $codeTerm = "%{$studentCodeInput}%";
+                $studentsQuery->where('student_code', 'LIKE', $codeTerm);
+            } else {
+                $studentsQuery->where(function($query) use ($term, $studentCodeInput) {
                     $query->where('first_name', 'LIKE', $term)
                           ->orWhere('last_name', 'LIKE', $term)
                           ->orWhere('full_name', 'LIKE', $term)
+                          ->orWhere('student_code', 'LIKE', $term)
                           ->orWhere('admission_no', 'LIKE', $term)
                           ->orWhere('email', 'LIKE', $term)
                           ->orWhere('phone', 'LIKE', $term);
-                })
-                ->take(15)
-                ->get();
+
+                    if ($studentCodeInput) {
+                        $query->orWhere('student_code', 'LIKE', "%{$studentCodeInput}%");
+                    }
+                });
+            }
+
+            $students = $studentsQuery->take(15)->get();
 
             foreach ($students as $stu) {
                 $className = $stu->class ? $stu->class->name : '';
                 $sectionName = $stu->section ? $stu->section->name : '';
-                $classDetail = trim($className . $sectionName);
-                $classDetailStr = $classDetail ? "Class {$classDetail}" : 'Student';
-                $admNoStr = $stu->admission_no ? " • Adm No:{$stu->admission_no}" : '';
+                $classDetail = trim($className . ($sectionName ? " {$sectionName}" : ''));
+                
+                $details = [];
+                if ($classDetail) {
+                    $details[] = "Class {$classDetail}";
+                }
+                if ($stu->student_code) {
+                    $details[] = "Code: {$stu->student_code}";
+                }
+                if ($stu->admission_no) {
+                    $details[] = "Adm No: {$stu->admission_no}";
+                }
+                $detailsStr = !empty($details) ? implode(' • ', $details) : 'Student';
                 
                 $results[] = [
                     'id' => $stu->id,
                     'student_id' => $stu->id,
                     'name' => $stu->full_name,
+                    'student_code' => $stu->student_code,
+                    'admission_no' => $stu->admission_no,
                     'type' => 'Student',
-                    'details' => $classDetailStr . $admNoStr,
+                    'details' => $detailsStr,
                     'photo' => $stu->photo ? url($stu->photo) : null,
                 ];
             }
@@ -150,13 +193,20 @@ class GlobalSearchController extends Controller
         // 3. PARENTS
         if (empty($types) || in_array('Parents', $types)) {
             $parents = StudentParent::with(['student.class', 'student.section'])
-                ->where(function($query) use ($term) {
+                ->where(function($query) use ($term, $studentCodeInput) {
                     $query->where('father_name', 'LIKE', $term)
                           ->orWhere('mother_name', 'LIKE', $term)
                           ->orWhere('guardian_name', 'LIKE', $term)
                           ->orWhere('father_phone', 'LIKE', $term)
                           ->orWhere('mother_phone', 'LIKE', $term)
-                          ->orWhere('guardian_phone', 'LIKE', $term);
+                          ->orWhere('guardian_phone', 'LIKE', $term)
+                          ->orWhereHas('student', function($sq) use ($term, $studentCodeInput) {
+                              $sq->where('student_code', 'LIKE', $term)
+                                 ->orWhere('admission_no', 'LIKE', $term);
+                              if ($studentCodeInput) {
+                                  $sq->orWhere('student_code', 'LIKE', "%{$studentCodeInput}%");
+                              }
+                          });
                 })
                 ->take(15)
                 ->get();
