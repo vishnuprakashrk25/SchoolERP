@@ -2120,6 +2120,189 @@ class StudentController extends Controller
 
     /**
      * @OA\Get(
+     *      path="/api/students/check-email",
+     *      operationId="checkStudentDuplicateEmail",
+     *      tags={"4. Student Enrollment - Student"},
+     *      summary="Detect duplicate email across students, parents, staff, and users",
+     *      description="Checks if an email is already registered anywhere in the system and returns full entity context (e.g. parent with existing children for sibling auto-linking, or existing student login).",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="email", in="query", required=true, description="Email address to check", @OA\Schema(type="string")),
+     *      @OA\Parameter(name="exclude_student_id", in="query", required=false, description="Student ID to exclude (for update forms)", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="exclude_user_id", in="query", required=false, description="User ID to exclude (for update forms)", @OA\Schema(type="integer")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Duplicate check response",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="is_duplicate", type="boolean", example=true),
+     *              @OA\Property(property="exists", type="boolean", example=true),
+     *              @OA\Property(property="email", type="string", example="parent@example.com"),
+     *              @OA\Property(property="message", type="string", example="This email is already registered to Parent: Jahangeer"),
+     *              @OA\Property(property="types", type="array", @OA\Items(type="string")),
+     *              @OA\Property(property="details", type="object")
+     *          )
+     *      )
+     * )
+     */
+    public function checkEmail(Request $request)
+    {
+        $email = trim($request->input('email') ?? $request->query('email') ?? '');
+
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return response()->json([
+                'success'      => false,
+                'is_duplicate' => false,
+                'exists'       => false,
+                'message'      => 'Please provide a valid email address to check.'
+            ], 422);
+        }
+
+        $excludeStudentId = $request->input('exclude_student_id') ?? $request->query('exclude_student_id');
+        $excludeUserId = $request->input('exclude_user_id') ?? $request->query('exclude_user_id');
+
+        $types = [];
+        $details = [];
+        $messages = [];
+
+        // 1. Check Student Table
+        $studentQuery = Student::where('email', $email)->with(['class:id,name', 'section:id,name']);
+        if ($excludeStudentId) {
+            $studentQuery->where('id', '!=', $excludeStudentId);
+        }
+        $existingStudent = $studentQuery->first();
+        if ($existingStudent) {
+            $types[] = 'student';
+            $className = $existingStudent->class?->name ?? '';
+            $sectionName = $existingStudent->section?->name ?? '';
+            $classSec = trim($className . ($sectionName ? " - {$sectionName}" : ''));
+            $details['student'] = [
+                'id'           => $existingStudent->id,
+                'full_name'    => $existingStudent->full_name,
+                'admission_no' => $existingStudent->admission_no,
+                'student_code' => $existingStudent->student_code,
+                'class'        => $classSec ?: 'N/A',
+                'photo'        => $existingStudent->photo ? url($existingStudent->photo) : null,
+            ];
+            $messages[] = "Student: {$existingStudent->full_name} (Adm: {$existingStudent->admission_no})";
+        }
+
+        // 2. Check Parent Table
+        $parentQuery = StudentParent::where(function ($q) use ($email) {
+            $q->where('father_email', $email)
+              ->orWhere('mother_email', $email)
+              ->orWhere('guardian_email', $email);
+        })->with(['student.class:id,name', 'student.section:id,name']);
+
+        if ($excludeStudentId) {
+            $parentQuery->where('student_id', '!=', $excludeStudentId);
+        }
+        $existingParents = $parentQuery->get();
+
+        if ($existingParents->isNotEmpty()) {
+            $types[] = 'parent';
+            $matchedAs = [];
+            $children = [];
+            $parentName = '';
+
+            foreach ($existingParents as $p) {
+                if (strtolower($p->father_email ?? '') === strtolower($email)) {
+                    $matchedAs[] = 'father';
+                    if (!$parentName) $parentName = $p->father_name;
+                }
+                if (strtolower($p->mother_email ?? '') === strtolower($email)) {
+                    $matchedAs[] = 'mother';
+                    if (!$parentName) $parentName = $p->mother_name;
+                }
+                if (strtolower($p->guardian_email ?? '') === strtolower($email)) {
+                    $matchedAs[] = 'guardian';
+                    if (!$parentName) $parentName = $p->guardian_name;
+                }
+
+                if ($p->student) {
+                    $cName = $p->student->class?->name ?? '';
+                    $sName = $p->student->section?->name ?? '';
+                    $classSec = trim($cName . ($sName ? " - {$sName}" : ''));
+                    $children[] = [
+                        'id'           => $p->student->id,
+                        'full_name'    => $p->student->full_name,
+                        'admission_no' => $p->student->admission_no,
+                        'student_code' => $p->student->student_code,
+                        'class'        => $classSec ?: 'N/A',
+                    ];
+                }
+            }
+
+            $firstParent = $existingParents->first();
+            $details['parent'] = [
+                'id'                 => $firstParent->id,
+                'parent_name'        => $parentName ?: 'Parent',
+                'matched_roles'      => array_values(array_unique($matchedAs)),
+                'father_name'        => $firstParent->father_name,
+                'father_phone'       => $firstParent->father_phone,
+                'mother_name'        => $firstParent->mother_name,
+                'mother_phone'       => $firstParent->mother_phone,
+                'guardian_name'      => $firstParent->guardian_name,
+                'guardian_phone'     => $firstParent->guardian_phone,
+                'existing_children'  => $children,
+                'children_count'     => count($children),
+            ];
+            $childNames = implode(', ', array_column($children, 'full_name'));
+            $messages[] = "Parent: " . ($parentName ?: 'Parent') . (count($children) > 0 ? " (Parent of: {$childNames})" : '');
+        }
+
+        // 3. Check Staff Table
+        $existingStaff = Staff::where('email', $email)->first();
+        if ($existingStaff) {
+            $types[] = 'staff';
+            $details['staff'] = [
+                'id'          => $existingStaff->id,
+                'full_name'   => $existingStaff->full_name,
+                'staff_code'  => $existingStaff->staff_code,
+                'role'        => $existingStaff->role,
+                'designation' => $existingStaff->designation,
+            ];
+            $messages[] = "Staff Member: {$existingStaff->full_name} ({$existingStaff->role})";
+        }
+
+        // 4. Check User Auth Table
+        $userQuery = User::where('email', $email);
+        if ($excludeUserId) {
+            $userQuery->where('id', '!=', $excludeUserId);
+        } elseif ($existingStudent && $existingStudent->user_id) {
+            $userQuery->where('id', '!=', $existingStudent->user_id);
+        }
+        $existingUser = $userQuery->first();
+        if ($existingUser) {
+            $types[] = 'user';
+            $details['user'] = [
+                'id'        => $existingUser->id,
+                'name'      => $existingUser->name,
+                'roles'     => $existingUser->getRoleNames(),
+                'is_active' => (bool)$existingUser->is_active,
+            ];
+            if (!in_array('student', $types) && !in_array('staff', $types)) {
+                $messages[] = "User Account: {$existingUser->name} (" . implode(', ', $existingUser->getRoleNames()->toArray()) . ")";
+            }
+        }
+
+        $isDuplicate = !empty($types);
+        $message = $isDuplicate
+            ? "Email is already in use by " . implode(' and ', $messages) . "."
+            : "Email is available.";
+
+        return response()->json([
+            'success'      => true,
+            'is_duplicate' => $isDuplicate,
+            'exists'       => $isDuplicate,
+            'email'        => $email,
+            'message'      => $message,
+            'types'        => array_values(array_unique($types)),
+            'details'      => $isDuplicate ? $details : null,
+        ]);
+    }
+
+    /**
+     * @OA\Get(
      *      path="/api/students/{id}/siblings",
      *      operationId="getStudentSiblingsList",
      *      tags={"4. Student Enrollment - Student"},

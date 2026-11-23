@@ -559,6 +559,7 @@ class Student extends Model
             ])
             ->select([
                 'students.id',
+                'students.student_code',
                 'students.admission_no',
                 'students.roll_no',
                 'students.first_name',
@@ -576,9 +577,20 @@ class Student extends Model
             ->get()
             ->map(function ($sib) {
                 $sibArray = $sib->toArray();
-                $sibArray['class_name'] = $sib->class?->name;
-                $sibArray['section_name'] = $sib->section?->name;
+                $cName = $sib->class?->name ?? '';
+                $sName = $sib->section?->name ?? '';
+                $classSection = trim($cName . ($sName ? ' - ' . $sName : ''));
+
+                $sibArray['class_name'] = $cName;
+                $sibArray['section_name'] = $sName;
+                $sibArray['class_section'] = $classSection;
+                $sibArray['class_and_section'] = $classSection;
                 $sibArray['academic_year_name'] = $sib->academicYear?->name;
+                $sibArray['admission_number'] = $sib->admission_no;
+                $sibArray['roll_number'] = (string)($sib->roll_no ?? '');
+                $sibArray['remark_points'] = $sib->remark_points;
+                $sibArray['remark_point'] = $sib->remark_point;
+                $sibArray['student_code'] = $sib->student_code;
                 return $sibArray;
             });
     }

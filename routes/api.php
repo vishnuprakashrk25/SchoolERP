@@ -192,6 +192,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('students/{id}/siblings', [StudentController::class, 'studentSiblings']);
     Route::get('students/{id}/sibling-info', [StudentController::class, 'getSiblingContactInfo']);
     Route::get('staff/{id}/contact-info', [StudentController::class, 'getStaffContactInfo']);
+    Route::match(['get', 'post'], 'students/check-email', [StudentController::class, 'checkEmail']);
+    Route::match(['get', 'post'], 'check-email', [StudentController::class, 'checkEmail']);
 
     Route::post('students/bulk', [StudentController::class, 'bulkStore']);
     Route::post('students/{id}', [StudentController::class, 'update']);

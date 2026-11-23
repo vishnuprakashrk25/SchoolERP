@@ -20516,6 +20516,93 @@
                 ]
             }
         },
+        "/api/students/check-email": {
+            "get": {
+                "tags": [
+                    "4. Student Enrollment - Student"
+                ],
+                "summary": "Detect duplicate email across students, parents, staff, and users",
+                "description": "Checks if an email is already registered anywhere in the system and returns full entity context (e.g. parent with existing children for sibling auto-linking, or existing student login).",
+                "operationId": "checkStudentDuplicateEmail",
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "Email address to check",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "exclude_student_id",
+                        "in": "query",
+                        "description": "Student ID to exclude (for update forms)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "exclude_user_id",
+                        "in": "query",
+                        "description": "User ID to exclude (for update forms)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Duplicate check response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "is_duplicate": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "exists": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "example": "parent@example.com"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "This email is already registered to Parent: Jahangeer"
+                                        },
+                                        "types": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "details": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/students/{id}/siblings": {
             "get": {
                 "tags": [
