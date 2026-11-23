@@ -52,8 +52,58 @@ class Staff extends Model
     ];
 
     protected $appends = [
-        'full_name'
+        'full_name',
+        'role_id'
     ];
+
+    public function getRoleIdAttribute()
+    {
+        // 1. Try to get role_id from loaded user relation
+        if ($this->relationLoaded('user') && $this->user) {
+            $userRole = $this->user->roles->first();
+            if ($userRole) {
+                return $userRole->id;
+            }
+        }
+
+        // 2. Lookup role_id by staff->role string name (cached in memory map for high performance)
+        $roleName = $this->attributes['role'] ?? null;
+        if (!empty($roleName)) {
+            static $roleMap = null;
+            if ($roleMap === null) {
+                try {
+                    $roles = \Spatie\Permission\Models\Role::pluck('id', 'name')->toArray();
+                    $roleMap = [];
+                    foreach ($roles as $name => $id) {
+                        $roleMap[strtolower(trim($name))] = (int)$id;
+                    }
+                } catch (\Throwable $e) {
+                    $roleMap = [];
+                }
+            }
+
+            $key = strtolower(trim($roleName));
+            if (isset($roleMap[$key])) {
+                return $roleMap[$key];
+            }
+        }
+
+        // 3. Fallback to direct pivot table lookup if user_id exists
+        if (!empty($this->user_id)) {
+            try {
+                $roleId = \Illuminate\Support\Facades\DB::table('model_has_roles')
+                    ->where('model_id', $this->user_id)
+                    ->where('model_type', User::class)
+                    ->value('role_id');
+                if ($roleId) {
+                    return (int)$roleId;
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+
+        return null;
+    }
 
     public function getFullNameAttribute($value)
     {

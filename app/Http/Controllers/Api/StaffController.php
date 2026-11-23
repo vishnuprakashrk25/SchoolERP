@@ -25,6 +25,8 @@ class StaffController extends Controller
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="page", in="query", required=false, @OA\Schema(type="integer", default=1)),
      *      @OA\Parameter(name="limit", in="query", required=false, @OA\Schema(type="integer", default=15)),
+     *      @OA\Parameter(name="role_id", in="query", required=false, description="Filter staff by Role ID", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="role", in="query", required=false, description="Filter staff by Role name", @OA\Schema(type="string")),
      *      @OA\Response(
      *          response=200,
      *          description="Successful operation",
@@ -43,11 +45,14 @@ class StaffController extends Controller
      *                  type="array",
      *                  @OA\Items(
      *                  @OA\Property(property="id", type="integer"),
+     *                  @OA\Property(property="user_id", type="integer"),
      *                  @OA\Property(property="email", type="string"),
      *                  @OA\Property(property="phone", type="string"),
      *                  @OA\Property(property="designation", type="string"),
      *                  @OA\Property(property="staff_no", type="string"),
-     *                  @OA\Property(property="role", type="string"),
+     *                  @OA\Property(property="staff_code", type="string"),
+     *                  @OA\Property(property="role_id", type="integer", example=2),
+     *                  @OA\Property(property="role", type="string", example="Teacher"),
      *                  @OA\Property(property="first_name", type="string"),
      *                  @OA\Property(property="last_name", type="string"),
      *                  @OA\Property(property="full_name", type="string"),
@@ -100,7 +105,30 @@ class StaffController extends Controller
     public function index(Request $request)
     {
         $limit = $request->input('limit', 15);
-        $data = Staff::latest()->paginate($limit);
+        $query = Staff::latest();
+
+        if ($request->filled('role_id')) {
+            $roleObj = \Spatie\Permission\Models\Role::find($request->input('role_id'));
+            if ($roleObj) {
+                $query->where('role', $roleObj->name);
+            }
+        } elseif ($request->filled('role')) {
+            $query->where('role', $request->input('role'));
+        }
+
+        if ($request->filled('search')) {
+            $search = trim($request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('full_name', 'like', "%{$search}%")
+                  ->orWhere('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('staff_code', 'like', "%{$search}%");
+            });
+        }
+
+        $data = $query->paginate($limit);
 
         return response()->json([
             'success' => true,
@@ -242,11 +270,19 @@ class StaffController extends Controller
      */
     public function store(Request $request)
     {
+        if ($request->filled('role_id') && !$request->filled('role')) {
+            $roleObj = \Spatie\Permission\Models\Role::find($request->input('role_id'));
+            if ($roleObj) {
+                $request->merge(['role' => $roleObj->name]);
+            }
+        }
+
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'staff_code' => 'nullable|string',
             'staff_no' => 'nullable|string',
             'category' => 'nullable|string',
-            'role' => 'required',
+            'role_id' => 'nullable',
+            'role' => 'required_without:role_id',
             'full_name' => 'nullable|string',
             'first_name' => 'nullable|string',
             'last_name' => 'nullable|string',
@@ -610,10 +646,18 @@ class StaffController extends Controller
     {
         $item = Staff::findOrFail($id);
         
+        if ($request->filled('role_id') && !$request->filled('role')) {
+            $roleObj = \Spatie\Permission\Models\Role::find($request->input('role_id'));
+            if ($roleObj) {
+                $request->merge(['role' => $roleObj->name]);
+            }
+        }
+
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'staff_code' => 'nullable|string',
             'staff_no' => 'nullable|string',
             'category' => 'nullable|string',
+            'role_id' => 'nullable',
             'role' => 'sometimes|required',
             'first_name' => 'sometimes|required',
             'email' => 'sometimes|required|email'
@@ -675,6 +719,16 @@ class StaffController extends Controller
                 $userUpdate['email'] = $request->email;
             }
             $item->user->update($userUpdate);
+
+            if (isset($data['role'])) {
+                try {
+                    \Spatie\Permission\Models\Role::firstOrCreate(['name' => $data['role'], 'guard_name' => 'web']);
+                    \Spatie\Permission\Models\Role::firstOrCreate(['name' => $data['role'], 'guard_name' => 'sanctum']);
+                    $item->user->syncRoles([$data['role']]);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("Could not sync staff role on update: " . $e->getMessage());
+                }
+            }
         }
         return response()->json([
             'success' => true,

@@ -15501,6 +15501,24 @@
                             "type": "integer",
                             "default": 15
                         }
+                    },
+                    {
+                        "name": "role_id",
+                        "in": "query",
+                        "description": "Filter staff by Role ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "Filter staff by Role name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -15538,6 +15556,9 @@
                                                     "id": {
                                                         "type": "integer"
                                                     },
+                                                    "user_id": {
+                                                        "type": "integer"
+                                                    },
                                                     "email": {
                                                         "type": "string"
                                                     },
@@ -15550,8 +15571,16 @@
                                                     "staff_no": {
                                                         "type": "string"
                                                     },
-                                                    "role": {
+                                                    "staff_code": {
                                                         "type": "string"
+                                                    },
+                                                    "role_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "role": {
+                                                        "type": "string",
+                                                        "example": "Teacher"
                                                     },
                                                     "first_name": {
                                                         "type": "string"
