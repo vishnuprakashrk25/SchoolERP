@@ -15,10 +15,10 @@ class TimetableController extends Controller
      *      operationId="getTimetableList",
      *      tags={"3. Academic Infrastructure - Timetable"},
      *      summary="Get list of Timetable",
-     *      description="Returns list of Timetables with optional filters by class_id, section_id, teacher_id, subject_id, and day.",
+     *      description="Returns list of Timetables. Requires both class_id and section_id input; returns an empty array if not provided.",
      *      security={{"sanctum":{}}},
-     *      @OA\Parameter(name="class_id", in="query", required=false, description="Filter by class ID", @OA\Schema(type="integer")),
-     *      @OA\Parameter(name="section_id", in="query", required=false, description="Filter by section ID", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="class_id", in="query", required=true, description="Filter by class ID (required)", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="section_id", in="query", required=true, description="Filter by section ID (required)", @OA\Schema(type="integer")),
      *      @OA\Parameter(name="teacher_id", in="query", required=false, description="Filter by teacher ID", @OA\Schema(type="integer")),
      *      @OA\Parameter(name="subject_id", in="query", required=false, description="Filter by subject ID", @OA\Schema(type="integer")),
      *      @OA\Parameter(name="day", in="query", required=false, description="Filter by day (e.g. Monday, Tue, etc.)", @OA\Schema(type="string")),
@@ -27,6 +27,18 @@ class TimetableController extends Controller
      */
     public function index(Request $request)
     {
+        $classId = $request->input('class_id') ?? $request->input('class');
+        $sectionId = $request->input('section_id') ?? $request->input('section');
+
+        // Only return output if both class and section are provided, otherwise return empty array
+        if ((empty($classId) || empty($sectionId)) && !$request->filled('teacher_id') && !$request->boolean('all')) {
+            return response()->json([
+                'success' => true,
+                'count'   => 0,
+                'data'    => []
+            ]);
+        }
+
         $query = Timetable::with([
             'class:id,name',
             'section:id,name',
@@ -34,12 +46,12 @@ class TimetableController extends Controller
             'teacher:id,first_name,last_name,full_name,staff_code,photo'
         ]);
 
-        if ($request->filled('class_id')) {
-            $query->where('class_id', $request->input('class_id'));
+        if (!empty($classId)) {
+            $query->where('class_id', $classId);
         }
 
-        if ($request->filled('section_id')) {
-            $query->where('section_id', $request->input('section_id'));
+        if (!empty($sectionId)) {
+            $query->where('section_id', $sectionId);
         }
 
         if ($request->filled('teacher_id')) {

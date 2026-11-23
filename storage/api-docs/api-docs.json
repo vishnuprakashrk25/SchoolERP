@@ -24119,14 +24119,14 @@
                     "3. Academic Infrastructure - Timetable"
                 ],
                 "summary": "Get list of Timetable",
-                "description": "Returns list of Timetables with optional filters by class_id, section_id, teacher_id, subject_id, and day.",
+                "description": "Returns list of Timetables. Requires both class_id and section_id input; returns an empty array if not provided.",
                 "operationId": "getTimetableList",
                 "parameters": [
                     {
                         "name": "class_id",
                         "in": "query",
-                        "description": "Filter by class ID",
-                        "required": false,
+                        "description": "Filter by class ID (required)",
+                        "required": true,
                         "schema": {
                             "type": "integer"
                         }
@@ -24134,8 +24134,8 @@
                     {
                         "name": "section_id",
                         "in": "query",
-                        "description": "Filter by section ID",
-                        "required": false,
+                        "description": "Filter by section ID (required)",
+                        "required": true,
                         "schema": {
                             "type": "integer"
                         }
