@@ -15,16 +15,56 @@ class TimetableController extends Controller
      *      operationId="getTimetableList",
      *      tags={"3. Academic Infrastructure - Timetable"},
      *      summary="Get list of Timetable",
+     *      description="Returns list of Timetables with optional filters by class_id, section_id, teacher_id, subject_id, and day.",
      *      security={{"sanctum":{}}},
-     *      @OA\Response(response=200,description="Successful operation")
+     *      @OA\Parameter(name="class_id", in="query", required=false, description="Filter by class ID", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="section_id", in="query", required=false, description="Filter by section ID", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="teacher_id", in="query", required=false, description="Filter by teacher ID", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="subject_id", in="query", required=false, description="Filter by subject ID", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="day", in="query", required=false, description="Filter by day (e.g. Monday, Tue, etc.)", @OA\Schema(type="string")),
+     *      @OA\Response(response=200, description="Successful operation")
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
-        $data = Timetable::latest()->get();
+        $query = Timetable::with([
+            'class:id,name',
+            'section:id,name',
+            'subject:id,name,code',
+            'teacher:id,first_name,last_name,full_name,staff_code,photo'
+        ]);
+
+        if ($request->filled('class_id')) {
+            $query->where('class_id', $request->input('class_id'));
+        }
+
+        if ($request->filled('section_id')) {
+            $query->where('section_id', $request->input('section_id'));
+        }
+
+        if ($request->filled('teacher_id')) {
+            $query->where('teacher_id', $request->input('teacher_id'));
+        }
+
+        if ($request->filled('subject_id')) {
+            $query->where('subject_id', $request->input('subject_id'));
+        }
+
+        if ($request->filled('day')) {
+            $day = trim($request->input('day'));
+            $query->where(function ($q) use ($day) {
+                $q->where('day', $day)
+                  ->orWhere('day', strtolower($day))
+                  ->orWhere('day', ucfirst($day));
+            });
+        }
+
+        $data = $query->orderBy('day')->orderBy('start_time')->get();
+
         return response()->json([
             'success' => true,
-            'data' => $data
+            'count'   => $data->count(),
+            'data'    => $data
         ]);
     }
 
@@ -70,10 +110,16 @@ class TimetableController extends Controller
             ], 422);
         }
         $item = Timetable::create($request->all());
+        $item->load([
+            'class:id,name',
+            'section:id,name',
+            'subject:id,name,code',
+            'teacher:id,first_name,last_name,full_name,staff_code,photo'
+        ]);
         return response()->json([
             'success' => true,
             'data' => $item
-        ]);
+        ], 201);
     }
 
     /**
@@ -89,7 +135,12 @@ class TimetableController extends Controller
      */
     public function show($id)
     {
-        $item = Timetable::findOrFail($id);
+        $item = Timetable::with([
+            'class:id,name',
+            'section:id,name',
+            'subject:id,name,code',
+            'teacher:id,first_name,last_name,full_name,staff_code,photo'
+        ])->findOrFail($id);
         return response()->json([
             'success' => true,
             'data' => $item
@@ -141,6 +192,12 @@ class TimetableController extends Controller
             ], 422);
         }
         $item->update($request->all());
+        $item->load([
+            'class:id,name',
+            'section:id,name',
+            'subject:id,name,code',
+            'teacher:id,first_name,last_name,full_name,staff_code,photo'
+        ]);
         return response()->json([
             'success' => true,
             'message' => 'Updated',
