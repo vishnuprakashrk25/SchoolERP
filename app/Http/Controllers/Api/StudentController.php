@@ -28,11 +28,11 @@ class StudentController extends Controller
      *      operationId="getStudentsList",
      *      tags={"4. Student Enrollment - Student"},
      *      summary="Get list of Students",
-     *      description="Returns list of Students with optional filters: academic_year_id, class_id, section_id, search, category_id, academic_category_id, student_group_id, gender, status",
+     *      description="Returns list of Students. Requires both class_id and section_id; returns an empty array if not provided.",
      *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="class_id", in="query", required=true, description="Filter by class_id (required)", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="section_id", in="query", required=true, description="Filter by section_id (required)", @OA\Schema(type="integer")),
      *      @OA\Parameter(name="academic_year_id", in="query", required=false, description="Filter by academic_year_id", @OA\Schema(type="integer")),
-     *      @OA\Parameter(name="class_id", in="query", required=false, description="Filter by class_id", @OA\Schema(type="integer")),
-     *      @OA\Parameter(name="section_id", in="query", required=false, description="Filter by section_id", @OA\Schema(type="integer")),
      *      @OA\Parameter(name="student_code", in="query", required=false, description="Filter by student_code (e.g. YESMLR647)", @OA\Schema(type="string")),
      *      @OA\Parameter(name="studentcode", in="query", required=false, description="Alias for student_code", @OA\Schema(type="string")),
      *      @OA\Parameter(name="search", in="query", required=false, description="Search by name, roll_no, student_code, admission_no, email, phone, etc.", @OA\Schema(type="string")),
@@ -130,6 +130,24 @@ class StudentController extends Controller
     public function index(Request $request)
     {
         $limit = $request->input('limit', 15);
+        $classId = $request->input('class_id') ?? $request->input('class');
+        $sectionId = $request->input('section_id') ?? $request->input('section');
+        $isAll = $request->boolean('all') || $limit == -1 || strtolower((string)$limit) === 'all';
+
+        // Only return data when both class_id and section_id are provided, otherwise return empty array
+        if ((empty($classId) || empty($sectionId)) && !$isAll) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+                'meta' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => (int) $limit,
+                    'total' => 0,
+                ]
+            ]);
+        }
+
         $query = Student::with([
             'user',
             'class',
@@ -144,10 +162,10 @@ class StudentController extends Controller
         ]);
 
         // Academic Year, Class, Section Filters
-        if ($request->filled('academic_year_id') || $request->filled('class_id') || $request->filled('section_id')) {
-            $query->where(function ($mainQ) use ($request) {
+        if ($request->filled('academic_year_id') || !empty($classId) || !empty($sectionId)) {
+            $query->where(function ($mainQ) use ($request, $classId, $sectionId) {
                 // Primary Branch: Match directly on students table
-                $mainQ->where(function ($q) use ($request) {
+                $mainQ->where(function ($q) use ($request, $classId, $sectionId) {
                     if ($request->filled('academic_year_id')) {
                         $ayId = (int)$request->input('academic_year_id');
                         $defaultAyId = (int)(AcademicYear::cachedCurrentId() ?? GeneralSetting::cached()?->academic_year_id ?? 0);
@@ -160,24 +178,24 @@ class StudentController extends Controller
                             $q->where('students.academic_year_id', $ayId);
                         }
                     }
-                    if ($request->filled('class_id')) {
-                        $q->where('students.class_id', $request->input('class_id'));
+                    if (!empty($classId)) {
+                        $q->where('students.class_id', $classId);
                     }
-                    if ($request->filled('section_id')) {
-                        $q->where('students.section_id', $request->input('section_id'));
+                    if (!empty($sectionId)) {
+                        $q->where('students.section_id', $sectionId);
                     }
                 });
 
                 // Secondary Branch: Match via student_academics table
-                $mainQ->orWhereHas('studentAcademics', function ($sq) use ($request) {
+                $mainQ->orWhereHas('studentAcademics', function ($sq) use ($request, $classId, $sectionId) {
                     if ($request->filled('academic_year_id')) {
                         $sq->where('academic_year_id', $request->input('academic_year_id'));
                     }
-                    if ($request->filled('class_id')) {
-                        $sq->where('class_id', $request->input('class_id'));
+                    if (!empty($classId)) {
+                        $sq->where('class_id', $classId);
                     }
-                    if ($request->filled('section_id')) {
-                        $sq->where('section_id', $request->input('section_id'));
+                    if (!empty($sectionId)) {
+                        $sq->where('section_id', $sectionId);
                     }
                 });
             });

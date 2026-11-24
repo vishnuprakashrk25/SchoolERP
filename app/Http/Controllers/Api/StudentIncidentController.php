@@ -74,12 +74,23 @@ class StudentIncidentController extends Controller
 
         if (!empty($classId) || !empty($sectionId)) {
             $query->whereHas('student', function ($sq) use ($classId, $sectionId) {
-                if (!empty($classId)) {
-                    $sq->where('class_id', $classId);
-                }
-                if (!empty($sectionId)) {
-                    $sq->where('section_id', $sectionId);
-                }
+                $sq->where(function ($matchQ) use ($classId, $sectionId) {
+                    $matchQ->where(function ($directQ) use ($classId, $sectionId) {
+                        if (!empty($classId)) {
+                            $directQ->where('students.class_id', $classId);
+                        }
+                        if (!empty($sectionId)) {
+                            $directQ->where('students.section_id', $sectionId);
+                        }
+                    })->orWhereHas('studentAcademics', function ($acQ) use ($classId, $sectionId) {
+                        if (!empty($classId)) {
+                            $acQ->where('class_id', $classId);
+                        }
+                        if (!empty($sectionId)) {
+                            $acQ->where('section_id', $sectionId);
+                        }
+                    });
+                });
             });
         }
 
