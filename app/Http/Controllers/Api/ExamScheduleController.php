@@ -14,7 +14,7 @@ class ExamScheduleController extends Controller
      * @OA\Get(
      *      path="/api/exam-schedules",
      *      operationId="getExamSchedulesList",
-     *      tags={"6. Examinations & Assessment - ExamSchedule"},
+     *      tags={"6. Examinations & Assessment - Exam Schedule"},
      *      summary="Get list of Exam Schedules",
      *      description="Returns list of Exam Schedules filterable by exam_id, class_id, and section_id.",
      *      security={{"sanctum":{}}},
@@ -117,7 +117,7 @@ class ExamScheduleController extends Controller
      * @OA\Post(
      *      path="/api/exam-schedules",
      *      operationId="storeExamSchedule",
-     *      tags={"6. Examinations & Assessment - ExamSchedule"},
+     *      tags={"6. Examinations & Assessment - Exam Schedule"},
      *      summary="Store new Exam Schedule",
      *      security={{"sanctum":{}}},
      *      @OA\RequestBody(
@@ -181,7 +181,7 @@ class ExamScheduleController extends Controller
      * @OA\Post(
      *      path="/api/exam-schedules/bulk",
      *      operationId="bulkStoreExamSchedule",
-     *      tags={"6. Examinations & Assessment - ExamSchedule"},
+     *      tags={"6. Examinations & Assessment - Exam Schedule"},
      *      summary="Bulk store / update Exam Schedules for a class and exam",
      *      description="Accepts an array of schedule rows and saves them all at once.",
      *      security={{"sanctum":{}}},
@@ -266,7 +266,7 @@ class ExamScheduleController extends Controller
      * @OA\Get(
      *      path="/api/exam-schedules/{id}",
      *      operationId="getExamScheduleById",
-     *      tags={"6. Examinations & Assessment - ExamSchedule"},
+     *      tags={"6. Examinations & Assessment - Exam Schedule"},
      *      summary="Get Exam Schedule information",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", required=true, in="path", @OA\Schema(type="integer")),
@@ -286,7 +286,7 @@ class ExamScheduleController extends Controller
      * @OA\Put(
      *      path="/api/exam-schedules/{id}",
      *      operationId="updateExamSchedule",
-     *      tags={"6. Examinations & Assessment - ExamSchedule"},
+     *      tags={"6. Examinations & Assessment - Exam Schedule"},
      *      summary="Update existing exam schedule",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", required=true, in="path", @OA\Schema(type="integer")),
@@ -314,7 +314,7 @@ class ExamScheduleController extends Controller
      * @OA\Delete(
      *      path="/api/exam-schedules/{id}",
      *      operationId="deleteExamSchedule",
-     *      tags={"6. Examinations & Assessment - ExamSchedule"},
+     *      tags={"6. Examinations & Assessment - Exam Schedule"},
      *      summary="Delete exam schedule",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", required=true, in="path", @OA\Schema(type="integer")),

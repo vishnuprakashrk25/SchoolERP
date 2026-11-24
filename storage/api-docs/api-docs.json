@@ -6703,7 +6703,7 @@
         "/api/exam-attendances": {
             "get": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Exam Attendance"
                 ],
                 "summary": "Get Exam Attendance list / student roster",
                 "description": "Fetches student attendance for an exam, class, section, and subject. If attendance hasn't been taken yet, returns student roster with default status 'P'.",
@@ -6786,7 +6786,7 @@
             },
             "post": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Exam Attendance"
                 ],
                 "summary": "Store / bulk update Exam Attendance",
                 "description": "Saves exam attendance records for multiple students.",
@@ -7033,7 +7033,7 @@
         "/api/exam-marks": {
             "get": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Mark Register"
                 ],
                 "summary": "Mark Register: Get student marks roster for exam, class, section, and subject",
                 "description": "Fetches student mark entries including mark distribution columns (Written, Practical, Viva, etc.), total marks, grade, GPA, and absent status.",
@@ -7107,7 +7107,7 @@
             },
             "post": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Mark Register"
                 ],
                 "summary": "Store / bulk update marks in Mark Register",
                 "description": "Saves marks for multiple students. Automatically calculates total marks, grade, and GPA based on Mark Grade configuration.",
@@ -7410,7 +7410,7 @@
         "/api/exam-schedules": {
             "get": {
                 "tags": [
-                    "6. Examinations & Assessment - ExamSchedule"
+                    "6. Examinations & Assessment - Exam Schedule"
                 ],
                 "summary": "Get list of Exam Schedules",
                 "description": "Returns list of Exam Schedules filterable by exam_id, class_id, and section_id.",
@@ -7489,7 +7489,7 @@
             },
             "post": {
                 "tags": [
-                    "6. Examinations & Assessment - ExamSchedule"
+                    "6. Examinations & Assessment - Exam Schedule"
                 ],
                 "summary": "Store new Exam Schedule",
                 "operationId": "storeExamSchedule",
@@ -7565,7 +7565,7 @@
         "/api/exam-schedules/bulk": {
             "post": {
                 "tags": [
-                    "6. Examinations & Assessment - ExamSchedule"
+                    "6. Examinations & Assessment - Exam Schedule"
                 ],
                 "summary": "Bulk store / update Exam Schedules for a class and exam",
                 "description": "Accepts an array of schedule rows and saves them all at once.",
@@ -7639,7 +7639,7 @@
         "/api/exam-schedules/{id}": {
             "get": {
                 "tags": [
-                    "6. Examinations & Assessment - ExamSchedule"
+                    "6. Examinations & Assessment - Exam Schedule"
                 ],
                 "summary": "Get Exam Schedule information",
                 "operationId": "getExamScheduleById",
@@ -7666,7 +7666,7 @@
             },
             "put": {
                 "tags": [
-                    "6. Examinations & Assessment - ExamSchedule"
+                    "6. Examinations & Assessment - Exam Schedule"
                 ],
                 "summary": "Update existing exam schedule",
                 "operationId": "updateExamSchedule",
@@ -7693,7 +7693,7 @@
             },
             "delete": {
                 "tags": [
-                    "6. Examinations & Assessment - ExamSchedule"
+                    "6. Examinations & Assessment - Exam Schedule"
                 ],
                 "summary": "Delete exam schedule",
                 "operationId": "deleteExamSchedule",
@@ -7722,7 +7722,7 @@
         "/api/exam-setups": {
             "get": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Exam Setup"
                 ],
                 "summary": "Get list of Exam Setups",
                 "description": "Returns list of Exam Setups with filters for class_id, section_id, exam_type_id, and subject_id.",
@@ -7801,7 +7801,7 @@
             },
             "post": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Exam Setup"
                 ],
                 "summary": "Store new Exam Setup",
                 "description": "Creates Exam Setup with mark distributions and pass mark criteria.",
@@ -7890,7 +7890,7 @@
         "/api/exam-setups/{id}": {
             "get": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Exam Setup"
                 ],
                 "summary": "Get Exam Setup details",
                 "operationId": "getExamSetupById",
@@ -7920,7 +7920,7 @@
             },
             "put": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Exam Setup"
                 ],
                 "summary": "Update existing Exam Setup",
                 "operationId": "updateExamSetup",
@@ -7974,7 +7974,7 @@
             },
             "delete": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Exam Setup"
                 ],
                 "summary": "Delete Exam Setup",
                 "operationId": "deleteExamSetup",
@@ -8003,7 +8003,7 @@
         "/api/exam-types": {
             "get": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Exam Type"
                 ],
                 "summary": "Get list of Exam Types",
                 "description": "Returns list of Exam Types with optional search and status filter.",
@@ -8060,7 +8060,7 @@
             },
             "post": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Exam Type"
                 ],
                 "summary": "Store new Exam Type",
                 "description": "Creates a new Exam Type with Group/Term Exam Status toggle.",
@@ -8111,7 +8111,7 @@
         "/api/exam-types/{id}": {
             "get": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Exam Type"
                 ],
                 "summary": "Get Exam Type details",
                 "operationId": "getExamTypeById",
@@ -8141,7 +8141,7 @@
             },
             "put": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Exam Type"
                 ],
                 "summary": "Update existing Exam Type",
                 "operationId": "updateExamType",
@@ -8192,7 +8192,7 @@
             },
             "delete": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Exam Type"
                 ],
                 "summary": "Delete Exam Type",
                 "operationId": "deleteExamType",
@@ -12048,7 +12048,7 @@
         "/api/mark-grades": {
             "get": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Mark Grade"
                 ],
                 "summary": "Get list of Mark Grades (Grade List)",
                 "description": "Returns list of grading scales with Grade Name, GPA, Percent (From To), and GPA (From To).",
@@ -12096,7 +12096,7 @@
             },
             "post": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Mark Grade"
                 ],
                 "summary": "Store new Mark Grade",
                 "description": "Creates a new Grade system entry.",
@@ -12165,7 +12165,7 @@
         "/api/mark-grades/{id}": {
             "get": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Mark Grade"
                 ],
                 "summary": "Get Mark Grade details",
                 "operationId": "getMarkGradeById",
@@ -12195,7 +12195,7 @@
             },
             "put": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Mark Grade"
                 ],
                 "summary": "Update existing Mark Grade",
                 "operationId": "updateMarkGrade",
@@ -12255,7 +12255,7 @@
             },
             "delete": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Mark Grade"
                 ],
                 "summary": "Delete Mark Grade",
                 "operationId": "deleteMarkGrade",
@@ -15144,7 +15144,7 @@
         "/api/exams/send-marks-sms": {
             "post": {
                 "tags": [
-                    "6. Examinations & Assessment - Exam"
+                    "6. Examinations & Assessment - Send Marks By SMS"
                 ],
                 "summary": "Send Marks By SMS",
                 "description": "Dispatches SMS with student exam marks and grades to Students, Parents, or All.",
@@ -27239,16 +27239,32 @@
             "description": "Dashboard - Events"
         },
         {
+            "name": "6. Examinations & Assessment - Exam Attendance",
+            "description": "6. Examinations & Assessment - Exam Attendance"
+        },
+        {
             "name": "6. Examinations & Assessment - Exam",
             "description": "6. Examinations & Assessment - Exam"
+        },
+        {
+            "name": "6. Examinations & Assessment - Mark Register",
+            "description": "6. Examinations & Assessment - Mark Register"
         },
         {
             "name": "6. Examinations & Assessment - ExamResult",
             "description": "6. Examinations & Assessment - ExamResult"
         },
         {
-            "name": "6. Examinations & Assessment - ExamSchedule",
-            "description": "6. Examinations & Assessment - ExamSchedule"
+            "name": "6. Examinations & Assessment - Exam Schedule",
+            "description": "6. Examinations & Assessment - Exam Schedule"
+        },
+        {
+            "name": "6. Examinations & Assessment - Exam Setup",
+            "description": "6. Examinations & Assessment - Exam Setup"
+        },
+        {
+            "name": "6. Examinations & Assessment - Exam Type",
+            "description": "6. Examinations & Assessment - Exam Type"
         },
         {
             "name": "5. Finance & Fee Collection - FeeGroup",
@@ -27295,6 +27311,10 @@
             "description": "Student Behaviour - Incidents"
         },
         {
+            "name": "6. Examinations & Assessment - Mark Grade",
+            "description": "6. Examinations & Assessment - Mark Grade"
+        },
+        {
             "name": "8. Communication & Utils - Message",
             "description": "8. Communication & Utils - Message"
         },
@@ -27325,6 +27345,10 @@
         {
             "name": "3. Academic Infrastructure - Section",
             "description": "3. Academic Infrastructure - Section"
+        },
+        {
+            "name": "6. Examinations & Assessment - Send Marks By SMS",
+            "description": "6. Examinations & Assessment - Send Marks By SMS"
         },
         {
             "name": "7. E-Learning & Content - SharedContent",

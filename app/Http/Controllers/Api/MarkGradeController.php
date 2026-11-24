@@ -13,7 +13,7 @@ class MarkGradeController extends Controller
      * @OA\Get(
      *      path="/api/mark-grades",
      *      operationId="getMarkGradesList",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Mark Grade"},
      *      summary="Get list of Mark Grades (Grade List)",
      *      description="Returns list of grading scales with Grade Name, GPA, Percent (From To), and GPA (From To).",
      *      security={{"sanctum":{}}},
@@ -72,7 +72,7 @@ class MarkGradeController extends Controller
      * @OA\Post(
      *      path="/api/mark-grades",
      *      operationId="storeMarkGrade",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Mark Grade"},
      *      summary="Store new Mark Grade",
      *      description="Creates a new Grade system entry.",
      *      security={{"sanctum":{}}},
@@ -141,7 +141,7 @@ class MarkGradeController extends Controller
      * @OA\Get(
      *      path="/api/mark-grades/{id}",
      *      operationId="getMarkGradeById",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Mark Grade"},
      *      summary="Get Mark Grade details",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
@@ -162,7 +162,7 @@ class MarkGradeController extends Controller
      * @OA\Put(
      *      path="/api/mark-grades/{id}",
      *      operationId="updateMarkGrade",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Mark Grade"},
      *      summary="Update existing Mark Grade",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
@@ -218,7 +218,7 @@ class MarkGradeController extends Controller
      * @OA\Delete(
      *      path="/api/mark-grades/{id}",
      *      operationId="deleteMarkGrade",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Mark Grade"},
      *      summary="Delete Mark Grade",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),

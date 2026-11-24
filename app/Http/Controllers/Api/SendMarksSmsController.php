@@ -18,7 +18,7 @@ class SendMarksSmsController extends Controller
      * @OA\Post(
      *      path="/api/exams/send-marks-sms",
      *      operationId="sendMarksBySms",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Send Marks By SMS"},
      *      summary="Send Marks By SMS",
      *      description="Dispatches SMS with student exam marks and grades to Students, Parents, or All.",
      *      security={{"sanctum":{}}},

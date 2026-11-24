@@ -16,7 +16,7 @@ class ExamMarkController extends Controller
      * @OA\Get(
      *      path="/api/exam-marks",
      *      operationId="getExamMarksList",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Mark Register"},
      *      summary="Mark Register: Get student marks roster for exam, class, section, and subject",
      *      description="Fetches student mark entries including mark distribution columns (Written, Practical, Viva, etc.), total marks, grade, GPA, and absent status.",
      *      security={{"sanctum":{}}},
@@ -137,7 +137,7 @@ class ExamMarkController extends Controller
      * @OA\Post(
      *      path="/api/exam-marks",
      *      operationId="storeExamMarks",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Mark Register"},
      *      summary="Store / bulk update marks in Mark Register",
      *      description="Saves marks for multiple students. Automatically calculates total marks, grade, and GPA based on Mark Grade configuration.",
      *      security={{"sanctum":{}}},

@@ -14,7 +14,7 @@ class ExamTypeController extends Controller
      * @OA\Get(
      *      path="/api/exam-types",
      *      operationId="getExamTypesList",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Exam Type"},
      *      summary="Get list of Exam Types",
      *      description="Returns list of Exam Types with optional search and status filter.",
      *      security={{"sanctum":{}}},
@@ -60,7 +60,7 @@ class ExamTypeController extends Controller
      * @OA\Post(
      *      path="/api/exam-types",
      *      operationId="storeExamType",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Exam Type"},
      *      summary="Store new Exam Type",
      *      description="Creates a new Exam Type with Group/Term Exam Status toggle.",
      *      security={{"sanctum":{}}},
@@ -116,7 +116,7 @@ class ExamTypeController extends Controller
      * @OA\Get(
      *      path="/api/exam-types/{id}",
      *      operationId="getExamTypeById",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Exam Type"},
      *      summary="Get Exam Type details",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
@@ -137,7 +137,7 @@ class ExamTypeController extends Controller
      * @OA\Put(
      *      path="/api/exam-types/{id}",
      *      operationId="updateExamType",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Exam Type"},
      *      summary="Update existing Exam Type",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
@@ -182,7 +182,7 @@ class ExamTypeController extends Controller
      * @OA\Delete(
      *      path="/api/exam-types/{id}",
      *      operationId="deleteExamType",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Exam Type"},
      *      summary="Delete Exam Type",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),

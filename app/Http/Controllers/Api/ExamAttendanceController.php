@@ -14,7 +14,7 @@ class ExamAttendanceController extends Controller
      * @OA\Get(
      *      path="/api/exam-attendances",
      *      operationId="getExamAttendanceList",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Exam Attendance"},
      *      summary="Get Exam Attendance list / student roster",
      *      description="Fetches student attendance for an exam, class, section, and subject. If attendance hasn't been taken yet, returns student roster with default status 'P'.",
      *      security={{"sanctum":{}}},
@@ -114,7 +114,7 @@ class ExamAttendanceController extends Controller
      * @OA\Post(
      *      path="/api/exam-attendances",
      *      operationId="storeExamAttendance",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Exam Attendance"},
      *      summary="Store / bulk update Exam Attendance",
      *      description="Saves exam attendance records for multiple students.",
      *      security={{"sanctum":{}}},

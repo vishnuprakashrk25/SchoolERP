@@ -13,7 +13,7 @@ class ExamSetupController extends Controller
      * @OA\Get(
      *      path="/api/exam-setups",
      *      operationId="getExamSetupsList",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Exam Setup"},
      *      summary="Get list of Exam Setups",
      *      description="Returns list of Exam Setups with filters for class_id, section_id, exam_type_id, and subject_id.",
      *      security={{"sanctum":{}}},
@@ -76,7 +76,7 @@ class ExamSetupController extends Controller
      * @OA\Post(
      *      path="/api/exam-setups",
      *      operationId="storeExamSetup",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Exam Setup"},
      *      summary="Store new Exam Setup",
      *      description="Creates Exam Setup with mark distributions and pass mark criteria.",
      *      security={{"sanctum":{}}},
@@ -159,7 +159,7 @@ class ExamSetupController extends Controller
      * @OA\Get(
      *      path="/api/exam-setups/{id}",
      *      operationId="getExamSetupById",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Exam Setup"},
      *      summary="Get Exam Setup details",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
@@ -180,7 +180,7 @@ class ExamSetupController extends Controller
      * @OA\Put(
      *      path="/api/exam-setups/{id}",
      *      operationId="updateExamSetup",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Exam Setup"},
      *      summary="Update existing Exam Setup",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
@@ -244,7 +244,7 @@ class ExamSetupController extends Controller
      * @OA\Delete(
      *      path="/api/exam-setups/{id}",
      *      operationId="deleteExamSetup",
-     *      tags={"6. Examinations & Assessment - Exam"},
+     *      tags={"6. Examinations & Assessment - Exam Setup"},
      *      summary="Delete Exam Setup",
      *      security={{"sanctum":{}}},
      *      @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
