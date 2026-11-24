@@ -148,6 +148,23 @@ class StudentController extends Controller
             ]);
         }
 
+        $classId = $request->input('class_id') ?? $request->input('class');
+        $sectionId = $request->input('section_id') ?? $request->input('section');
+
+        // Only return data when both class_id and section_id are provided, otherwise return empty array
+        if ((empty($classId) || empty($sectionId)) && !$request->boolean('all')) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+                'meta' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => (int) $limit,
+                    'total' => 0,
+                ]
+            ]);
+        }
+
         $query = Student::with([
             'user',
             'class',

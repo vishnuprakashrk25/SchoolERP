@@ -6700,6 +6700,169 @@
                 ]
             }
         },
+        "/api/exam-attendances": {
+            "get": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Get Exam Attendance list / student roster",
+                "description": "Fetches student attendance for an exam, class, section, and subject. If attendance hasn't been taken yet, returns student roster with default status 'P'.",
+                "operationId": "getExamAttendanceList",
+                "parameters": [
+                    {
+                        "name": "exam_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "class_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "section_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "subject_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "total_students": {
+                                            "type": "integer",
+                                            "example": 25
+                                        },
+                                        "present_count": {
+                                            "type": "integer",
+                                            "example": 23
+                                        },
+                                        "absent_count": {
+                                            "type": "integer",
+                                            "example": 2
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Store / bulk update Exam Attendance",
+                "description": "Saves exam attendance records for multiple students.",
+                "operationId": "storeExamAttendance",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "exam_id",
+                                    "class_id",
+                                    "subject_id",
+                                    "attendances"
+                                ],
+                                "properties": {
+                                    "exam_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "class_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "section_id": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "subject_id": {
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-11-20"
+                                    },
+                                    "attendances": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "student_id": {
+                                                    "type": "integer",
+                                                    "example": 101
+                                                },
+                                                "status": {
+                                                    "description": "P: Present, A: Absent, L: Late",
+                                                    "type": "string",
+                                                    "example": "P"
+                                                },
+                                                "note": {
+                                                    "type": "string",
+                                                    "example": ""
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Attendance saved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/exams": {
             "get": {
                 "tags": [
@@ -6858,6 +7021,178 @@
                 "responses": {
                     "204": {
                         "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/exam-marks": {
+            "get": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Mark Register: Get student marks roster for exam, class, section, and subject",
+                "description": "Fetches student mark entries including mark distribution columns (Written, Practical, Viva, etc.), total marks, grade, GPA, and absent status.",
+                "operationId": "getExamMarksList",
+                "parameters": [
+                    {
+                        "name": "exam_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "class_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "section_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "subject_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "exam_setup": {
+                                            "type": "object"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Store / bulk update marks in Mark Register",
+                "description": "Saves marks for multiple students. Automatically calculates total marks, grade, and GPA based on Mark Grade configuration.",
+                "operationId": "storeExamMarks",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "exam_id",
+                                    "class_id",
+                                    "subject_id",
+                                    "marks"
+                                ],
+                                "properties": {
+                                    "exam_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "class_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "section_id": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "subject_id": {
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "exam_setup_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "marks": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "student_id": {
+                                                    "type": "integer",
+                                                    "example": 101
+                                                },
+                                                "marks_distribution": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "Written": 45,
+                                                        "Practical": 20,
+                                                        "Viva": 22
+                                                    }
+                                                },
+                                                "total_marks": {
+                                                    "type": "number",
+                                                    "example": 87
+                                                },
+                                                "grade": {
+                                                    "type": "string",
+                                                    "example": "A+"
+                                                },
+                                                "gpa": {
+                                                    "type": "number",
+                                                    "example": 5
+                                                },
+                                                "is_absent": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "remarks": {
+                                                    "type": "string",
+                                                    "example": "Good performance"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Marks saved successfully"
                     }
                 },
                 "security": [
@@ -7077,9 +7412,51 @@
                 "tags": [
                     "6. Examinations & Assessment - ExamSchedule"
                 ],
-                "summary": "Get list of ExamSchedules",
-                "description": "Returns list of ExamSchedules",
+                "summary": "Get list of Exam Schedules",
+                "description": "Returns list of Exam Schedules filterable by exam_id, class_id, and section_id.",
                 "operationId": "getExamSchedulesList",
+                "parameters": [
+                    {
+                        "name": "exam_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "exam_type_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "class_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "section_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "subject_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -7094,32 +7471,6 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer"
-                                                    },
-                                                    "exam_id": {
-                                                        "type": "string"
-                                                    },
-                                                    "class_id": {
-                                                        "type": "integer"
-                                                    },
-                                                    "subject_id": {
-                                                        "type": "string"
-                                                    },
-                                                    "exam_date": {
-                                                        "type": "string"
-                                                    },
-                                                    "created_at": {
-                                                        "type": "string"
-                                                    },
-                                                    "updated_at": {
-                                                        "type": "string"
-                                                    },
-                                                    "deleted_at": {
-                                                        "type": "string"
-                                                    }
-                                                },
                                                 "type": "object"
                                             }
                                         }
@@ -7128,12 +7479,6 @@
                                 }
                             }
                         }
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
                     }
                 },
                 "security": [
@@ -7146,8 +7491,7 @@
                 "tags": [
                     "6. Examinations & Assessment - ExamSchedule"
                 ],
-                "summary": "Store new exam schedule",
-                "description": "Returns saved exam schedule data",
+                "summary": "Store new Exam Schedule",
                 "operationId": "storeExamSchedule",
                 "requestBody": {
                     "required": true,
@@ -7155,10 +7499,8 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "exam_id",
                                     "class_id",
-                                    "subject_id",
-                                    "exam_date"
+                                    "subject_id"
                                 ],
                                 "properties": {
                                     "exam_id": {
@@ -7167,16 +7509,40 @@
                                     },
                                     "class_id": {
                                         "type": "integer",
-                                        "example": 1
+                                        "example": 5
+                                    },
+                                    "section_id": {
+                                        "type": "integer",
+                                        "example": 2
                                     },
                                     "subject_id": {
                                         "type": "integer",
-                                        "example": 1
+                                        "example": 3
+                                    },
+                                    "teacher_id": {
+                                        "type": "integer",
+                                        "example": 10
                                     },
                                     "exam_date": {
                                         "type": "string",
                                         "format": "date",
                                         "example": "2026-11-20"
+                                    },
+                                    "start_time": {
+                                        "type": "string",
+                                        "example": "09:00:00"
+                                    },
+                                    "end_time": {
+                                        "type": "string",
+                                        "example": "09:45:00"
+                                    },
+                                    "duration": {
+                                        "type": "string",
+                                        "example": "45 Minutes"
+                                    },
+                                    "room": {
+                                        "type": "string",
+                                        "example": "235432"
                                     }
                                 },
                                 "type": "object"
@@ -7186,62 +7552,81 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Success"
-                                        },
-                                        "data": {
+                        "description": "Exam Schedule created successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/exam-schedules/bulk": {
+            "post": {
+                "tags": [
+                    "6. Examinations & Assessment - ExamSchedule"
+                ],
+                "summary": "Bulk store / update Exam Schedules for a class and exam",
+                "description": "Accepts an array of schedule rows and saves them all at once.",
+                "operationId": "bulkStoreExamSchedule",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "schedules"
+                                ],
+                                "properties": {
+                                    "schedules": {
+                                        "type": "array",
+                                        "items": {
                                             "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
                                                 "exam_id": {
-                                                    "type": "string"
+                                                    "type": "integer"
                                                 },
                                                 "class_id": {
                                                     "type": "integer"
                                                 },
+                                                "section_id": {
+                                                    "type": "integer"
+                                                },
                                                 "subject_id": {
-                                                    "type": "string"
+                                                    "type": "integer"
+                                                },
+                                                "teacher_id": {
+                                                    "type": "integer"
                                                 },
                                                 "exam_date": {
+                                                    "type": "string",
+                                                    "format": "date"
+                                                },
+                                                "start_time": {
                                                     "type": "string"
                                                 },
-                                                "created_at": {
+                                                "end_time": {
                                                     "type": "string"
                                                 },
-                                                "updated_at": {
+                                                "duration": {
                                                     "type": "string"
                                                 },
-                                                "deleted_at": {
+                                                "room": {
                                                     "type": "string"
                                                 }
                                             },
                                             "type": "object"
                                         }
-                                    },
-                                    "type": "object"
-                                }
+                                    }
+                                },
+                                "type": "object"
                             }
                         }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Schedules saved successfully"
                     }
                 },
                 "security": [
@@ -7256,14 +7641,12 @@
                 "tags": [
                     "6. Examinations & Assessment - ExamSchedule"
                 ],
-                "summary": "Get exam schedule information",
-                "description": "Returns exam schedule data",
+                "summary": "Get Exam Schedule information",
                 "operationId": "getExamScheduleById",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ExamSchedule id",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -7272,62 +7655,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Success"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "exam_id": {
-                                                    "type": "string"
-                                                },
-                                                "class_id": {
-                                                    "type": "integer"
-                                                },
-                                                "subject_id": {
-                                                    "type": "string"
-                                                },
-                                                "exam_date": {
-                                                    "type": "string"
-                                                },
-                                                "created_at": {
-                                                    "type": "string"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string"
-                                                },
-                                                "deleted_at": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
+                        "description": "Successful operation"
                     }
                 },
                 "security": [
@@ -7341,109 +7669,20 @@
                     "6. Examinations & Assessment - ExamSchedule"
                 ],
                 "summary": "Update existing exam schedule",
-                "description": "Returns updated exam schedule data",
                 "operationId": "updateExamSchedule",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ExamSchedule id",
                         "required": true,
                         "schema": {
                             "type": "integer"
                         }
                     }
                 ],
-                "requestBody": {
-                    "required": false,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "exam_id": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "class_id": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "subject_id": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "exam_date": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2026-11-20"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Success"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer"
-                                                },
-                                                "exam_id": {
-                                                    "type": "string"
-                                                },
-                                                "class_id": {
-                                                    "type": "integer"
-                                                },
-                                                "subject_id": {
-                                                    "type": "string"
-                                                },
-                                                "exam_date": {
-                                                    "type": "string"
-                                                },
-                                                "created_at": {
-                                                    "type": "string"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string"
-                                                },
-                                                "deleted_at": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Resource Not Found"
+                        "description": "Updated successfully"
                     }
                 },
                 "security": [
@@ -7456,14 +7695,12 @@
                 "tags": [
                     "6. Examinations & Assessment - ExamSchedule"
                 ],
-                "summary": "Delete existing exam schedule",
-                "description": "Deletes a record and returns no content",
+                "summary": "Delete exam schedule",
                 "operationId": "deleteExamSchedule",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ExamSchedule id",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -7471,17 +7708,507 @@
                     }
                 ],
                 "responses": {
-                    "204": {
+                    "200": {
+                        "description": "Deleted successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/exam-setups": {
+            "get": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Get list of Exam Setups",
+                "description": "Returns list of Exam Setups with filters for class_id, section_id, exam_type_id, and subject_id.",
+                "operationId": "getExamSetupsList",
+                "parameters": [
+                    {
+                        "name": "class_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "section_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "exam_type_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "subject_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Store new Exam Setup",
+                "description": "Creates Exam Setup with mark distributions and pass mark criteria.",
+                "operationId": "storeExamSetup",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "exam_title",
+                                    "class_id",
+                                    "subject_id",
+                                    "total_mark"
+                                ],
+                                "properties": {
+                                    "exam_title": {
+                                        "type": "string",
+                                        "example": "First Term Physics"
+                                    },
+                                    "exam_type_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "class_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "section_id": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "subject_id": {
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "teacher_id": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "pass_mark": {
+                                        "type": "number",
+                                        "example": 33
+                                    },
+                                    "total_mark": {
+                                        "type": "number",
+                                        "example": 100
+                                    },
+                                    "mark_distributions": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "Written"
+                                                },
+                                                "mark": {
+                                                    "type": "number",
+                                                    "example": 50
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Exam Setup created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/exam-setups/{id}": {
+            "get": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Get Exam Setup details",
+                "operationId": "getExamSetupById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
                         "description": "Successful operation"
                     },
-                    "401": {
-                        "description": "Unauthenticated"
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Update existing Exam Setup",
+                "operationId": "updateExamSetup",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "exam_title": {
+                                        "type": "string"
+                                    },
+                                    "pass_mark": {
+                                        "type": "number"
+                                    },
+                                    "total_mark": {
+                                        "type": "number"
+                                    },
+                                    "mark_distributions": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Delete Exam Setup",
+                "operationId": "deleteExamSetup",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/exam-types": {
+            "get": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Get list of Exam Types",
+                "description": "Returns list of Exam Types with optional search and status filter.",
+                "operationId": "getExamTypesList",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by exam name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
                     },
-                    "403": {
-                        "description": "Forbidden"
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Store new Exam Type",
+                "description": "Creates a new Exam Type with Group/Term Exam Status toggle.",
+                "operationId": "storeExamType",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "First Term"
+                                    },
+                                    "is_group": {
+                                        "description": "Group / Term Exam Status toggle",
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "status": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Exam Type created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/exam-types/{id}": {
+            "get": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Get Exam Type details",
+                "operationId": "getExamTypeById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
                     },
                     "404": {
-                        "description": "Resource Not Found"
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Update existing Exam Type",
+                "operationId": "updateExamType",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "First Term"
+                                    },
+                                    "is_group": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "status": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Delete Exam Type",
+                "operationId": "deleteExamType",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted successfully"
                     }
                 },
                 "security": [
@@ -11318,6 +12045,242 @@
                 ]
             }
         },
+        "/api/mark-grades": {
+            "get": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Get list of Mark Grades (Grade List)",
+                "description": "Returns list of grading scales with Grade Name, GPA, Percent (From To), and GPA (From To).",
+                "operationId": "getMarkGradesList",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by grade name or description",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Store new Mark Grade",
+                "description": "Creates a new Grade system entry.",
+                "operationId": "storeMarkGrade",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "grade_name",
+                                    "gpa",
+                                    "percent_from",
+                                    "percent_to"
+                                ],
+                                "properties": {
+                                    "grade_name": {
+                                        "type": "string",
+                                        "example": "A+"
+                                    },
+                                    "gpa": {
+                                        "type": "number",
+                                        "example": 5
+                                    },
+                                    "percent_from": {
+                                        "type": "number",
+                                        "example": 80
+                                    },
+                                    "percent_to": {
+                                        "type": "number",
+                                        "example": 100
+                                    },
+                                    "gpa_from": {
+                                        "type": "number",
+                                        "example": 5
+                                    },
+                                    "gpa_to": {
+                                        "type": "number",
+                                        "example": 5.99
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Outstanding performance"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Grade created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/mark-grades/{id}": {
+            "get": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Get Mark Grade details",
+                "operationId": "getMarkGradeById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Update existing Mark Grade",
+                "operationId": "updateMarkGrade",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "grade_name": {
+                                        "type": "string"
+                                    },
+                                    "gpa": {
+                                        "type": "number"
+                                    },
+                                    "percent_from": {
+                                        "type": "number"
+                                    },
+                                    "percent_to": {
+                                        "type": "number"
+                                    },
+                                    "gpa_from": {
+                                        "type": "number"
+                                    },
+                                    "gpa_to": {
+                                        "type": "number"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Delete Mark Grade",
+                "operationId": "deleteMarkGrade",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/messages": {
             "get": {
                 "tags": [
@@ -14169,6 +15132,86 @@
                     },
                     "404": {
                         "description": "Resource Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/exams/send-marks-sms": {
+            "post": {
+                "tags": [
+                    "6. Examinations & Assessment - Exam"
+                ],
+                "summary": "Send Marks By SMS",
+                "description": "Dispatches SMS with student exam marks and grades to Students, Parents, or All.",
+                "operationId": "sendMarksBySms",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "exam_id",
+                                    "class_id",
+                                    "receiver"
+                                ],
+                                "properties": {
+                                    "exam_id": {
+                                        "description": "Exam or Exam Type ID",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "class_id": {
+                                        "description": "Class ID",
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "receiver": {
+                                        "description": "Receiver: 'students', 'parents', or 'all'",
+                                        "type": "string",
+                                        "example": "parents"
+                                    },
+                                    "custom_message": {
+                                        "type": "string",
+                                        "example": "Dear Parent, your child's exam report is ready."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Marks SMS sent successfully to 28 recipient(s)."
+                                        },
+                                        "total_sent": {
+                                            "type": "integer",
+                                            "example": 28
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [

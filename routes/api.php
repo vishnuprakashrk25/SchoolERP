@@ -33,6 +33,12 @@ use App\Http\Controllers\Api\StaffAttendanceController;
 use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\ExamScheduleController;
 use App\Http\Controllers\Api\ExamResultController;
+use App\Http\Controllers\Api\ExamTypeController;
+use App\Http\Controllers\Api\ExamSetupController;
+use App\Http\Controllers\Api\ExamAttendanceController;
+use App\Http\Controllers\Api\ExamMarkController;
+use App\Http\Controllers\Api\MarkGradeController;
+use App\Http\Controllers\Api\SendMarksSmsController;
 use App\Http\Controllers\Api\FeeTypeController;
 use App\Http\Controllers\Api\FeeGroupController;
 use App\Http\Controllers\Api\FeeStructureController;
@@ -228,10 +234,36 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('staff/{staff_id}/attendance-report', [StaffAttendanceController::class, 'monthlyReport']);
     Route::apiResource('staff-attendance', StaffAttendanceController::class);
     Route::apiResource('staff-attendances', StaffAttendanceController::class);
-    //exam
+    // Examination Module (7 Sections)
+    // 1. Exam Type
+    Route::apiResource('exam-types', ExamTypeController::class);
     Route::apiResource('exams', ExamController::class);
+
+    // 2. Exam Setup (Mark Distribution & Pass Mark Criteria)
+    Route::apiResource('exam-setups', ExamSetupController::class);
+
+    // 3. Exam Schedule
+    Route::post('exam-schedules/bulk', [ExamScheduleController::class, 'bulkStore']);
     Route::apiResource('exam-schedules', ExamScheduleController::class);
+
+    // 4. Exam Attendance
+    Route::get('exam-attendances', [ExamAttendanceController::class, 'index']);
+    Route::post('exam-attendances', [ExamAttendanceController::class, 'store']);
+    Route::apiResource('exam-attendance', ExamAttendanceController::class);
+
+    // 5. Mark Register
+    Route::get('exam-marks', [ExamMarkController::class, 'index']);
+    Route::post('exam-marks', [ExamMarkController::class, 'store']);
+    Route::get('mark-registers', [ExamMarkController::class, 'index']);
+    Route::post('mark-registers', [ExamMarkController::class, 'store']);
     Route::apiResource('exam-results', ExamResultController::class);
+
+    // 6. Mark Grade (Grade List & Setup)
+    Route::apiResource('mark-grades', MarkGradeController::class);
+
+    // 7. Send Marks By SMS
+    Route::post('exams/send-marks-sms', [SendMarksSmsController::class, 'send']);
+    Route::post('send-marks-sms', [SendMarksSmsController::class, 'send']);
     //fee & finance management
     Route::apiResource('fee-groups', FeeGroupController::class);
     Route::apiResource('fee-types', FeeTypeController::class);
