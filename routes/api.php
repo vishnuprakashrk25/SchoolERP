@@ -222,6 +222,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('staff-departments', StaffDepartmentController::class);
     Route::post('staff/bulk', [StaffController::class, 'bulkStore']);
     Route::apiResource('staff', StaffController::class);
+    Route::get('staff-attendances/monthly-report', [StaffAttendanceController::class, 'monthlyReport']);
+    Route::get('staff-attendance/monthly-report', [StaffAttendanceController::class, 'monthlyReport']);
+    Route::get('staff-attendance-report', [StaffAttendanceController::class, 'monthlyReport']);
+    Route::get('staff/{staff_id}/attendance-report', [StaffAttendanceController::class, 'monthlyReport']);
     Route::apiResource('staff-attendance', StaffAttendanceController::class);
     Route::apiResource('staff-attendances', StaffAttendanceController::class);
     //exam

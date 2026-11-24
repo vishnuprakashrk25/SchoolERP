@@ -15178,6 +15178,135 @@
                 ]
             }
         },
+        "/api/staff-attendances/monthly-report": {
+            "get": {
+                "tags": [
+                    "2. Staff & HR - StaffAttendance"
+                ],
+                "summary": "Staff Attendance Monthly Report",
+                "description": "Returns structured grid-ready monthly attendance report for staff members (P, L, A, F, H, Le, W) across all days of the selected month.",
+                "operationId": "getStaffMonthlyAttendanceReport",
+                "parameters": [
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "description": "Year (default current year)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2026
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "description": "Month 1-12 (default current month)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 11
+                        }
+                    },
+                    {
+                        "name": "role_id",
+                        "in": "query",
+                        "description": "Filter by staff role ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "Filter by staff role name (e.g. Teacher, Admin)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "staff_id",
+                        "in": "query",
+                        "description": "Filter for a specific staff member ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search staff name, code, email, or phone",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "month": {
+                                            "type": "integer",
+                                            "example": 11
+                                        },
+                                        "year": {
+                                            "type": "integer",
+                                            "example": 2026
+                                        },
+                                        "month_name": {
+                                            "type": "string",
+                                            "example": "November 2026"
+                                        },
+                                        "title": {
+                                            "type": "string",
+                                            "example": "Staff Attendance Report P:45 L:3 A:2 F:1 H:4 Le:1"
+                                        },
+                                        "summary": {
+                                            "type": "object"
+                                        },
+                                        "legend": {
+                                            "type": "object"
+                                        },
+                                        "days_header": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "total_staff": {
+                                            "type": "integer",
+                                            "example": 15
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/staff-attendances": {
             "get": {
                 "tags": [
