@@ -21,11 +21,11 @@ class StudentIncidentController extends Controller
      *      operationId="getStudentIncidentsList",
      *      tags={"Student Behaviour - Incidents"},
      *      summary="List assigned student incidents (Behaviour Records)",
-     *      description="Fetches assigned behaviour incidents. Can filter by student_id, class_id, section_id, or date range.",
+     *      description="Fetches assigned behaviour incidents. Requires both class_id and section_id; returns an empty array if not provided.",
      *      security={{"sanctum":{}}},
-     *      @OA\Parameter(name="student_id", in="query", required=false, @OA\Schema(type="integer")),
-     *      @OA\Parameter(name="class_id", in="query", required=false, @OA\Schema(type="integer")),
-     *      @OA\Parameter(name="section_id", in="query", required=false, @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="class_id", in="query", required=true, description="Filter by class ID (required)", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="section_id", in="query", required=true, description="Filter by section ID (required)", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="student_id", in="query", required=false, description="Filter by specific student ID", @OA\Schema(type="integer")),
      *      @OA\Parameter(name="date_from", in="query", required=false, @OA\Schema(type="string", format="date")),
      *      @OA\Parameter(name="date_to", in="query", required=false, @OA\Schema(type="string", format="date")),
      *      @OA\Response(
@@ -46,6 +46,23 @@ class StudentIncidentController extends Controller
      */
     public function index(Request $request)
     {
+        $classId = $request->input('class_id') ?? $request->input('class');
+        $sectionId = $request->input('section_id') ?? $request->input('section');
+
+        // Only return data when both class_id and section_id are provided, otherwise return empty array
+        if ((empty($classId) || empty($sectionId)) && !$request->boolean('all')) {
+            return response()->json([
+                'success' => true,
+                'summary' => [
+                    'total_points'    => 0,
+                    'positive_points' => 0,
+                    'negative_points' => 0,
+                    'total_incidents' => 0,
+                ],
+                'data'    => []
+            ]);
+        }
+
         $query = StudentIncident::query()
             ->with([
                 'student:id,user_id,admission_no,first_name,last_name,full_name,roll_no,class_id,section_id,photo',
@@ -55,19 +72,19 @@ class StudentIncidentController extends Controller
                 'assignedBy:id,name,full_name,email',
             ]);
 
-        if ($request->filled('student_id')) {
-            $query->where('student_id', $request->input('student_id'));
-        }
-
-        if ($request->filled('class_id') || $request->filled('section_id')) {
-            $query->whereHas('student', function ($sq) use ($request) {
-                if ($request->filled('class_id')) {
-                    $sq->where('class_id', $request->input('class_id'));
+        if (!empty($classId) || !empty($sectionId)) {
+            $query->whereHas('student', function ($sq) use ($classId, $sectionId) {
+                if (!empty($classId)) {
+                    $sq->where('class_id', $classId);
                 }
-                if ($request->filled('section_id')) {
-                    $sq->where('section_id', $request->input('section_id'));
+                if (!empty($sectionId)) {
+                    $sq->where('section_id', $sectionId);
                 }
             });
+        }
+
+        if ($request->filled('student_id')) {
+            $query->where('student_id', $request->input('student_id'));
         }
 
         if ($request->filled('date_from')) {

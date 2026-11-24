@@ -21825,21 +21825,14 @@
                     "Student Behaviour - Incidents"
                 ],
                 "summary": "List assigned student incidents (Behaviour Records)",
-                "description": "Fetches assigned behaviour incidents. Can filter by student_id, class_id, section_id, or date range.",
+                "description": "Fetches assigned behaviour incidents. Requires both class_id and section_id; returns an empty array if not provided.",
                 "operationId": "getStudentIncidentsList",
                 "parameters": [
                     {
-                        "name": "student_id",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
                         "name": "class_id",
                         "in": "query",
-                        "required": false,
+                        "description": "Filter by class ID (required)",
+                        "required": true,
                         "schema": {
                             "type": "integer"
                         }
@@ -21847,6 +21840,16 @@
                     {
                         "name": "section_id",
                         "in": "query",
+                        "description": "Filter by section ID (required)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "student_id",
+                        "in": "query",
+                        "description": "Filter by specific student ID",
                         "required": false,
                         "schema": {
                             "type": "integer"
