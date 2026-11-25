@@ -39,6 +39,12 @@ use App\Http\Controllers\Api\ExamAttendanceController;
 use App\Http\Controllers\Api\ExamMarkController;
 use App\Http\Controllers\Api\MarkGradeController;
 use App\Http\Controllers\Api\SendMarksSmsController;
+use App\Http\Controllers\Api\RouteController;
+use App\Http\Controllers\Api\VehicleController;
+use App\Http\Controllers\Api\AssignVehicleController;
+use App\Http\Controllers\Api\RoomTypeController;
+use App\Http\Controllers\Api\DormitoryController;
+use App\Http\Controllers\Api\DormitoryRoomController;
 use App\Http\Controllers\Api\FeeTypeController;
 use App\Http\Controllers\Api\FeeGroupController;
 use App\Http\Controllers\Api\FeeStructureController;
@@ -264,6 +270,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // 7. Send Marks By SMS
     Route::post('exams/send-marks-sms', [SendMarksSmsController::class, 'send']);
     Route::post('send-marks-sms', [SendMarksSmsController::class, 'send']);
+
+    // Transport Module (Routes, Vehicles, Assign Vehicle)
+    Route::apiResource('routes', RouteController::class);
+    Route::get('vehicles/drivers-dropdown', [VehicleController::class, 'driversDropdown']);
+    Route::apiResource('vehicles', VehicleController::class);
+    Route::apiResource('assign-vehicles', AssignVehicleController::class);
+
+    // Dormitory Module (Room Types, Dormitories, Dormitory Rooms)
+    Route::apiResource('room-types', RoomTypeController::class);
+    Route::apiResource('dormitories', DormitoryController::class);
+    Route::apiResource('dormitory-rooms', DormitoryRoomController::class);
     //fee & finance management
     Route::apiResource('fee-groups', FeeGroupController::class);
     Route::apiResource('fee-types', FeeTypeController::class);

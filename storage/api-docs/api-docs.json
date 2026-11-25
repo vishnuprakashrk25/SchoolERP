@@ -1066,6 +1066,210 @@
                 ]
             }
         },
+        "/api/assign-vehicles": {
+            "get": {
+                "tags": [
+                    "5. Transport - Assign Vehicle"
+                ],
+                "summary": "Get list of Assigned Vehicles",
+                "description": "Returns list of Route to Vehicle assignments.",
+                "operationId": "getAssignVehiclesList",
+                "parameters": [
+                    {
+                        "name": "route_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "vehicle_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "5. Transport - Assign Vehicle"
+                ],
+                "summary": "Assign Vehicle to Route",
+                "description": "Assigns one or more vehicles to a route.",
+                "operationId": "storeAssignVehicle",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "route_id",
+                                    "vehicle_id"
+                                ],
+                                "properties": {
+                                    "route_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "vehicle_id": {
+                                        "description": "Vehicle ID or array of Vehicle IDs",
+                                        "type": "integer",
+                                        "example": 2
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Assigned successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/assign-vehicles/{id}": {
+            "get": {
+                "tags": [
+                    "5. Transport - Assign Vehicle"
+                ],
+                "summary": "Get Assignment details",
+                "operationId": "getAssignVehicleById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "5. Transport - Assign Vehicle"
+                ],
+                "summary": "Update Vehicle Assignment",
+                "operationId": "updateAssignVehicle",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "route_id": {
+                                        "type": "integer"
+                                    },
+                                    "vehicle_id": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "5. Transport - Assign Vehicle"
+                ],
+                "summary": "Delete Vehicle Assignment",
+                "operationId": "deleteAssignVehicle",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/assignments": {
             "get": {
                 "tags": [
@@ -5644,6 +5848,478 @@
                     },
                     "401": {
                         "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/dormitories": {
+            "get": {
+                "tags": [
+                    "5. Dormitory - Dormitory"
+                ],
+                "summary": "Get list of Dormitories",
+                "description": "Returns list of dormitories with SL, Dormitory Name, Type, Address, Intake, and Actions.",
+                "operationId": "getDormitoriesList",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by dormitory name, address, or type",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filter by type (Boys, Girls, Mixed)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "5. Dormitory - Dormitory"
+                ],
+                "summary": "Store new Dormitory",
+                "description": "Creates a new Dormitory with name, type (Boys, Girls, Mixed), address, intake, and description.",
+                "operationId": "storeDormitory",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Test Dormitory"
+                                    },
+                                    "type": {
+                                        "description": "Boys, Girls, or Mixed",
+                                        "type": "string",
+                                        "example": "Boys"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "25/13, Sukrabad Rd, Dhaka"
+                                    },
+                                    "intake": {
+                                        "type": "integer",
+                                        "example": 200
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Main hostel building"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Dormitory created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/dormitories/{id}": {
+            "get": {
+                "tags": [
+                    "5. Dormitory - Dormitory"
+                ],
+                "summary": "Get Dormitory details",
+                "operationId": "getDormitoryById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "5. Dormitory - Dormitory"
+                ],
+                "summary": "Update existing Dormitory",
+                "operationId": "updateDormitory",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "intake": {
+                                        "type": "integer"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "5. Dormitory - Dormitory"
+                ],
+                "summary": "Delete Dormitory",
+                "operationId": "deleteDormitory",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/dormitory-rooms": {
+            "get": {
+                "tags": [
+                    "5. Dormitory - Dormitory Room"
+                ],
+                "summary": "Get list of Dormitory Rooms",
+                "description": "Returns list of dormitory rooms with SL, Dormitory, Room Number, Room Type, No. of Bed, Cost Per Bed, and Actions.",
+                "operationId": "getDormitoryRoomsList",
+                "parameters": [
+                    {
+                        "name": "dormitory_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "room_type_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by room number or description",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "5. Dormitory - Dormitory Room"
+                ],
+                "summary": "Store new Dormitory Room",
+                "description": "Creates a new Dormitory Room with Dormitory, Room Number, Type, Number of Bed, Cost Per Bed, and Description.",
+                "operationId": "storeDormitoryRoom",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "dormitory_id",
+                                    "room_number"
+                                ],
+                                "properties": {
+                                    "dormitory_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "room_number": {
+                                        "type": "string",
+                                        "example": "12"
+                                    },
+                                    "room_type_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "number_of_bed": {
+                                        "type": "integer",
+                                        "example": 21
+                                    },
+                                    "cost_per_bed": {
+                                        "type": "number",
+                                        "example": 200
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "First floor room"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Dormitory Room created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/dormitory-rooms/{id}": {
+            "get": {
+                "tags": [
+                    "5. Dormitory - Dormitory Room"
+                ],
+                "summary": "Get Dormitory Room details",
+                "operationId": "getDormitoryRoomById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "5. Dormitory - Dormitory Room"
+                ],
+                "summary": "Update existing Dormitory Room",
+                "operationId": "updateDormitoryRoom",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "dormitory_id": {
+                                        "type": "integer"
+                                    },
+                                    "room_number": {
+                                        "type": "string"
+                                    },
+                                    "room_type_id": {
+                                        "type": "integer"
+                                    },
+                                    "number_of_bed": {
+                                        "type": "integer"
+                                    },
+                                    "cost_per_bed": {
+                                        "type": "number"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "5. Dormitory - Dormitory Room"
+                ],
+                "summary": "Delete Dormitory Room",
+                "operationId": "deleteDormitoryRoom",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted successfully"
                     }
                 },
                 "security": [
@@ -14449,6 +15125,408 @@
                 "responses": {
                     "200": {
                         "description": "Roles assigned successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/room-types": {
+            "get": {
+                "tags": [
+                    "5. Dormitory - Room Type"
+                ],
+                "summary": "Get list of Room Types",
+                "description": "Returns list of room types with SL, Room Type name, Description, and Actions.",
+                "operationId": "getRoomTypesList",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by room type name or description",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "5. Dormitory - Room Type"
+                ],
+                "summary": "Store new Room Type",
+                "description": "Creates a new Room Type with name and description.",
+                "operationId": "storeRoomType",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "description": "Room Type name",
+                                        "type": "string",
+                                        "example": "Single"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Single bed room"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Room Type created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/room-types/{id}": {
+            "get": {
+                "tags": [
+                    "5. Dormitory - Room Type"
+                ],
+                "summary": "Get Room Type details",
+                "operationId": "getRoomTypeById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "5. Dormitory - Room Type"
+                ],
+                "summary": "Update existing Room Type",
+                "operationId": "updateRoomType",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Double"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Double bed room"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "5. Dormitory - Room Type"
+                ],
+                "summary": "Delete Room Type",
+                "operationId": "deleteRoomType",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/routes": {
+            "get": {
+                "tags": [
+                    "5. Transport - Route"
+                ],
+                "summary": "Get list of Routes",
+                "description": "Returns list of routes with SL, Route Title, Fare, and Actions.",
+                "operationId": "getRoutesList",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by route title",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "5. Transport - Route"
+                ],
+                "summary": "Store new Route",
+                "description": "Creates a new route with Route Title and Fare.",
+                "operationId": "storeRoute",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title",
+                                    "fare"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Test Route"
+                                    },
+                                    "fare": {
+                                        "type": "number",
+                                        "example": 200
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Route created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/routes/{id}": {
+            "get": {
+                "tags": [
+                    "5. Transport - Route"
+                ],
+                "summary": "Get Route details",
+                "operationId": "getRouteById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "5. Transport - Route"
+                ],
+                "summary": "Update existing Route",
+                "operationId": "updateRoute",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Updated Route"
+                                    },
+                                    "fare": {
+                                        "type": "number",
+                                        "example": 250
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "5. Transport - Route"
+                ],
+                "summary": "Delete Route",
+                "operationId": "deleteRoute",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted successfully"
                     }
                 },
                 "security": [
@@ -26729,6 +27807,254 @@
                 ]
             }
         },
+        "/api/vehicles": {
+            "get": {
+                "tags": [
+                    "5. Transport - Vehicle"
+                ],
+                "summary": "Get list of Vehicles",
+                "description": "Returns list of vehicles with Vehicle No, Model No, Year Made, Driver Name, and Driver Phone Number.",
+                "operationId": "getVehiclesList",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search by vehicle number, model, or driver name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "5. Transport - Vehicle"
+                ],
+                "summary": "Store new Vehicle",
+                "description": "Creates a new vehicle with Vehicle Number, Vehicle Model, Year Made, Driver, and Note.",
+                "operationId": "storeVehicle",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "vehicle_no"
+                                ],
+                                "properties": {
+                                    "vehicle_no": {
+                                        "type": "string",
+                                        "example": "Test Vehicle 23232"
+                                    },
+                                    "vehicle_model": {
+                                        "type": "string",
+                                        "example": "Test Model 4343433"
+                                    },
+                                    "year_made": {
+                                        "type": "string",
+                                        "example": "2007"
+                                    },
+                                    "driver_id": {
+                                        "description": "Staff ID with Driver role",
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "driver_name": {
+                                        "type": "string",
+                                        "example": "Jhon Martin"
+                                    },
+                                    "driver_contact": {
+                                        "type": "string",
+                                        "example": "7037372929"
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "example": "School bus 1"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Vehicle created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/vehicles/{id}": {
+            "get": {
+                "tags": [
+                    "5. Transport - Vehicle"
+                ],
+                "summary": "Get Vehicle details",
+                "operationId": "getVehicleById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "5. Transport - Vehicle"
+                ],
+                "summary": "Update existing Vehicle",
+                "operationId": "updateVehicle",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "vehicle_no": {
+                                        "type": "string"
+                                    },
+                                    "vehicle_model": {
+                                        "type": "string"
+                                    },
+                                    "year_made": {
+                                        "type": "string"
+                                    },
+                                    "driver_id": {
+                                        "type": "integer"
+                                    },
+                                    "note": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "5. Transport - Vehicle"
+                ],
+                "summary": "Delete Vehicle",
+                "operationId": "deleteVehicle",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/vehicles/drivers-dropdown": {
+            "get": {
+                "tags": [
+                    "5. Transport - Vehicle"
+                ],
+                "summary": "Get drivers dropdown list",
+                "description": "Returns list of staff with driver role or all staff for driver selection.",
+                "operationId": "getDriversDropdown",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/videos": {
             "get": {
                 "tags": [
@@ -27175,6 +28501,10 @@
             "description": "1. Reception & Admission - Inquiry"
         },
         {
+            "name": "5. Transport - Assign Vehicle",
+            "description": "5. Transport - Assign Vehicle"
+        },
+        {
             "name": "7. E-Learning & Content - Assignment",
             "description": "7. E-Learning & Content - Assignment"
         },
@@ -27225,6 +28555,14 @@
         {
             "name": "3. Academic Infrastructure - Teacher",
             "description": "3. Academic Infrastructure - Teacher"
+        },
+        {
+            "name": "5. Dormitory - Dormitory",
+            "description": "5. Dormitory - Dormitory"
+        },
+        {
+            "name": "5. Dormitory - Dormitory Room",
+            "description": "5. Dormitory - Dormitory Room"
         },
         {
             "name": "7. E-Learning & Content - DownloadContent",
@@ -27335,6 +28673,14 @@
             "description": "1. Core System - Role"
         },
         {
+            "name": "5. Dormitory - Room Type",
+            "description": "5. Dormitory - Room Type"
+        },
+        {
+            "name": "5. Transport - Route",
+            "description": "5. Transport - Route"
+        },
+        {
             "name": "SaaS Management",
             "description": "SaaS Management"
         },
@@ -27433,6 +28779,10 @@
         {
             "name": "1. Core System - User",
             "description": "1. Core System - User"
+        },
+        {
+            "name": "5. Transport - Vehicle",
+            "description": "5. Transport - Vehicle"
         },
         {
             "name": "7. E-Learning & Content - Video",
