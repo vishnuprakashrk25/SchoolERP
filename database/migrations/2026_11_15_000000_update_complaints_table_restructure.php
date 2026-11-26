@@ -24,13 +24,13 @@ return new class extends Migration
             }
             // Add new columns if missing
             if (!Schema::hasColumn('complaints', 'email')) {
-                $table->string('email')->nullable()->after('phone');
+                $table->string('email')->nullable();
             }
             if (!Schema::hasColumn('complaints', 'complaint_type')) {
-                $table->string('complaint_type')->nullable()->after('message');
+                $table->string('complaint_type')->nullable();
             }
             if (!Schema::hasColumn('complaints', 'source')) {
-                $table->string('source')->nullable()->after('complaint_type');
+                $table->string('source')->nullable();
             }
             // Drop old columns no longer needed
             if (Schema::hasColumn('complaints', 'date')) {
