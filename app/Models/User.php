@@ -311,4 +311,14 @@ class User extends Authenticatable
     {
         $this->notify(new \App\Notifications\ResetPasswordNotification($token));
     }
+
+    public function deviceTokens()
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
 }

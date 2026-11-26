@@ -317,6 +317,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('shared-contents', SharedContentController::class);
     Route::apiResource('videos', VideoController::class);
     //communication
+    Route::get('my-notifications', [NotificationController::class, 'myNotifications']);
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('notifications/send', [NotificationController::class, 'send']);
+    Route::post('notifications/broadcast', [NotificationController::class, 'send']);
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+    Route::post('save-device-token', [NotificationController::class, 'saveDeviceToken']);
+    Route::post('device-tokens', [NotificationController::class, 'saveDeviceToken']);
+    Route::post('remove-device-token', [NotificationController::class, 'removeDeviceToken']);
     Route::apiResource('notifications', NotificationController::class);
     Route::apiResource('messages', MessageController::class);
     Route::apiResource('message-threads', MessageThreadController::class);
