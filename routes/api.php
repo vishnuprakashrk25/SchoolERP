@@ -238,6 +238,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('staff-attendance/monthly-report', [StaffAttendanceController::class, 'monthlyReport']);
     Route::get('staff-attendance-report', [StaffAttendanceController::class, 'monthlyReport']);
     Route::get('staff/{staff_id}/attendance-report', [StaffAttendanceController::class, 'monthlyReport']);
+    Route::get('staff-attendances/roster', [StaffAttendanceController::class, 'staffRoster']);
+    Route::get('staff-attendance/roster', [StaffAttendanceController::class, 'staffRoster']);
+    Route::get('staff-attendances/staff-roster', [StaffAttendanceController::class, 'staffRoster']);
+    Route::post('staff-attendances/bulk', [StaffAttendanceController::class, 'store']);
+    Route::post('staff-attendance/bulk', [StaffAttendanceController::class, 'store']);
     Route::apiResource('staff-attendance', StaffAttendanceController::class);
     Route::apiResource('staff-attendances', StaffAttendanceController::class);
     // Examination Module (7 Sections)

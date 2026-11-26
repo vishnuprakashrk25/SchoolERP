@@ -17428,14 +17428,275 @@
                 ]
             }
         },
+        "/api/staff-attendances/roster": {
+            "get": {
+                "tags": [
+                    "2. Staff & HR - StaffAttendance"
+                ],
+                "summary": "List staff roster with attendance status for taking daily attendance",
+                "description": "Returns all staff members (with role/search filters) mapped with their attendance record for the given date (default today). If not yet marked, status defaults to 'Present'.",
+                "operationId": "getStaffAttendanceRoster",
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Attendance date (YYYY-MM-DD, defaults to today)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "role_id",
+                        "in": "query",
+                        "description": "Filter staff by role ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "Filter staff by role name (e.g. Teacher, Admin)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search staff name, code, phone, or email",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter staff by attendance status",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "staff_id",
+                        "in": "query",
+                        "description": "Filter specific staff ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "date": {
+                                            "type": "string",
+                                            "format": "date",
+                                            "example": "2026-11-26"
+                                        },
+                                        "total_staff": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "marked_count": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "present_count": {
+                                            "type": "integer",
+                                            "example": 4
+                                        },
+                                        "absent_count": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "late_count": {
+                                            "type": "integer",
+                                            "example": 0
+                                        },
+                                        "half_day_count": {
+                                            "type": "integer",
+                                            "example": 0
+                                        },
+                                        "holiday_count": {
+                                            "type": "integer",
+                                            "example": 0
+                                        },
+                                        "leave_count": {
+                                            "type": "integer",
+                                            "example": 0
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1,
+                                                        "nullable": true
+                                                    },
+                                                    "staff_id": {
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    },
+                                                    "staff_code": {
+                                                        "type": "string",
+                                                        "example": "STF003"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Sarah Connor"
+                                                    },
+                                                    "full_name": {
+                                                        "type": "string",
+                                                        "example": "Sarah Connor"
+                                                    },
+                                                    "role": {
+                                                        "type": "string",
+                                                        "example": "Teacher"
+                                                    },
+                                                    "role_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "designation": {
+                                                        "type": "string",
+                                                        "example": "Senior Teacher"
+                                                    },
+                                                    "category": {
+                                                        "type": "string",
+                                                        "example": "Teaching"
+                                                    },
+                                                    "photo": {
+                                                        "type": "string",
+                                                        "example": "http://localhost:8000/uploads/staff/sarah.jpg",
+                                                        "nullable": true
+                                                    },
+                                                    "phone": {
+                                                        "type": "string",
+                                                        "example": "9876543210"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "sarah@school.com"
+                                                    },
+                                                    "date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2026-11-26"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "Present"
+                                                    },
+                                                    "note": {
+                                                        "type": "string",
+                                                        "example": ""
+                                                    },
+                                                    "is_marked": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "staff": {
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/staff-attendances": {
             "get": {
                 "tags": [
                     "2. Staff & HR - StaffAttendance"
                 ],
-                "summary": "Get list of StaffAttendance",
+                "summary": "Get list of StaffAttendance (or full staff roster with attendance status)",
+                "description": "By default, returns staff roster for taking daily attendance. Pass only_uploaded=true to query only stored records.",
                 "operationId": "getStaffAttendanceList",
                 "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Date for attendance (YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "role_id",
+                        "in": "query",
+                        "description": "Role ID filter",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "Role name filter",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search name, code, phone, or email",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "only_uploaded",
+                        "in": "query",
+                        "description": "If true, return only existing attendance records from DB",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
                     {
                         "name": "page",
                         "in": "query",
@@ -17467,31 +17728,6 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer"
-                                                    },
-                                                    "staff_id": {
-                                                        "type": "integer"
-                                                    },
-                                                    "date": {
-                                                        "type": "string"
-                                                    },
-                                                    "status": {
-                                                        "type": "string"
-                                                    },
-                                                    "note": {
-                                                        "type": "string",
-                                                        "example": "On sick leave"
-                                                    },
-                                                    "photo": {
-                                                        "type": "string",
-                                                        "example": "http://localhost:8000/uploads/staff_photos/example.jpg"
-                                                    },
-                                                    "staff": {
-                                                        "type": "object"
-                                                    }
-                                                },
                                                 "type": "object"
                                             }
                                         }
@@ -17512,35 +17748,69 @@
                 "tags": [
                     "2. Staff & HR - StaffAttendance"
                 ],
-                "summary": "Store new StaffAttendance",
+                "summary": "Store Staff Attendance (Single or Bulk Array)",
+                "description": "Stores single attendance record or bulk roster attendance array. Uses updateOrCreate on staff_id and date.",
                 "operationId": "storeStaffAttendance",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "staff_id",
-                                    "date",
-                                    "status"
-                                ],
                                 "properties": {
-                                    "staff_id": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
                                     "date": {
                                         "type": "string",
                                         "format": "date",
-                                        "example": "2026-08-09"
+                                        "example": "2026-11-26"
+                                    },
+                                    "attendances": {
+                                        "description": "Bulk attendance items (optional, omit for single record)",
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "staff_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "staff_code": {
+                                                    "type": "string",
+                                                    "example": "STF001"
+                                                },
+                                                "date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2026-11-26"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Present"
+                                                },
+                                                "note": {
+                                                    "type": "string",
+                                                    "example": "On time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "staff_id": {
+                                        "description": "For single record",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "staff_code": {
+                                        "description": "For single record",
+                                        "type": "string",
+                                        "example": "STF001"
                                     },
                                     "status": {
+                                        "description": "For single record",
                                         "type": "string",
-                                        "example": "present"
+                                        "example": "Present"
                                     },
                                     "note": {
+                                        "description": "For single record",
                                         "type": "string",
-                                        "example": "On sick leave"
+                                        "example": "Optional note"
                                     }
                                 },
                                 "type": "object"
@@ -17558,6 +17828,10 @@
                                         "success": {
                                             "type": "boolean",
                                             "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Staff attendances saved successfully"
                                         },
                                         "data": {
                                             "type": "object"
