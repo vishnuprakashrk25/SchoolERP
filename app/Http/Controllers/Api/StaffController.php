@@ -27,6 +27,10 @@ class StaffController extends Controller
      *      @OA\Parameter(name="limit", in="query", required=false, @OA\Schema(type="integer", default=15)),
      *      @OA\Parameter(name="role_id", in="query", required=false, description="Filter staff by Role ID", @OA\Schema(type="integer")),
      *      @OA\Parameter(name="role", in="query", required=false, description="Filter staff by Role name", @OA\Schema(type="string")),
+     *      @OA\Parameter(name="search", in="query", required=false, description="Search by name, email, phone, code", @OA\Schema(type="string")),
+     *      @OA\Parameter(name="date", in="query", required=false, description="Filter attendances by date (YYYY-MM-DD)", @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="year", in="query", required=false, description="Filter attendances by year", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="month", in="query", required=false, description="Filter attendances by month (1-12)", @OA\Schema(type="integer")),
      *      @OA\Response(
      *          response=200,
      *          description="Successful operation",
@@ -105,7 +109,20 @@ class StaffController extends Controller
     public function index(Request $request)
     {
         $limit = $request->input('limit', 15);
-        $query = Staff::latest();
+        $query = Staff::with([
+            'user',
+            'attendances' => function ($q) use ($request) {
+                if ($request->filled('date')) {
+                    $q->where('date', $request->input('date'));
+                } elseif ($request->filled('month') && $request->filled('year')) {
+                    $q->whereYear('date', $request->input('year'))
+                      ->whereMonth('date', $request->input('month'));
+                } elseif ($request->filled('date_from') && $request->filled('date_to')) {
+                    $q->whereBetween('date', [$request->input('date_from'), $request->input('date_to')]);
+                }
+                $q->orderBy('date', 'desc');
+            }
+        ])->latest();
 
         if ($request->filled('role_id')) {
             $roleObj = \Spatie\Permission\Models\Role::find($request->input('role_id'));
@@ -497,12 +514,105 @@ class StaffController extends Controller
      *      )
      * )
      */
-        public function show($id)
+    public function show($id)
     {
-        $item = Staff::findOrFail($id);
+        $item = Staff::with([
+            'user',
+            'attendances' => function ($q) {
+                $q->orderBy('date', 'desc');
+            }
+        ])->findOrFail($id);
+
         return response()->json([
             'success' => true,
             'data' => $item
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *      path="/api/staff/{id}/attendances",
+     *      operationId="getStaffAttendancesList",
+     *      tags={"2. Staff & HR - Staff"},
+     *      summary="Get attendance records for a specific staff member",
+     *      description="Returns all attendance history for a staff member with optional date, year, month, date_from, date_to, and status filtering.",
+     *      security={{"sanctum":{}}},
+     *      @OA\Parameter(name="id", in="path", required=true, description="Staff ID", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="date", in="query", required=false, description="Exact date (YYYY-MM-DD)", @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="year", in="query", required=false, description="Year (e.g. 2026)", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="month", in="query", required=false, description="Month (1-12)", @OA\Schema(type="integer")),
+     *      @OA\Parameter(name="date_from", in="query", required=false, description="Start date (YYYY-MM-DD)", @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="date_to", in="query", required=false, description="End date (YYYY-MM-DD)", @OA\Schema(type="string", format="date")),
+     *      @OA\Parameter(name="status", in="query", required=false, description="Status filter (Present, Absent, Late, Half Day, Holiday)", @OA\Schema(type="string")),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              @OA\Property(property="success", type="boolean", example=true),
+     *              @OA\Property(property="staff", type="object",
+     *                  @OA\Property(property="id", type="integer", example=1),
+     *                  @OA\Property(property="name", type="string", example="John Doe"),
+     *                  @OA\Property(property="staff_code", type="string", example="STF001"),
+     *                  @OA\Property(property="role", type="string", example="Teacher"),
+     *                  @OA\Property(property="designation", type="string", example="Mathematics Teacher")
+     *              ),
+     *              @OA\Property(property="summary", type="object",
+     *                  @OA\Property(property="total", type="integer", example=25),
+     *                  @OA\Property(property="present", type="integer", example=22),
+     *                  @OA\Property(property="absent", type="integer", example=2),
+     *                  @OA\Property(property="late", type="integer", example=1),
+     *                  @OA\Property(property="half_day", type="integer", example=0),
+     *                  @OA\Property(property="holiday", type="integer", example=0)
+     *              ),
+     *              @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *          )
+     *      )
+     * )
+     */
+    public function attendances(Request $request, $id)
+    {
+        $staff = Staff::findOrFail($id);
+        $query = \App\Models\StaffAttendance::where('staff_id', $id)->orderBy('date', 'desc');
+
+        if ($request->filled('date')) {
+            $query->where('date', $request->input('date'));
+        }
+        if ($request->filled('year')) {
+            $query->whereYear('date', $request->input('year'));
+        }
+        if ($request->filled('month')) {
+            $query->whereMonth('date', $request->input('month'));
+        }
+        if ($request->filled('date_from')) {
+            $query->where('date', '>=', $request->input('date_from'));
+        }
+        if ($request->filled('date_to')) {
+            $query->where('date', '<=', $request->input('date_to'));
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        $attendances = $query->get();
+
+        return response()->json([
+            'success' => true,
+            'staff' => [
+                'id' => $staff->id,
+                'name' => $staff->full_name,
+                'staff_code' => $staff->staff_code,
+                'role' => $staff->role,
+                'designation' => $staff->designation,
+            ],
+            'summary' => [
+                'total' => $attendances->count(),
+                'present' => $attendances->where('status', 'Present')->count(),
+                'absent' => $attendances->where('status', 'Absent')->count(),
+                'late' => $attendances->where('status', 'Late')->count(),
+                'half_day' => $attendances->where('status', 'Half Day')->count(),
+                'holiday' => $attendances->where('status', 'Holiday')->count(),
+            ],
+            'data' => $attendances
         ]);
     }
 

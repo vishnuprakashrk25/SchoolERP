@@ -233,6 +233,8 @@ Route::middleware('auth:sanctum')->group(function () {
     //staff
     Route::apiResource('staff-departments', StaffDepartmentController::class);
     Route::post('staff/bulk', [StaffController::class, 'bulkStore']);
+    Route::get('staff/{id}/attendances', [StaffController::class, 'attendances']);
+    Route::get('staff/{id}/attendance', [StaffController::class, 'attendances']);
     Route::apiResource('staff', StaffController::class);
     Route::get('staff-attendances/monthly-report', [StaffAttendanceController::class, 'monthlyReport']);
     Route::get('staff-attendance/monthly-report', [StaffAttendanceController::class, 'monthlyReport']);

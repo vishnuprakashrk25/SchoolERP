@@ -53,7 +53,8 @@ class Staff extends Model
 
     protected $appends = [
         'full_name',
-        'role_id'
+        'role_id',
+        'staff_attendance'
     ];
 
     public function getRoleIdAttribute()
@@ -191,5 +192,23 @@ class Staff extends Model
     public function getPhotoAttribute($value)
     {
         return $value;
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(StaffAttendance::class, 'staff_id')->orderBy('date', 'desc');
+    }
+
+    public function staffAttendances()
+    {
+        return $this->hasMany(StaffAttendance::class, 'staff_id')->orderBy('date', 'desc');
+    }
+
+    public function getStaffAttendanceAttribute()
+    {
+        if ($this->relationLoaded('attendances')) {
+            return $this->attendances;
+        }
+        return null;
     }
 }
